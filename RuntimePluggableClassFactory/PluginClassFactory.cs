@@ -6,6 +6,8 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
+using System.Security.Cryptography.X509Certificates;
 
 namespace DevelApp.RuntimePluggableClassFactory
 {
@@ -55,7 +57,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 throw new PluginClassFactoryException($"Directory {pluginPathUri.AbsolutePath} does not exist");
             }
 
-            //Isolate plugins from other parts of the program
+            //TODO Isolate plugins from other parts of the program
             //PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPathUri.AbsolutePath);
 
             // Load from each assembly in folder
@@ -63,14 +65,15 @@ namespace DevelApp.RuntimePluggableClassFactory
             {
                 //TODO check if assembly certificate is valid to improve security
 
-
+                //TODO Isolate plugins from other parts of the program
                 //Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
-                Assembly assembly = AppDomain.CurrentDomain.GetAssemblies()
-                    .FirstOrDefault(a => new Uri(a.CodeBase).Equals(new Uri(fileName)));
-                if(assembly == null)
-                {
-                    assembly = Assembly.LoadFile(fileName);
-                }
+
+                //TODO check if assembly has already been loaded by another (probably default) AssemblyLoadContext
+                //Get assembly from already loaded AssemblyLoadContext via
+                //AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assemblyName.FullName);
+
+                //HACK Load into Default AssemblyloadContext
+                Assembly assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(fileName);
 
                 LoadFromAssembly(assembly);
             }
@@ -91,7 +94,19 @@ namespace DevelApp.RuntimePluggableClassFactory
                 if (typeof(IPluginClass).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
                 {
                     // Make an instance to ask for name
-                    T instance = (T)Activator.CreateInstance(type);
+                    object instanceObject = Activator.CreateInstance(type);
+
+                    //Assembly debug
+                    Assembly pluginAssemblyT = typeof(T).Assembly;
+                    Assembly pluginAssemblyType = type.Assembly;
+                    Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
+
+                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
+                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(type.Assembly);
+                    System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
+                    //End Assembly debug
+
+                    T instance = (T)instanceObject;
                     if (pluginClassStore.TryGetValue(instance.Name, out PluginClass outPluginClass))
                     {
                         outPluginClass.InsertVersion(instance.Version, type);
@@ -135,8 +150,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             {
                 if (pluginClass.TryGetVersion(version, out Type type))
                 {
-                    IPluginClass pluginClassInstance = (IPluginClass) Activator.CreateInstance(type);
-                    return (T)pluginClassInstance;
+                    return (T)Activator.CreateInstance(type);
                 }
                 else
                 {
