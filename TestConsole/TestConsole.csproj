@@ -6,8 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DevelApp.RuntimePluggableClassFactory" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
-    <ProjectReference Include="..\RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj" />
   </ItemGroup>
 
 </Project>
