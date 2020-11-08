@@ -57,23 +57,22 @@ namespace DevelApp.RuntimePluggableClassFactory
                 throw new PluginClassFactoryException($"Directory {pluginPathUri.AbsolutePath} does not exist");
             }
 
-            //TODO Isolate plugins from other parts of the program
-            //PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPathUri.AbsolutePath);
+            //Isolate plugins from other parts of the program
+            PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPathUri.AbsolutePath);
 
             // Load from each assembly in folder
             foreach (string fileName in Directory.GetFiles(pluginPathUri.AbsolutePath, "*.dll", SearchOption.TopDirectoryOnly))
             {
                 //TODO check if assembly certificate is valid to improve security
 
-                //TODO Isolate plugins from other parts of the program
-                //Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
+                Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
 
-                //TODO check if assembly has already been loaded by another (probably default) AssemblyLoadContext
-                //Get assembly from already loaded AssemblyLoadContext via
-                //AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assemblyName.FullName);
-
-                //HACK Load into Default AssemblyloadContext
-                Assembly assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(fileName);
+                //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not useful
+                Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
+                if(defaultAssembly != null)
+                {
+                    assembly = defaultAssembly;
+                }
 
                 LoadFromAssembly(assembly);
             }
