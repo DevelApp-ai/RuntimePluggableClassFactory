@@ -13,7 +13,7 @@
   </Target>
 
   <ItemGroup>
-    <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
+    <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.1" />
   </ItemGroup>
 
 </Project>
