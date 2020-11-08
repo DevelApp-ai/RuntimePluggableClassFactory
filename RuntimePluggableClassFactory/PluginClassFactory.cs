@@ -1,5 +1,6 @@
 ﻿using DevelApp.RuntimePluggableClassFactory.Interface;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
@@ -15,36 +16,62 @@ namespace DevelApp.RuntimePluggableClassFactory
             _retainOldVersions = retainOldVersions;
             if (!typeof(T).IsInterface)
             {
-                throw new PluginClassFactoryException("Generic type is not an interface as required");
+                throw new PluginClassFactoryException("Generic type T is not an interface as required");
+            }
+        }
+
+        /// <summary>
+        /// Returns all plugins of interface T currently in the store
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<(string Name, string Description, List<int> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
+        {
+            foreach(PluginClass pluginClass in pluginClassStore.Values)
+            {
+                yield return (Name: pluginClass.Name, Description: pluginClass.Description, Versions: pluginClass.Versions);
             }
         }
 
         /// <summary>
         /// Stores the types for the factory
         /// </summary>
-        private Dictionary<string, PluginClass> pluginClassStore = new Dictionary<string, PluginClass>();
+        private ConcurrentDictionary<string, PluginClass> pluginClassStore = new ConcurrentDictionary<string, PluginClass>();
 
         private int _retainOldVersions;
 
         /// <summary>
         /// Loads all assemblies from the pluginPath and returns all non-abstract classes implementing interface T
         /// </summary>
-        /// <param name="pluginPath"></param>
+        /// <param name="pluginPathUri"></param>
         /// <returns></returns>
-        public void LoadFromDirectory(string pluginPath)
+        public void LoadFromDirectory(Uri pluginPathUri)
         {
-            if (!Directory.Exists(pluginPath))
+            if(!pluginPathUri.IsAbsoluteUri)
             {
-                return;
+                throw new PluginClassFactoryException($"The supplied uri in {nameof(pluginPathUri)} is not an absolute uri but is required to be");
+            }
+            if (!Directory.Exists(pluginPathUri.AbsolutePath))
+            {
+                throw new PluginClassFactoryException($"Directory {pluginPathUri.AbsolutePath} does not exist");
             }
 
-            PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPath);
+            //Isolate plugins from other parts of the program
+            //PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPathUri.AbsolutePath);
 
             // Load from each assembly in folder
-            foreach (string fileName in Directory.GetFiles(pluginPath, "*.dll"))
+            foreach (string fileName in Directory.GetFiles(pluginPathUri.AbsolutePath, "*.dll", SearchOption.TopDirectoryOnly))
             {
-                //TODO check if assembly certificate is valid
-                Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
+                //TODO check if assembly certificate is valid to improve security
+
+
+                //Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
+                Assembly assembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => new Uri(a.CodeBase).Equals(new Uri(fileName)));
+                if(assembly == null)
+                {
+                    assembly = Assembly.LoadFile(fileName);
+                }
+
                 LoadFromAssembly(assembly);
             }
         }
@@ -59,18 +86,22 @@ namespace DevelApp.RuntimePluggableClassFactory
             // Return each T for IPluginClass
             foreach (Type type in assembly.GetTypes())
             {
-                if (typeof(T).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
+                //TODO examine if there is a need to exclude interface dll to avoid problem with IsAssignableFrom falsly returning false
+                //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
+                if (typeof(IPluginClass).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
                 {
                     // Make an instance to ask for name
                     T instance = (T)Activator.CreateInstance(type);
                     if (pluginClassStore.TryGetValue(instance.Name, out PluginClass outPluginClass))
                     {
                         outPluginClass.InsertVersion(instance.Version, type);
+                        outPluginClass.Description = instance.Description;
+                        outPluginClass.Name = instance.Name;
                     }
                     else
                     {
-                        PluginClass pluginClass = new PluginClass(_retainOldVersions, instance.Description, instance.Version, type);
-                        pluginClassStore.Add(instance.Name, pluginClass);
+                        PluginClass pluginClass = new PluginClass(_retainOldVersions, instance.Name, instance.Description, instance.Version, type);
+                        pluginClassStore.TryAdd(instance.Name, pluginClass);
                     }
                 }
             }
@@ -104,7 +135,8 @@ namespace DevelApp.RuntimePluggableClassFactory
             {
                 if (pluginClass.TryGetVersion(version, out Type type))
                 {
-                    return (T)Activator.CreateInstance(type);
+                    IPluginClass pluginClassInstance = (IPluginClass) Activator.CreateInstance(type);
+                    return (T)pluginClassInstance;
                 }
                 else
                 {
@@ -120,17 +152,41 @@ namespace DevelApp.RuntimePluggableClassFactory
         private sealed class PluginClass
         {
             private int _retainOldVersions;
-            internal PluginClass(int retainOldVersions, string description, int version, Type type)
+            internal PluginClass(int retainOldVersions, string name, string description, int version, Type type)
             {
                 _retainOldVersions = retainOldVersions;
+                Name = name;
                 Description = description;
                 InsertVersion(version, type);
             }
 
-            private Dictionary<int, Type> pluginVersions = new Dictionary<int, Type>();
+            private ConcurrentDictionary<int, Type> pluginVersions = new ConcurrentDictionary<int, Type>();
 
-            internal string Description { get; }
+            /// <summary>
+            /// The name of the plugin.
+            /// </summary>
+            internal string Name { get; set; }
 
+            /// <summary>
+            /// The description of the plugin. Always containing the version last added plugin (assumed to be the newest)
+            /// </summary>
+            internal string Description { get; set; }
+
+            /// <summary>
+            /// Returns all the version numbers stored
+            /// </summary>
+            public List<int> Versions
+            {
+                get
+                {
+                    return pluginVersions.Keys.ToList();
+                }
+            }
+
+            /// <summary>
+            /// Returns the newest version in the store
+            /// </summary>
+            /// <returns></returns>
             internal Type GetNewestVersion()
             {
                 if (pluginVersions.Count == 0)
@@ -147,6 +203,13 @@ namespace DevelApp.RuntimePluggableClassFactory
                     throw new PluginClassFactoryException("Somehow the higest version of plugin was not there");
                 }
             }
+
+            /// <summary>
+            /// Tries to get a specific version 
+            /// </summary>
+            /// <param name="version"></param>
+            /// <param name="type"></param>
+            /// <returns></returns>
             internal bool TryGetVersion(int version, out Type type)
             {
                 if (pluginVersions.Count == 0)
@@ -165,7 +228,13 @@ namespace DevelApp.RuntimePluggableClassFactory
                 }
             }
 
-            internal void InsertVersion(int version, Type type)
+            /// <summary>
+            /// Inserts a version and removes versions that should not be retained
+            /// </summary>
+            /// <param name="version"></param>
+            /// <param name="type"></param>
+            /// <returns></returns>
+            internal bool InsertVersion(int version, Type type)
             {
                 if(pluginVersions.ContainsKey(version))
                 {
@@ -174,12 +243,22 @@ namespace DevelApp.RuntimePluggableClassFactory
                 else
                 {
                     //Delete old versions if not retaining them
-                    pluginVersions.Add(version, type);
-                    foreach(int deletableVersion in pluginVersions.Keys.Where(s=>s + _retainOldVersions < version))
+                    if (pluginVersions.TryAdd(version, type))
                     {
-                        pluginVersions.Remove(deletableVersion);
+                        foreach (int deletableVersion in pluginVersions.Keys.Where(s => s + _retainOldVersions < version))
+                        {
+                            if (pluginVersions.Remove(deletableVersion, out Type value))
+                            {
+                                //TODO Log removed type or use as observable
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
+                return true;
             }
         }
     }
