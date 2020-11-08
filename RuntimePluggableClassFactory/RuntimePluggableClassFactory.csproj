@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>DevelApp.RuntimePluggableClassFactory</AssemblyName>
+    <RootNamespace>DevelApp.RuntimePluggableClassFactory</RootNamespace>
+    <Authors>Lars Shakya Buch-Jepsen</Authors>
+    <Copyright>Copyright © DevelApp 2020</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Company>DevelApp Denmark (CVR 33211740)</Company>
+    <Description>RuntimePluggableClassFactory that loads classes from provided assemblies having a specific interface</Description>
+    <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
+  </ItemGroup>
+
+</Project>

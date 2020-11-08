@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>DevelApp.RuntimePluggableClassFactory.Interface</AssemblyName>
+    <RootNamespace>DevelApp.RuntimePluggableClassFactory.Interface</RootNamespace>
+    <Authors>Lars Shakya Buch-Jepsen</Authors>
+    <Company>DevelApp Denmark (CVR 33211740)</Company>
+    <Description>Base interface for RuntimePluggableClassFactory
+
+RuntimePluggableClassFactory that loads classes from provided assemblies having a specific interface</Description>
+    <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>Copyright © DevelApp 2020</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
