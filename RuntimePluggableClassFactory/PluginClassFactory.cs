@@ -11,6 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace DevelApp.RuntimePluggableClassFactory
 {
+    //TODO Link pluginclass version to plugin files
+    //TODO Example project to make single dll output with references internalized Fody ? Otherwise compressed zip deployment with definition file
     public class PluginClassFactory<T> where T : IPluginClass
     {
         public PluginClassFactory(int retainOldVersions)
@@ -108,7 +110,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                     T instance = (T)instanceObject;
                     if (pluginClassStore.TryGetValue(instance.Name, out PluginClass outPluginClass))
                     {
-                        outPluginClass.InsertVersion(instance.Version, type);
+                        outPluginClass.UpsertVersion(instance.Version, type);
                         outPluginClass.Description = instance.Description;
                         outPluginClass.Name = instance.Name;
                     }
@@ -170,7 +172,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 _retainOldVersions = retainOldVersions;
                 Name = name;
                 Description = description;
-                InsertVersion(version, type);
+                UpsertVersion(version, type);
             }
 
             private ConcurrentDictionary<int, Type> pluginVersions = new ConcurrentDictionary<int, Type>();
@@ -247,7 +249,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             /// <param name="version"></param>
             /// <param name="type"></param>
             /// <returns></returns>
-            internal bool InsertVersion(int version, Type type)
+            internal bool UpsertVersion(int version, Type type)
             {
                 if(pluginVersions.ContainsKey(version))
                 {
@@ -258,7 +260,9 @@ namespace DevelApp.RuntimePluggableClassFactory
                     //Delete old versions if not retaining them
                     if (pluginVersions.TryAdd(version, type))
                     {
-                        foreach (int deletableVersion in pluginVersions.Keys.Where(s => s + _retainOldVersions < version))
+                        List<int> retainKeys = pluginVersions.Keys.OrderByDescending(s => s).Take(_retainOldVersions).ToList();
+
+                        foreach (int deletableVersion in pluginVersions.Keys.Where(s => !retainKeys.Contains(s)))
                         {
                             if (pluginVersions.Remove(deletableVersion, out Type value))
                             {
