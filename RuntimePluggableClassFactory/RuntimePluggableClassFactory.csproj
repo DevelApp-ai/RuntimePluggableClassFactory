@@ -11,7 +11,8 @@
     <Description>RuntimePluggableClassFactory that loads classes from provided assemblies having a specific interface</Description>
     <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
     <Version>1.0.3</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>

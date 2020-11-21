@@ -13,7 +13,8 @@ RuntimePluggableClassFactory that loads classes from provided assemblies having 
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright © DevelApp 2020</Copyright>
     <Version>1.0.2</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
