@@ -13,7 +13,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.3" />
+    <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.4" />
   </ItemGroup>
 
 </Project>

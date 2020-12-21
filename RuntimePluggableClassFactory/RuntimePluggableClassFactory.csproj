@@ -10,7 +10,7 @@
     <Company>DevelApp Denmark (CVR 33211740)</Company>
     <Description>RuntimePluggableClassFactory that loads classes from provided assemblies having a specific interface</Description>
     <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.3" />
+    <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.4" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 

@@ -1,4 +1,5 @@
 ﻿using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.Utility.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// Returns all plugins of interface T currently in the store
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<(string Name, string Description, List<int> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
+        public IEnumerable<(string Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
         {
             foreach(PluginClass pluginClass in pluginClassStore.Values)
             {
@@ -145,7 +146,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(string name, int version)
+        public T GetInstance(string name, SemanticVersionNumber version)
         {
             if (pluginClassStore.TryGetValue(name, out PluginClass pluginClass))
             {
@@ -167,7 +168,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         private sealed class PluginClass
         {
             private int _retainOldVersions;
-            internal PluginClass(int retainOldVersions, string name, string description, int version, Type type)
+            internal PluginClass(int retainOldVersions, string name, string description, SemanticVersionNumber version, Type type)
             {
                 _retainOldVersions = retainOldVersions;
                 Name = name;
@@ -175,7 +176,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 UpsertVersion(version, type);
             }
 
-            private ConcurrentDictionary<int, Type> pluginVersions = new ConcurrentDictionary<int, Type>();
+            private ConcurrentDictionary<SemanticVersionNumber, Type> pluginVersions = new ConcurrentDictionary<SemanticVersionNumber, Type>();
 
             /// <summary>
             /// The name of the plugin.
@@ -190,7 +191,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             /// <summary>
             /// Returns all the version numbers stored
             /// </summary>
-            public List<int> Versions
+            public List<SemanticVersionNumber> Versions
             {
                 get
                 {
@@ -208,7 +209,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 {
                     throw new PluginClassFactoryException("Somehow there is no plugin versions");
                 }
-                int highestKey = pluginVersions.Keys.Max();
+                SemanticVersionNumber highestKey = pluginVersions.Keys.Max();
                 if (TryGetVersion(highestKey, out Type type))
                 {
                     return type;
@@ -225,7 +226,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             /// <param name="version"></param>
             /// <param name="type"></param>
             /// <returns></returns>
-            internal bool TryGetVersion(int version, out Type type)
+            internal bool TryGetVersion(SemanticVersionNumber version, out Type type)
             {
                 if (pluginVersions.Count == 0)
                 {
@@ -249,7 +250,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             /// <param name="version"></param>
             /// <param name="type"></param>
             /// <returns></returns>
-            internal bool UpsertVersion(int version, Type type)
+            internal bool UpsertVersion(SemanticVersionNumber version, Type type)
             {
                 if(pluginVersions.ContainsKey(version))
                 {
@@ -260,9 +261,9 @@ namespace DevelApp.RuntimePluggableClassFactory
                     //Delete old versions if not retaining them
                     if (pluginVersions.TryAdd(version, type))
                     {
-                        List<int> retainKeys = pluginVersions.Keys.OrderByDescending(s => s).Take(_retainOldVersions).ToList();
+                        List<SemanticVersionNumber> retainKeys = pluginVersions.Keys.OrderByDescending(s => s).Take(_retainOldVersions).ToList();
 
-                        foreach (int deletableVersion in pluginVersions.Keys.Where(s => !retainKeys.Contains(s)))
+                        foreach (SemanticVersionNumber deletableVersion in pluginVersions.Keys.Where(s => !retainKeys.Contains(s)))
                         {
                             if (pluginVersions.Remove(deletableVersion, out Type value))
                             {
