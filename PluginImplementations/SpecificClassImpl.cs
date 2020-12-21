@@ -9,7 +9,7 @@ namespace PluginImplementations
         {
             get
             {
-                return GetType().FullName;
+                return GetType().Name;
             }
         }
 
@@ -48,7 +48,7 @@ namespace PluginImplementations
         {
             get
             {
-                return GetType().FullName;
+                return GetType().Name;
             }
         }
 
@@ -88,7 +88,7 @@ namespace PluginImplementations
         {
             get
             {
-                return GetType().FullName;
+                return GetType().Name;
             }
         }
 
@@ -127,7 +127,7 @@ namespace PluginImplementations
         {
             get
             {
-                return GetType().FullName;
+                return GetType().Name;
             }
         }
 

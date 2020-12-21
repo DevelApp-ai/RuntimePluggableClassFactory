@@ -1,5 +1,6 @@
 ﻿using DevelApp.RuntimePluggableClassFactory;
 using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.Utility.Model;
 using PluginImplementations;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace TestConsole
             }
             Console.WriteLine("End of instances");
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("PluginImplementations.SpecificClassImpl", 1);
+            ISpecificInterface instance = pluginClassFactory.GetInstance("SpecificClassImpl", "1.2.1");
 
             if (!instance.Execute("Mønster"))
             {
@@ -43,10 +44,10 @@ namespace TestConsole
             Console.ReadLine();
        }
 
-        private static string ListToString(List<int> versions)
+        private static string ListToString(List<SemanticVersionNumber> versions)
         {
             string list = string.Empty;
-            foreach(int version in versions)
+            foreach(SemanticVersionNumber version in versions)
             {
                 if(!list.Equals(string.Empty))
                 {
