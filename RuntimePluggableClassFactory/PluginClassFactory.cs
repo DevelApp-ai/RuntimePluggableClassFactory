@@ -64,7 +64,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPathUri.AbsolutePath);
 
             // Load from each assembly in folder
-            foreach (string fileName in Directory.GetFiles(pluginPathUri.AbsolutePath, "*.dll", SearchOption.TopDirectoryOnly))
+            foreach (string fileName in Directory.GetFiles(pluginPathUri.AbsolutePath, "*.dll", SearchOption.AllDirectories))
             {
                 //TODO check if assembly certificate is valid to improve security
 
@@ -99,13 +99,13 @@ namespace DevelApp.RuntimePluggableClassFactory
                     object instanceObject = Activator.CreateInstance(type);
 
                     //Assembly debug
-                    //Assembly pluginAssemblyT = typeof(T).Assembly;
-                    //Assembly pluginAssemblyType = type.Assembly;
-                    //Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
+                    Assembly pluginAssemblyT = typeof(T).Assembly;
+                    Assembly pluginAssemblyType = type.Assembly;
+                    Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
 
-                    //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
-                    //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(type.Assembly);
-                    //System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
+                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
+                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(type.Assembly);
+                    System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
                     //End Assembly debug
 
                     T instance = (T)instanceObject;

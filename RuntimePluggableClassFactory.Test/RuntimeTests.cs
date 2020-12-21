@@ -14,7 +14,8 @@ namespace RuntimePluggableClassFactory.Test
         {
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(retainOldVersions: 10);
 
-            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + 
+                Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -33,7 +34,8 @@ namespace RuntimePluggableClassFactory.Test
         {
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(retainOldVersions: 10);
 
-            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + 
+                Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -52,7 +54,8 @@ namespace RuntimePluggableClassFactory.Test
         {
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(retainOldVersions: 10);
 
-            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + 
+                Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -71,7 +74,8 @@ namespace RuntimePluggableClassFactory.Test
         {
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(retainOldVersions: 10);
 
-            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+            string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + 
+                Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);

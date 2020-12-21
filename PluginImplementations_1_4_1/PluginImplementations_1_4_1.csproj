@@ -2,14 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>1.4.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath></OutputPath>
   </PropertyGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder\$(ProjectName)\&quot;" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
   </ItemGroup>
 
 </Project>
