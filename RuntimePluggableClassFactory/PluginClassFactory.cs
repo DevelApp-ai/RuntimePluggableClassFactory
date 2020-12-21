@@ -99,13 +99,13 @@ namespace DevelApp.RuntimePluggableClassFactory
                     object instanceObject = Activator.CreateInstance(type);
 
                     //Assembly debug
-                    Assembly pluginAssemblyT = typeof(T).Assembly;
-                    Assembly pluginAssemblyType = type.Assembly;
-                    Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
+                    //Assembly pluginAssemblyT = typeof(T).Assembly;
+                    //Assembly pluginAssemblyType = type.Assembly;
+                    //Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
 
-                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
-                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(type.Assembly);
-                    System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
+                    //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
+                    //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(type.Assembly);
+                    //System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
                     //End Assembly debug
 
                     T instance = (T)instanceObject;

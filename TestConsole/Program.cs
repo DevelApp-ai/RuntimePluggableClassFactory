@@ -13,6 +13,8 @@ namespace TestConsole
         static void Main(string[] args)
         {
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(retainOldVersions: 10);
+
+
             Uri pluginDirectory = new Uri("file:///E:/Projects/RuntimePluggableClassFactory/PluginFolder", UriKind.Absolute);
             if (!Directory.Exists(pluginDirectory.AbsolutePath))
             {
@@ -29,6 +31,8 @@ namespace TestConsole
             }
             Console.WriteLine("End of instances");
 
+            #region Test 1.2.1
+
             ISpecificInterface instance = pluginClassFactory.GetInstance("SpecificClassImpl", "1.2.1");
 
             if (!instance.Execute("Mønster"))
@@ -39,6 +43,53 @@ namespace TestConsole
             {
                 Console.WriteLine("Result is Yay");
             }
+
+            #endregion
+
+            #region Test 1.2.2
+
+            ISpecificInterface instance2 = pluginClassFactory.GetInstance("SpecificClassImpl", "1.2.2");
+
+            if (!instance2.Execute("Mønster"))
+            {
+                Console.WriteLine("Result is Nay");
+            }
+            if (instance2.Execute("Monster"))
+            {
+                Console.WriteLine("Result is Yay");
+            }
+
+            #endregion
+
+            #region Test 1.3.1
+
+            ISpecificInterface instance3 = pluginClassFactory.GetInstance("SpecificClassImpl", "1.3.1");
+
+            if (!instance.Execute("Mønster"))
+            {
+                Console.WriteLine("Result is Nay");
+            }
+            if (instance.Execute("SnuggleMonster"))
+            {
+                Console.WriteLine("Result is Yay");
+            }
+
+            #endregion
+
+            #region Test 1.4.1
+
+            ISpecificInterface instance4 = pluginClassFactory.GetInstance("SpecificClassImpl", "1.4.1");
+
+            if (!instance.Execute("Mønster"))
+            {
+                Console.WriteLine("Result is Nay");
+            }
+            if (instance.Execute("CookieMonster"))
+            {
+                Console.WriteLine("Result is Yay");
+            }
+
+            #endregion
 
             Console.WriteLine("Finished. Press Any key to continue (Only [Enter] works though)");
             Console.ReadLine();
