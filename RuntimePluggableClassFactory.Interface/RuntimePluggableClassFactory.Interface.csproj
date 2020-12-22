@@ -12,8 +12,9 @@ RuntimePluggableClassFactory that loads classes from provided assemblies having 
     <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright © DevelApp 2020</Copyright>
-    <Version>1.0.2</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.4</Version>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,10 @@ RuntimePluggableClassFactory that loads classes from provided assemblies having 
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DevelApp.Utility" Version="1.0.7" />
   </ItemGroup>
 
 </Project>
