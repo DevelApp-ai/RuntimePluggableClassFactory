@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder\$(ProjectName)\&quot;" />
+    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder$([System.IO.Path]::DirectorySeparatorChar)$(ProjectName)$([System.IO.Path]::DirectorySeparatorChar)&quot;" />
   </Target>
 
   <ItemGroup>
