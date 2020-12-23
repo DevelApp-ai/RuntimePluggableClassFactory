@@ -17,11 +17,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
+    <ProjectReference Include="..\RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
-    <ProjectReference Include="..\RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj" />
   </ItemGroup>
+
 
 </Project>

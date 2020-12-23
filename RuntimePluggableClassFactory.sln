@@ -5,15 +5,13 @@ VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimePluggableClassFactory", "RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj", "{313C2F90-A65E-4A92-B9E5-9DAD052DF9CC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{4008719C-7E2C-41B3-A8E9-281CDA1C714A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginImplementations", "PluginImplementations\PluginImplementations.csproj", "{5A1DDE57-99A5-429B-BCB8-2194512A56A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimePluggableClassFactory.Interface", "RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj", "{E62A4F0C-E9A1-40C5-AD13-1AF5546AD734}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PluginFolder", "PluginFolder", "{F9A2B657-FA55-41CB-84EF-B0CB6236EE43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimePluggableClassFactory.Test", "RuntimePluggableClassFactory.Test\RuntimePluggableClassFactory.Test.csproj", "{C99F3A59-90A0-401D-8854-5388C2A4768D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimePluggableClassFactory.Test", "RuntimePluggableClassFactory.Test\RuntimePluggableClassFactory.Test.csproj", "{C99F3A59-90A0-401D-8854-5388C2A4768D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +23,6 @@ Global
 		{313C2F90-A65E-4A92-B9E5-9DAD052DF9CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{313C2F90-A65E-4A92-B9E5-9DAD052DF9CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{313C2F90-A65E-4A92-B9E5-9DAD052DF9CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4008719C-7E2C-41B3-A8E9-281CDA1C714A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4008719C-7E2C-41B3-A8E9-281CDA1C714A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4008719C-7E2C-41B3-A8E9-281CDA1C714A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4008719C-7E2C-41B3-A8E9-281CDA1C714A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5A1DDE57-99A5-429B-BCB8-2194512A56A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5A1DDE57-99A5-429B-BCB8-2194512A56A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A1DDE57-99A5-429B-BCB8-2194512A56A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
