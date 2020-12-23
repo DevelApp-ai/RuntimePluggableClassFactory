@@ -29,18 +29,18 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// Returns all plugins of interface T currently in the store
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<(string Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
+        public IEnumerable<(string ModuleName, string Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
         {
             foreach(PluginClass pluginClass in pluginClassStore.Values)
             {
-                yield return (Name: pluginClass.Name, Description: pluginClass.Description, Versions: pluginClass.Versions);
+                yield return (ModuleName: pluginClass.ModuleName, Name: pluginClass.Name, Description: pluginClass.Description, Versions: pluginClass.Versions);
             }
         }
 
         /// <summary>
         /// Stores the types for the factory
         /// </summary>
-        private ConcurrentDictionary<string, PluginClass> pluginClassStore = new ConcurrentDictionary<string, PluginClass>();
+        private ConcurrentDictionary<(string moduleName, string name), PluginClass> pluginClassStore = new ConcurrentDictionary<(string moduleName, string name), PluginClass>();
 
         private int _retainOldVersions;
 
@@ -109,16 +109,17 @@ namespace DevelApp.RuntimePluggableClassFactory
                     //End Assembly debug
 
                     T instance = (T)instanceObject;
-                    if (pluginClassStore.TryGetValue(instance.Name, out PluginClass outPluginClass))
+                    if (pluginClassStore.TryGetValue((instance.Module.ToString(), instance.Name), out PluginClass outPluginClass))
                     {
                         outPluginClass.UpsertVersion(instance.Version, type);
                         outPluginClass.Description = instance.Description;
                         outPluginClass.Name = instance.Name;
+                        outPluginClass.ModuleName = instance.Module.ToString();
                     }
                     else
                     {
-                        PluginClass pluginClass = new PluginClass(_retainOldVersions, instance.Name, instance.Description, instance.Version, type);
-                        pluginClassStore.TryAdd(instance.Name, pluginClass);
+                        PluginClass pluginClass = new PluginClass(_retainOldVersions, instance.Module.ToString(), instance.Name, instance.Description, instance.Version, type);
+                        pluginClassStore.TryAdd((instance.Module.ToString(), instance.Name), pluginClass);
                     }
                 }
             }
@@ -129,9 +130,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(string name)
+        public T GetInstance(string moduleName, string name)
         {
-            if (pluginClassStore.TryGetValue(name, out PluginClass pluginClass))
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
             {
                 return (T)Activator.CreateInstance(pluginClass.GetNewestVersion());
             }
@@ -146,9 +147,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(string name, SemanticVersionNumber version)
+        public T GetInstance(string moduleName, string name, SemanticVersionNumber version)
         {
-            if (pluginClassStore.TryGetValue(name, out PluginClass pluginClass))
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
             {
                 if (pluginClass.TryGetVersion(version, out Type type))
                 {
@@ -168,15 +169,18 @@ namespace DevelApp.RuntimePluggableClassFactory
         private sealed class PluginClass
         {
             private int _retainOldVersions;
-            internal PluginClass(int retainOldVersions, string name, string description, SemanticVersionNumber version, Type type)
+            internal PluginClass(int retainOldVersions, string moduleName, string name, string description, SemanticVersionNumber version, Type type)
             {
                 _retainOldVersions = retainOldVersions;
+                ModuleName = moduleName;
                 Name = name;
                 Description = description;
                 UpsertVersion(version, type);
             }
 
             private ConcurrentDictionary<SemanticVersionNumber, Type> pluginVersions = new ConcurrentDictionary<SemanticVersionNumber, Type>();
+
+            internal string ModuleName { get; set; }
 
             /// <summary>
             /// The name of the plugin.
