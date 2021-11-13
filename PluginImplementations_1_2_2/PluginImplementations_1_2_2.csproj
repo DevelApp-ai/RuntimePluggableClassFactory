@@ -14,10 +14,6 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="DevelApp.RuntimePluggableClassFactory.Interface" Version="1.0.4" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
   </ItemGroup>
 

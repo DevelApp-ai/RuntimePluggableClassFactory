@@ -23,7 +23,7 @@ namespace RuntimePluggableClassFactory.Test
 
             pluginClassFactory.LoadFromDirectory(pluginDirectory);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("SpecificClassImpl", "1.2.1");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl", "1.2.1");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("Monster"));
 
@@ -43,7 +43,7 @@ namespace RuntimePluggableClassFactory.Test
 
             pluginClassFactory.LoadFromDirectory(pluginDirectory);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("SpecificClassImpl", "1.2.2");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl2", "1.2.2");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("Monster"));
 
@@ -63,7 +63,7 @@ namespace RuntimePluggableClassFactory.Test
 
             pluginClassFactory.LoadFromDirectory(pluginDirectory);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("SpecificClassImpl", "1.3.1");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl3", "1.3.1");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("SnuggleMonster"));
 
@@ -83,7 +83,7 @@ namespace RuntimePluggableClassFactory.Test
 
             pluginClassFactory.LoadFromDirectory(pluginDirectory);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("SpecificClassImpl", "1.4.1");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl4", "1.4.1");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("CookieMonster"));
 

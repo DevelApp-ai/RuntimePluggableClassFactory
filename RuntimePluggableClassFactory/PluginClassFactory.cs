@@ -31,7 +31,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <returns></returns>
         public IEnumerable<(string ModuleName, string Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
         {
-            foreach(PluginClass pluginClass in pluginClassStore.Values)
+            foreach (PluginClass pluginClass in pluginClassStore.Values)
             {
                 yield return (ModuleName: pluginClass.ModuleName, Name: pluginClass.Name, Description: pluginClass.Description, Versions: pluginClass.Versions);
             }
@@ -51,7 +51,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <returns></returns>
         public void LoadFromDirectory(Uri pluginPathUri)
         {
-            if(!pluginPathUri.IsAbsoluteUri)
+            if (!pluginPathUri.IsAbsoluteUri)
             {
                 throw new PluginClassFactoryException($"The supplied uri in {nameof(pluginPathUri)} is not an absolute uri but is required to be");
             }
@@ -72,7 +72,7 @@ namespace DevelApp.RuntimePluggableClassFactory
 
                 //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not useful
                 Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
-                if(defaultAssembly != null)
+                if (defaultAssembly != null)
                 {
                     assembly = defaultAssembly;
                 }
@@ -256,7 +256,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             /// <returns></returns>
             internal bool UpsertVersion(SemanticVersionNumber version, Type type)
             {
-                if(pluginVersions.ContainsKey(version))
+                if (pluginVersions.ContainsKey(version))
                 {
                     pluginVersions[version] = type;
                 }
