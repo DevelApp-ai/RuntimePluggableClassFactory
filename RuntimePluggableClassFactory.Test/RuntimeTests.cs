@@ -107,8 +107,10 @@ namespace RuntimePluggableClassFactory.Test
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
+            //TODO test output
             var allLocated = pluginClassFactory.GetPossiblePlugins();
 
+            //TODO test output
             var allClassfactoryContents = pluginClassFactory.GetAllInstanceNamesDescriptionsAndVersions();
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
