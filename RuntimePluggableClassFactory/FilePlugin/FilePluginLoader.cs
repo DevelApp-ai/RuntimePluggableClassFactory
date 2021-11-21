@@ -45,31 +45,85 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// </summary>
         /// <param name="allowedPlugins"></param>
         /// <returns></returns>
-        public IEnumerable<Type> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins)
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins)
         {
+            List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> filteredList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
 
-            //Isolate plugins from other parts of the program
-            PluginLoadContext pluginLoadContext = new PluginLoadContext(_pluginPathUri.AbsolutePath);
-
-            // Load from each assembly in folder
-            foreach (string fileName in Directory.GetFiles(_pluginPathUri.AbsolutePath, "*.dll", SearchOption.AllDirectories))
+            foreach (var tuple in await LoadUnfilteredPluginsAsync())
             {
-                //TODO check if assembly certificate is valid to improve security
-
-                Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
-
-                //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not useful
-                Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
-                if (defaultAssembly != null)
+                //filter based on allowed plugins   
+                if (allowedPlugins.Contains((tuple.ModuleName, tuple.PluginName, tuple.Version)))
                 {
-                    assembly = defaultAssembly;
-                }
-
-                foreach (Type identifiedType in LoadFromAssembly(assembly))
-                {
-                    yield return identifiedType;
+                    filteredList.Add((tuple.ModuleName, tuple.PluginName, tuple.Version, tuple.Description, tuple.Type));
                 }
             }
+
+            return filteredList;
+        }
+
+        /// <summary>
+        /// Loads all assemblies from the pluginPath and returns all types from IPluginClass
+        /// </summary>
+        /// <returns></returns>
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        private async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadUnfilteredPluginsAsync()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        {
+            List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> typeList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
+
+            // Isolate plugin context per subfolder
+            foreach (string pluginSubfolder in Directory.GetDirectories(_pluginPathUri.AbsolutePath))
+            {
+                //Isolate plugins from other parts of the program
+                PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginSubfolder);
+
+                // Load from each assembly in folder
+                foreach (string fileName in Directory.GetFiles(pluginSubfolder, "*.dll", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+
+                        //TODO check if assembly certificate is valid to improve security
+
+                        Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
+
+                        //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not useful
+                        Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
+                        if (defaultAssembly != null)
+                        {
+                            assembly = defaultAssembly;
+                        }
+
+                        foreach (Type identifiedType in LoadFromAssembly(assembly))
+                        {
+                            //Assembly debug
+                            //Assembly pluginAssemblyT = typeof(T).Assembly;
+                            //Assembly pluginAssemblyType = pluginType.Assembly;
+                            //Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
+
+                            //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
+                            //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(pluginType.Assembly);
+                            //System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
+                            //End Assembly debug
+
+
+                            //TODO filter for T interface
+                            //TODO Here be dragons. We create an instance before the instance is accepted
+                            //TODO solution assembly embedded file containing ModuleName, PluginName, Version, Description ?
+                            IPluginClass identifiedTypeInstance = Activator.CreateInstance(identifiedType) as IPluginClass;
+                            if (identifiedTypeInstance != null)
+                            {
+                                typeList.Add((identifiedTypeInstance.Module, identifiedTypeInstance.Name, identifiedTypeInstance.Version, identifiedTypeInstance.Description, identifiedType));
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        //TODO add logging reject reason
+                    }
+                }
+            }
+            return typeList;
         }
 
         /// <summary>
@@ -77,7 +131,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        public IEnumerable<Type> LoadFromAssembly(Assembly assembly)
+        private IEnumerable<Type> LoadFromAssembly(Assembly assembly)
         {
             // Return each T for IPluginClass
             foreach (Type type in assembly.GetTypes())
@@ -95,9 +149,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// Returns all possible plugins located in the file folder
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version)> ListAllPossiblePlugins()
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync()
         {
-            throw new NotImplementedException();
+            return await LoadUnfilteredPluginsAsync();
         }
     }
 }

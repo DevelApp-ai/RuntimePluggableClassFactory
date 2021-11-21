@@ -53,9 +53,9 @@ namespace DevelApp.RuntimePluggableClassFactory
             RemovePluginClassVersion(moduleName, pluginName, version);
         }
 
-        public IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version)> GetPossiblePlugins()
+        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string Description, Type Type)>> GetPossiblePlugins()
         {
-            return PluginLoader.ListAllPossiblePlugins();
+            return await PluginLoader.ListAllPossiblePluginsAsync();
         }
 
         public PluginClassFactory(IPluginLoader pluginLoader, int retainOldVersions = 1)
@@ -87,45 +87,29 @@ namespace DevelApp.RuntimePluggableClassFactory
 
         private int _retainOldVersions;
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<(bool Success,int Count)> RefreshPluginsAsync()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             try
             {
-                IEnumerable<Type> pluginTypes = PluginLoader.LoadPluginsAsync(_allowedPlugins);
-                foreach (Type pluginType in pluginTypes)
+                var pluginTypeTuples = await PluginLoader.LoadPluginsAsync(_allowedPlugins);
+                foreach (var pluginTypeTuple in pluginTypeTuples)
                 {
-                    // Make an instance to ask for name
-                    object instanceObject = Activator.CreateInstance(pluginType);
-
-                    //Assembly debug
-                    Assembly pluginAssemblyT = typeof(T).Assembly;
-                    Assembly pluginAssemblyType = pluginType.Assembly;
-                    Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
-
-                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
-                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(pluginType.Assembly);
-                    System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
-                    //End Assembly debug
-
-                    T instance = (T)instanceObject;
-                    if (pluginClassStore.TryGetValue((instance.Module.ToString(), instance.Name), out PluginClass outPluginClass))
+                    if (pluginClassStore.TryGetValue((pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName), out PluginClass outPluginClass))
                     {
-                        outPluginClass.UpsertVersion(instance.Version, pluginType);
-                        outPluginClass.Description = instance.Description;
-                        outPluginClass.Name = instance.Name;
-                        outPluginClass.ModuleName = instance.Module.ToString();
+                        outPluginClass.UpsertVersion(pluginTypeTuple.Version, pluginTypeTuple.Type);
+                        outPluginClass.Description = pluginTypeTuple.Description;
+                        outPluginClass.Name = pluginTypeTuple.PluginName;
+                        outPluginClass.ModuleName = pluginTypeTuple.ModuleName;
                     }
                     else
                     {
-                        PluginClass pluginClass = new PluginClass(_retainOldVersions, instance.Module.ToString(), instance.Name, instance.Description, instance.Version, pluginType);
-                        pluginClassStore.TryAdd((instance.Module.ToString(), instance.Name), pluginClass);
+                        PluginClass pluginClass = new PluginClass(_retainOldVersions, pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName, pluginTypeTuple.Description, pluginTypeTuple.Version, pluginTypeTuple.Type);
+                        pluginClassStore.TryAdd((pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName), pluginClass);
                     }
                 }
-                return (true, pluginTypes.Count());
+                return (true, pluginTypeTuples.Count());
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //Log.Error(ex, "RefreshPluginsAsync failed");
                 return (false, 0);

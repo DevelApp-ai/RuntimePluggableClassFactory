@@ -14,12 +14,12 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="allowedPlugins"></param>
         /// <returns></returns>
-        IEnumerable<Type> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins);
+        Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins);
 
         /// <summary>
         /// Lists all identified plugins
         /// </summary>
         /// <returns></returns>
-        IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version)> ListAllPossiblePlugins();
+        Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync();
     }
 }
