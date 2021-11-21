@@ -14,6 +14,7 @@ namespace RuntimePluggableClassFactory.Test
         public void Test_1_2_1()
         {
             string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -23,9 +24,9 @@ namespace RuntimePluggableClassFactory.Test
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.4.1");
 
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
@@ -41,6 +42,7 @@ namespace RuntimePluggableClassFactory.Test
         public void Test_1_2_2()
         {
             string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -50,15 +52,15 @@ namespace RuntimePluggableClassFactory.Test
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.4.1");
 
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
             Assert.Equal(4, loadResult.Count);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl2", "1.2.2");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl", "1.2.2");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("Monster"));
 
@@ -68,6 +70,7 @@ namespace RuntimePluggableClassFactory.Test
         public void Test_1_3_1()
         {
             string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -77,15 +80,15 @@ namespace RuntimePluggableClassFactory.Test
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.4.1");
 
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
             Assert.Equal(4, loadResult.Count);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl3", "1.3.1");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl", "1.3.1");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("SnuggleMonster"));
 
@@ -95,6 +98,7 @@ namespace RuntimePluggableClassFactory.Test
         public void Test_1_4_1()
         {
             string pathString = ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + ".." + Path.DirectorySeparatorChar + "PluginFolder";
+
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
@@ -103,16 +107,20 @@ namespace RuntimePluggableClassFactory.Test
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
+            var allLocated = pluginClassFactory.GetPossiblePlugins();
+
+            var allClassfactoryContents = pluginClassFactory.GetAllInstanceNamesDescriptionsAndVersions();
+
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
-            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.4.1");
 
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
             Assert.Equal(4, loadResult.Count);
 
-            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl4", "1.4.1");
+            ISpecificInterface instance = pluginClassFactory.GetInstance("Test", "SpecificClassImpl", "1.4.1");
             Assert.False(instance.Execute("Mønster"));
             Assert.True(instance.Execute("CookieMonster"));
 

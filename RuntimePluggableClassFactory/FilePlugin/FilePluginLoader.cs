@@ -88,6 +88,8 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 
                         //TODO check if assembly certificate is valid to improve security
 
+                        //TODO exclude interface assembly from context loaded via typeof(T).Assembly.FullName
+
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
 
                         //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not needed and to avoid
@@ -112,6 +114,8 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 
                             //TODO Here be dragons. We create an instance before the instance is accepted
                             //TODO solution assembly embedded file containing ModuleName, PluginName, Version, Description via https://devblogs.microsoft.com/dotnet/new-c-source-generator-samples/
+                            //TODO examine if there is a need to exclude interface dll to avoid problem with IsAssignableFrom falsly returning false
+                            //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
                             if (typeof(T).IsAssignableFrom(identifiedType) && !identifiedType.IsAbstract && !identifiedType.IsInterface)
                             {
                                 T identifiedTypeInstance = (T)Activator.CreateInstance(identifiedType);
