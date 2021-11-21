@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory
 {
@@ -16,8 +17,9 @@ namespace DevelApp.RuntimePluggableClassFactory
     //TODO Example project to make single dll output with references internalized Fody ? Otherwise compressed zip deployment with definition file
     public class PluginClassFactory<T> where T : IPluginClass
     {
-        public PluginClassFactory(int retainOldVersions)
+        public PluginClassFactory(IPluginLoader<T> pluginLoader, int retainOldVersions = 1)
         {
+            PluginLoader = pluginLoader;
             _retainOldVersions = retainOldVersions;
             if (!typeof(T).IsInterface)
             {
@@ -26,10 +28,56 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
+        /// The configured plugin loader
+        /// </summary>
+        public IPluginLoader<T> PluginLoader { get; }
+
+        private List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version)> _allowedPlugins = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version)>();
+
+        /// <summary>
+        /// Allows a plugin to be loaded into the factory
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="pluginName"></param>
+        /// <param name="version"></param>
+        public void AllowPlugin(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version)
+        {
+            if (!_allowedPlugins.Contains((moduleName, pluginName, version)))
+            {
+                _allowedPlugins.Add((moduleName, pluginName, version));
+            }
+        }
+
+        /// <summary>
+        /// Disallows a plugin to be loaded into the factory
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="pluginName"></param>
+        /// <param name="version"></param>
+        public void DisallowPlugin(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version)
+        {
+            if (_allowedPlugins.Contains((moduleName, pluginName, version)))
+            {
+                _allowedPlugins.Remove((moduleName, pluginName, version));
+            }
+            RemovePluginClassVersion(moduleName, pluginName, version);
+        }
+
+        /// <summary>
+        /// Retuens identified plugins
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string Description, Type Type)>> GetPossiblePlugins()
+        {
+            return await PluginLoader.ListAllPossiblePluginsAsync();
+        }
+
+
+        /// <summary>
         /// Returns all plugins of interface T currently in the store
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<(string ModuleName, string Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
+        public IEnumerable<(NamespaceString ModuleName, IdentifierString Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
         {
             foreach (PluginClass pluginClass in pluginClassStore.Values)
             {
@@ -40,88 +88,36 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <summary>
         /// Stores the types for the factory
         /// </summary>
-        private ConcurrentDictionary<(string moduleName, string name), PluginClass> pluginClassStore = new ConcurrentDictionary<(string moduleName, string name), PluginClass>();
+        private ConcurrentDictionary<(NamespaceString moduleName, IdentifierString name), PluginClass> pluginClassStore = new ConcurrentDictionary<(NamespaceString moduleName, IdentifierString name), PluginClass>();
 
         private int _retainOldVersions;
 
-        /// <summary>
-        /// Loads all assemblies from the pluginPath and returns all non-abstract classes implementing interface T
-        /// </summary>
-        /// <param name="pluginPathUri"></param>
-        /// <returns></returns>
-        public void LoadFromDirectory(Uri pluginPathUri)
+        public async Task<(bool Success,int Count)> RefreshPluginsAsync()
         {
-            if (!pluginPathUri.IsAbsoluteUri)
+            try
             {
-                throw new PluginClassFactoryException($"The supplied uri in {nameof(pluginPathUri)} is not an absolute uri but is required to be");
-            }
-            if (!Directory.Exists(pluginPathUri.AbsolutePath))
-            {
-                throw new PluginClassFactoryException($"Directory {pluginPathUri.AbsolutePath} does not exist");
-            }
-
-            //Isolate plugins from other parts of the program
-            PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginPathUri.AbsolutePath);
-
-            // Load from each assembly in folder
-            foreach (string fileName in Directory.GetFiles(pluginPathUri.AbsolutePath, "*.dll", SearchOption.AllDirectories))
-            {
-                //TODO check if assembly certificate is valid to improve security
-
-                Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
-
-                //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not useful
-                Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
-                if (defaultAssembly != null)
+                var pluginTypeTuples = await PluginLoader.LoadPluginsAsync(_allowedPlugins);
+                foreach (var pluginTypeTuple in pluginTypeTuples)
                 {
-                    assembly = defaultAssembly;
-                }
-
-                LoadFromAssembly(assembly);
-            }
-        }
-
-        /// <summary>
-        /// Return all the non-abstract classes implementing interface T
-        /// </summary>
-        /// <param name="assembly"></param>
-        /// <returns></returns>
-        public void LoadFromAssembly(Assembly assembly)
-        {
-            // Return each T for IPluginClass
-            foreach (Type type in assembly.GetTypes())
-            {
-                //TODO examine if there is a need to exclude interface dll to avoid problem with IsAssignableFrom falsly returning false
-                //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
-                if (typeof(IPluginClass).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
-                {
-                    // Make an instance to ask for name
-                    object instanceObject = Activator.CreateInstance(type);
-
-                    //Assembly debug
-                    Assembly pluginAssemblyT = typeof(T).Assembly;
-                    Assembly pluginAssemblyType = type.Assembly;
-                    Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
-
-                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
-                    System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTypeLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(type.Assembly);
-                    System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
-                    //End Assembly debug
-
-                    T instance = (T)instanceObject;
-                    if (pluginClassStore.TryGetValue((instance.Module.ToString(), instance.Name), out PluginClass outPluginClass))
+                    if (pluginClassStore.TryGetValue((pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName), out PluginClass outPluginClass))
                     {
-                        outPluginClass.UpsertVersion(instance.Version, type);
-                        outPluginClass.Description = instance.Description;
-                        outPluginClass.Name = instance.Name;
-                        outPluginClass.ModuleName = instance.Module.ToString();
+                        outPluginClass.UpsertVersion(pluginTypeTuple.Version, pluginTypeTuple.Type);
+                        outPluginClass.Description = pluginTypeTuple.Description;
+                        outPluginClass.Name = pluginTypeTuple.PluginName;
+                        outPluginClass.ModuleName = pluginTypeTuple.ModuleName;
                     }
                     else
                     {
-                        PluginClass pluginClass = new PluginClass(_retainOldVersions, instance.Module.ToString(), instance.Name, instance.Description, instance.Version, type);
-                        pluginClassStore.TryAdd((instance.Module.ToString(), instance.Name), pluginClass);
+                        PluginClass pluginClass = new PluginClass(_retainOldVersions, pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName, pluginTypeTuple.Description, pluginTypeTuple.Version, pluginTypeTuple.Type);
+                        pluginClassStore.TryAdd((pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName), pluginClass);
                     }
                 }
+                return (true, pluginTypeTuples.Count());
+            }
+            catch (Exception)
+            {
+                //Log.Error(ex, "RefreshPluginsAsync failed");
+                return (false, 0);
             }
         }
 
@@ -130,7 +126,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(string moduleName, string name)
+        public T GetInstance(NamespaceString moduleName, IdentifierString name)
         {
             if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
             {
@@ -147,7 +143,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(string moduleName, string name, SemanticVersionNumber version)
+        public T GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
         {
             if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
             {
@@ -166,10 +162,24 @@ namespace DevelApp.RuntimePluggableClassFactory
             }
         }
 
+        /// <summary>
+        /// Removes the specific instance from the plugin class factory
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        internal void RemovePluginClassVersion(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
+        {
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
+            {
+                pluginClass.RemoveVersion(version);
+            }
+        }
+
         private sealed class PluginClass
         {
             private int _retainOldVersions;
-            internal PluginClass(int retainOldVersions, string moduleName, string name, string description, SemanticVersionNumber version, Type type)
+            internal PluginClass(int retainOldVersions, NamespaceString moduleName, IdentifierString name, string description, SemanticVersionNumber version, Type type)
             {
                 _retainOldVersions = retainOldVersions;
                 ModuleName = moduleName;
@@ -180,12 +190,12 @@ namespace DevelApp.RuntimePluggableClassFactory
 
             private ConcurrentDictionary<SemanticVersionNumber, Type> pluginVersions = new ConcurrentDictionary<SemanticVersionNumber, Type>();
 
-            internal string ModuleName { get; set; }
+            internal NamespaceString ModuleName { get; set; }
 
             /// <summary>
             /// The name of the plugin.
             /// </summary>
-            internal string Name { get; set; }
+            internal IdentifierString Name { get; set; }
 
             /// <summary>
             /// The description of the plugin. Always containing the version last added plugin (assumed to be the newest)
@@ -281,6 +291,18 @@ namespace DevelApp.RuntimePluggableClassFactory
                     }
                 }
                 return true;
+            }
+
+            /// <summary>
+            /// Removes a specific version if existing
+            /// </summary>
+            /// <param name="version"></param>
+            internal void RemoveVersion(SemanticVersionNumber version)
+            {
+                if (pluginVersions.ContainsKey(version))
+                {
+                    pluginVersions.Remove(version, out Type ignoredType);
+                }
             }
         }
     }
