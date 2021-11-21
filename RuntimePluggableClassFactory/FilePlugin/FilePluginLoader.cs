@@ -20,6 +20,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 
         private Uri _pluginPathUri;
 
+        /// <summary>
+        /// Url for the plugin path used
+        /// </summary>
         public Uri PluginPathUri
         {
             get
@@ -87,7 +90,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
 
-                        //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not useful
+                        //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not needed and to avoid
                         Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
                         if (defaultAssembly != null)
                         {
@@ -98,7 +101,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                         {
                             //Assembly debug
                             //Assembly pluginAssemblyT = typeof(T).Assembly;
-                            //Assembly pluginAssemblyType = pluginType.Assembly;
+                            //Assembly pluginAssemblyType = identifiedType.Assembly;
                             //Assembly pluginInterfaceAssembly = typeof(IPluginClass).Assembly;
 
                             //System.Runtime.Loader.AssemblyLoadContext pluginAssemblyTLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(T).Assembly);
