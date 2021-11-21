@@ -22,6 +22,11 @@ namespace RuntimePluggableClassFactory.Test
             FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
+
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
             Assert.Equal(4, loadResult.Count);
@@ -43,6 +48,11 @@ namespace RuntimePluggableClassFactory.Test
 
             FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
+
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
 
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
@@ -66,6 +76,11 @@ namespace RuntimePluggableClassFactory.Test
             FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
+
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
             Assert.Equal(4, loadResult.Count);
@@ -87,6 +102,11 @@ namespace RuntimePluggableClassFactory.Test
 
             FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
+
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl2", "1.2.2");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl3", "1.3.1");
+            pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl4", "1.4.1");
 
             var loadResult = pluginClassFactory.RefreshPluginsAsync().Result;
             Assert.True(loadResult.Success);
