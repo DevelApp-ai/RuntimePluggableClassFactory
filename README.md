@@ -20,9 +20,6 @@ This library has been made to make dependency injection at runtime. The main ide
 ## Plugin libraries
 * The pluging needs to have all the dependencies deployed with it having all in one plugin folder including the IPluginClass
 
-## Bug Found
-* There is only support for one dll per interface as an odd cast error happens. Perhaps a trick like the one done with IPluginClass needs to be done for the special loaded interfaces so they are in the same context
-
 ## TODO
 * Include documentation on how to use the library as it is only existing in code right now
 * Massively extend the unit and integration testing
