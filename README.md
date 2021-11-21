@@ -26,13 +26,10 @@ This library has been made to make dependency injection at runtime. The main ide
 ## TODO
 * Include documentation on how to use the library as it is only existing in code right now
 * Massively extend the unit and integration testing
-* A plugin folder hierarchy to support existing functionality but making plugins easier to manage as all plugins and dependencies are in the same folder
 * Assembly loader based on Nuget
   * Automatic updates support 
   * Triggered updates support
   * Use Semantic versioning so that 1.2.x will return the latest as it is only corrections without breaking changes
   * Investigate if Semantic versioning only makes sense for interfaces and not for implementations
-* Separate each assembly loaded code to limit the possibility of the plugin being able to crash the main application. This is done but more investigation needs to be put in ApplicationLoadContext
-* Make a file with accepted pluins to load to filter which plugins have been accepted
-* Making it easier to make extensions with runtime errors not take down the whole application if possible. It seems to be easier to do when using the library than in the library itself
+* Unload ApplicationLoadContext when not any longer in use
 * Perhaps use the (Dot Net Tools)[https://github.com/RicoSuter/DNT] to switch between project and nuget references if I can get it to work in GitHub Actions

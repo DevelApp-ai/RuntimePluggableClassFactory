@@ -17,10 +17,20 @@ namespace DevelApp.RuntimePluggableClassFactory
     //TODO Example project to make single dll output with references internalized Fody ? Otherwise compressed zip deployment with definition file
     public class PluginClassFactory<T> where T : IPluginClass
     {
+        public PluginClassFactory(IPluginLoader<T> pluginLoader, int retainOldVersions = 1)
+        {
+            PluginLoader = pluginLoader;
+            _retainOldVersions = retainOldVersions;
+            if (!typeof(T).IsInterface)
+            {
+                throw new PluginClassFactoryException("Generic type T is not an interface as required");
+            }
+        }
+
         /// <summary>
         /// The configured plugin loader
         /// </summary>
-        public IPluginLoader PluginLoader { get; }
+        public IPluginLoader<T> PluginLoader { get; }
 
         private List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version)> _allowedPlugins = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version)>();
 
@@ -53,20 +63,15 @@ namespace DevelApp.RuntimePluggableClassFactory
             RemovePluginClassVersion(moduleName, pluginName, version);
         }
 
+        /// <summary>
+        /// Retuens identified plugins
+        /// </summary>
+        /// <returns></returns>
         public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string Description, Type Type)>> GetPossiblePlugins()
         {
             return await PluginLoader.ListAllPossiblePluginsAsync();
         }
 
-        public PluginClassFactory(IPluginLoader pluginLoader, int retainOldVersions = 1)
-        {
-            PluginLoader = pluginLoader;
-            _retainOldVersions = retainOldVersions;
-            if (!typeof(T).IsInterface)
-            {
-                throw new PluginClassFactoryException("Generic type T is not an interface as required");
-            }
-        }
 
         /// <summary>
         /// Returns all plugins of interface T currently in the store

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 {
-    public class FilePluginLoader:IPluginLoader
+    public class FilePluginLoader<T>:IPluginLoader<T> where T:IPluginClass
     {
         public FilePluginLoader(Uri pluginPathUri)
         {
@@ -107,19 +107,21 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             //End Assembly debug
 
 
-                            //TODO filter for T interface
                             //TODO Here be dragons. We create an instance before the instance is accepted
-                            //TODO solution assembly embedded file containing ModuleName, PluginName, Version, Description ?
-                            IPluginClass identifiedTypeInstance = Activator.CreateInstance(identifiedType) as IPluginClass;
-                            if (identifiedTypeInstance != null)
+                            //TODO solution assembly embedded file containing ModuleName, PluginName, Version, Description via https://devblogs.microsoft.com/dotnet/new-c-source-generator-samples/
+                            if (typeof(T).IsAssignableFrom(identifiedType) && !identifiedType.IsAbstract && !identifiedType.IsInterface)
                             {
-                                typeList.Add((identifiedTypeInstance.Module, identifiedTypeInstance.Name, identifiedTypeInstance.Version, identifiedTypeInstance.Description, identifiedType));
+                                T identifiedTypeInstance = (T)Activator.CreateInstance(identifiedType);
+                                if (identifiedTypeInstance != null)
+                                {
+                                    typeList.Add((identifiedTypeInstance.Module, identifiedTypeInstance.Name, identifiedTypeInstance.Version, identifiedTypeInstance.Description, identifiedType));
+                                }
                             }
                         }
                     }
                     catch (Exception)
                     {
-                        //TODO add logging reject reason
+                        //TODO add logging reject reason via logging.abstractions
                     }
                 }
             }

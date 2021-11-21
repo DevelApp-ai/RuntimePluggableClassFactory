@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory
 {
-    public interface IPluginLoader
+    public interface IPluginLoader<T> where T: IPluginClass
     {
         /// <summary>
         /// Responsible for loading plugins to use in the plugin factory

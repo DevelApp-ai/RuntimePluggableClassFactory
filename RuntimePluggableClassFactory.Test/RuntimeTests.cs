@@ -19,7 +19,7 @@ namespace RuntimePluggableClassFactory.Test
             Uri pluginDirectory = new Uri(pathStringExpanded);
             Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
 
-            FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
+            FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
@@ -46,7 +46,7 @@ namespace RuntimePluggableClassFactory.Test
             Uri pluginDirectory = new Uri(pathStringExpanded);
             Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
 
-            FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
+            FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
@@ -73,7 +73,7 @@ namespace RuntimePluggableClassFactory.Test
             Uri pluginDirectory = new Uri(pathStringExpanded);
             Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
 
-            FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
+            FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
@@ -100,7 +100,7 @@ namespace RuntimePluggableClassFactory.Test
             Uri pluginDirectory = new Uri(pathStringExpanded);
             Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
 
-            FilePluginLoader filePluginLoader = new FilePluginLoader(pluginDirectory);
+            FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             pluginClassFactory.AllowPlugin("Test", "SpecificClassImpl", "1.2.1");
