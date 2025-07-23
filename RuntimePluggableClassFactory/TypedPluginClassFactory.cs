@@ -55,11 +55,12 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
-        /// Returns identified plugins
+        /// Lists all possible plugins that can be loaded
         /// </summary>
-        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string Description, Type Type)>> GetPossiblePlugins()
+        /// <returns>Enumerable of plugin information</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync()
         {
-            return await _underlyingFactory.GetPossiblePlugins();
+            return await _underlyingFactory.PluginLoader.ListAllPossiblePluginsAsync();
         }
 
         /// <summary>
@@ -71,8 +72,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
-        /// Refreshes the plugin store
+        /// Refreshes the plugin cache
         /// </summary>
+        /// <returns>Task representing the refresh operation</returns>
         public async Task<(bool Success, int Count)> RefreshPluginsAsync()
         {
             return await _underlyingFactory.RefreshPluginsAsync();
