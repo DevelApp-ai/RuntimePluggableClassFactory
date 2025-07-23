@@ -25,6 +25,11 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         private readonly ConcurrentDictionary<string, WeakReference> _loadContexts = new ConcurrentDictionary<string, WeakReference>();
 
         /// <summary>
+        /// Event fired when plugin loading fails
+        /// </summary>
+        public event EventHandler<PluginLoadingErrorEventArgs> PluginLoadingFailed;
+
+        /// <summary>
         /// Url for the plugin path used
         /// </summary>
         public Uri PluginPathUri
@@ -166,9 +171,10 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        //TODO add logging reject reason via logging.abstractions
+                        // Enhanced error handling with detailed logging (TDS requirement)
+                        OnPluginLoadingFailed(fileName, pluginSubfolder, ex);
                     }
                 }
             }
@@ -202,5 +208,37 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         {
             return await LoadUnfilteredPluginsAsync();
         }
+
+        /// <summary>
+        /// Fires the plugin loading failed event
+        /// </summary>
+        private void OnPluginLoadingFailed(string fileName, string pluginPath, Exception exception)
+        {
+            try
+            {
+                PluginLoadingFailed?.Invoke(this, new PluginLoadingErrorEventArgs
+                {
+                    FileName = fileName,
+                    PluginPath = pluginPath,
+                    Exception = exception,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch
+            {
+                // Ignore errors in event firing to prevent cascading failures
+            }
+        }
+    }
+
+    /// <summary>
+    /// Event arguments for plugin loading errors
+    /// </summary>
+    public class PluginLoadingErrorEventArgs : EventArgs
+    {
+        public string FileName { get; set; }
+        public string PluginPath { get; set; }
+        public Exception Exception { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }
