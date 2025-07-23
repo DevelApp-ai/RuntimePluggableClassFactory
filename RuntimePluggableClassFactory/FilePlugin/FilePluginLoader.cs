@@ -1,4 +1,5 @@
-﻿using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.RuntimePluggableClassFactory.Security;
 using DevelApp.Utility.Model;
 using System;
 using System.Collections.Concurrent;
@@ -7,16 +8,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 {
     public class FilePluginLoader<T>:IPluginLoader<T> where T:IPluginClass
     {
-        public FilePluginLoader(Uri pluginPathUri)
+        public FilePluginLoader(Uri pluginPathUri, IPluginSecurityValidator securityValidator = null)
         {
             PluginPathUri = pluginPathUri;
+            _securityValidator = securityValidator ?? new DefaultPluginSecurityValidator();
         }
 
         private Uri _pluginPathUri;
@@ -24,10 +25,18 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         // Track AssemblyLoadContext instances for unloading capability
         private readonly ConcurrentDictionary<string, WeakReference> _loadContexts = new ConcurrentDictionary<string, WeakReference>();
 
+        // Security validator for plugin validation (TDS requirement)
+        private readonly IPluginSecurityValidator _securityValidator;
+
         /// <summary>
         /// Event fired when plugin loading fails
         /// </summary>
         public event EventHandler<PluginLoadingErrorEventArgs> PluginLoadingFailed;
+
+        /// <summary>
+        /// Event fired when security validation fails
+        /// </summary>
+        public event EventHandler<PluginSecurityValidationFailedEventArgs> SecurityValidationFailed;
 
         /// <summary>
         /// Url for the plugin path used
@@ -110,9 +119,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// Loads all assemblies from the pluginPath and returns all types from IPluginClass
         /// </summary>
         /// <returns></returns>
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadUnfilteredPluginsAsync()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> typeList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
 
@@ -130,12 +137,33 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 {
                     try
                     {
+                        // Security validation before loading (TDS requirement)
+                        var securityResult = await _securityValidator.ValidateAssemblyAsync(fileName);
+                        if (!securityResult.IsValid)
+                        {
+                            OnSecurityValidationFailed(fileName, pluginSubfolder, securityResult);
+                            continue; // Skip loading this plugin
+                        }
+
+                        // Log security warnings if any
+                        if (securityResult.Warnings.Any())
+                        {
+                            OnSecurityValidationFailed(fileName, pluginSubfolder, securityResult);
+                        }
 
                         //TODO check if assembly certificate is valid to improve security
 
                         //TODO exclude interface assembly from context loaded via typeof(T).Assembly.FullName
 
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
+                        
+                        // Additional security validation on loaded assembly
+                        var loadedSecurityResult = _securityValidator.ValidateLoadedAssembly(assembly);
+                        if (!loadedSecurityResult.IsValid)
+                        {
+                            OnSecurityValidationFailed(fileName, pluginSubfolder, loadedSecurityResult);
+                            continue; // Skip this assembly
+                        }
 
                         //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not needed and to avoid
                         Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
@@ -229,6 +257,27 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 // Ignore errors in event firing to prevent cascading failures
             }
         }
+
+        /// <summary>
+        /// Fires the security validation failed event
+        /// </summary>
+        private void OnSecurityValidationFailed(string fileName, string pluginPath, PluginSecurityValidationResult validationResult)
+        {
+            try
+            {
+                SecurityValidationFailed?.Invoke(this, new PluginSecurityValidationFailedEventArgs
+                {
+                    FileName = fileName,
+                    PluginPath = pluginPath,
+                    ValidationResult = validationResult,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch
+            {
+                // Ignore errors in event firing to prevent cascading failures
+            }
+        }
     }
 
     /// <summary>
@@ -239,6 +288,17 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         public string FileName { get; set; }
         public string PluginPath { get; set; }
         public Exception Exception { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    /// <summary>
+    /// Event arguments for plugin security validation failures
+    /// </summary>
+    public class PluginSecurityValidationFailedEventArgs : EventArgs
+    {
+        public string FileName { get; set; }
+        public string PluginPath { get; set; }
+        public PluginSecurityValidationResult ValidationResult { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }
