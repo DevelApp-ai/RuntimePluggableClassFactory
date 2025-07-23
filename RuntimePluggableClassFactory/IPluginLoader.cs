@@ -21,5 +21,17 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <returns></returns>
         Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync();
+
+        /// <summary>
+        /// Unloads a specific plugin assembly by path (TDS requirement)
+        /// </summary>
+        /// <param name="pluginPath">Path to the plugin to unload</param>
+        /// <returns>True if unloaded successfully, false if not found or already unloaded</returns>
+        bool UnloadPlugin(string pluginPath);
+
+        /// <summary>
+        /// Unloads all plugin assemblies (TDS requirement)
+        /// </summary>
+        void UnloadAllPlugins();
     }
 }

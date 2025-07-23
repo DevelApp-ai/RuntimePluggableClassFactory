@@ -1,6 +1,7 @@
 ﻿using DevelApp.RuntimePluggableClassFactory.Interface;
 using DevelApp.Utility.Model;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         }
 
         private Uri _pluginPathUri;
+        
+        // Track AssemblyLoadContext instances for unloading capability
+        private readonly ConcurrentDictionary<string, WeakReference> _loadContexts = new ConcurrentDictionary<string, WeakReference>();
 
         /// <summary>
         /// Url for the plugin path used
@@ -41,6 +45,39 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 }
                 _pluginPathUri = value;
             }
+        }
+
+        /// <summary>
+        /// Unloads a specific plugin assembly by path
+        /// </summary>
+        /// <param name="pluginPath">Path to the plugin to unload</param>
+        /// <returns>True if unloaded successfully, false if not found or already unloaded</returns>
+        public bool UnloadPlugin(string pluginPath)
+        {
+            if (_loadContexts.TryRemove(pluginPath, out WeakReference contextRef) && contextRef.IsAlive)
+            {
+                if (contextRef.Target is PluginLoadContext context)
+                {
+                    context.Unload();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Unloads all plugin assemblies
+        /// </summary>
+        public void UnloadAllPlugins()
+        {
+            foreach (var kvp in _loadContexts.ToList())
+            {
+                if (kvp.Value.IsAlive && kvp.Value.Target is PluginLoadContext context)
+                {
+                    context.Unload();
+                }
+            }
+            _loadContexts.Clear();
         }
 
         /// <summary>
@@ -77,8 +114,11 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
             // Isolate plugin context per subfolder
             foreach (string pluginSubfolder in Directory.GetDirectories(_pluginPathUri.AbsolutePath))
             {
-                //Isolate plugins from other parts of the program
+                //Isolate plugins from other parts of the program with collectible context
                 PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginSubfolder);
+                
+                // Track the context for potential unloading
+                _loadContexts.TryAdd(pluginSubfolder, new WeakReference(pluginLoadContext));
 
                 // Load from each assembly in folder
                 foreach (string fileName in Directory.GetFiles(pluginSubfolder, "*.dll", SearchOption.AllDirectories))

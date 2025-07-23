@@ -5,13 +5,15 @@ using System.Runtime.Loader;
 namespace DevelApp.RuntimePluggableClassFactory
 {
     /// <summary>
+    /// Collectible AssemblyLoadContext for plugin loading with unloading support
     /// Taken from the https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support
+    /// Enhanced for TDS requirements with collectible support
     /// </summary>
     internal class PluginLoadContext : AssemblyLoadContext
     {
         private AssemblyDependencyResolver _resolver;
 
-        public PluginLoadContext(string pluginPath)
+        public PluginLoadContext(string pluginPath) : base(isCollectible: true)
         {
             _resolver = new AssemblyDependencyResolver(pluginPath);
         }

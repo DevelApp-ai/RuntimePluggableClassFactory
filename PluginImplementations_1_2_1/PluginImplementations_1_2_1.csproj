@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Version>1.2.1</Version>
   </PropertyGroup>
 
@@ -10,7 +10,8 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder$([System.IO.Path]::DirectorySeparatorChar)$(ProjectName)$([System.IO.Path]::DirectorySeparatorChar)&quot;" />
+    <Exec Command="mkdir -p &quot;$(SolutionDir)PluginFolder/$(ProjectName)&quot; &amp;&amp; cp &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder/$(ProjectName)/&quot;" Condition="'$(OS)' != 'Windows_NT'" />
+    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder$([System.IO.Path]::DirectorySeparatorChar)$(ProjectName)$([System.IO.Path]::DirectorySeparatorChar)&quot;" Condition="'$(OS)' == 'Windows_NT'" />
   </Target>
 
   <ItemGroup>
