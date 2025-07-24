@@ -1,20 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>DevelApp.RuntimePluggableClassFactory.Interface</AssemblyName>
     <RootNamespace>DevelApp.RuntimePluggableClassFactory.Interface</RootNamespace>
     <Authors>Lars Shakya Buch-Jepsen</Authors>
     <Company>DevelApp Denmark (CVR 33211740)</Company>
-    <Description>Base interface for RuntimePluggableClassFactory
-
-RuntimePluggableClassFactory that loads classes from provided assemblies having a specific interface</Description>
+    <Product>RuntimePluggableClassFactory.Interface</Product>
+    <Description>Base interfaces for RuntimePluggableClassFactory including IPluginClass and ITypedPluginClass&lt;TInput, TOutput&gt; for type-safe plugin development. Provides strongly-typed plugin interfaces, execution context, and result types for building dynamic plugin systems.</Description>
+    <PackageTags>plugin;interface;dynamic-loading;type-safety;factory;dependency-injection;modular;extensibility</PackageTags>
     <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>
+      TDS Implementation Complete:
+      - Added ITypedPluginClass&lt;TInput, TOutput&gt; for type-safe plugin development
+      - IPluginExecutionContext with logging, cancellation, and properties support
+      - PluginExecutionResult&lt;T&gt; for strongly-typed execution results
+      - Backward compatible with existing IPluginClass implementations
+      - Enhanced plugin metadata and versioning support
+    </PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Copyright>Copyright © DevelApp 2020</Copyright>
-    <Version>1.0.7</Version>
+    <Copyright>Copyright © DevelApp 2020-2025</Copyright>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <NoWarn>CS8618;CS8625</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,6 +44,10 @@ RuntimePluggableClassFactory that loads classes from provided assemblies having 
 
   <ItemGroup>
     <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
