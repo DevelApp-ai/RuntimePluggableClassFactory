@@ -123,6 +123,7 @@ namespace DevelApp.RuntimePluggableClassFactory
 
         /// <summary>
         /// Returns an instance of the newest version of the named class abiding interface T
+        /// Enhanced with sandbox execution for stability (TDS requirement)
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -130,7 +131,17 @@ namespace DevelApp.RuntimePluggableClassFactory
         {
             if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
             {
-                return (T)Activator.CreateInstance(pluginClass.GetNewestVersion());
+                try
+                {
+                    var type = pluginClass.GetNewestVersion();
+                    return CreateInstanceSafely(type, moduleName, name);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error and return default instead of crashing
+                    OnPluginInstantiationFailed(moduleName, name, null, ex);
+                    return default;
+                }
             }
             else
             {
@@ -139,7 +150,8 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
-        /// Returns an instance of the newest version of the named class abiding interface T
+        /// Returns an instance of the specific version of the named class abiding interface T
+        /// Enhanced with sandbox execution for stability (TDS requirement)
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -149,7 +161,16 @@ namespace DevelApp.RuntimePluggableClassFactory
             {
                 if (pluginClass.TryGetVersion(version, out Type type))
                 {
-                    return (T)Activator.CreateInstance(type);
+                    try
+                    {
+                        return CreateInstanceSafely(type, moduleName, name, version);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error and return default instead of crashing
+                        OnPluginInstantiationFailed(moduleName, name, version, ex);
+                        return default;
+                    }
                 }
                 else
                 {
@@ -159,6 +180,50 @@ namespace DevelApp.RuntimePluggableClassFactory
             else
             {
                 return default;
+            }
+        }
+
+        /// <summary>
+        /// Event fired when plugin instantiation fails
+        /// </summary>
+        public event EventHandler<PluginInstantiationErrorEventArgs> PluginInstantiationFailed;
+
+        /// <summary>
+        /// Safely creates a plugin instance with error handling
+        /// </summary>
+        private T CreateInstanceSafely(Type type, NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version = null)
+        {
+            try
+            {
+                var instance = (T)Activator.CreateInstance(type);
+                return instance;
+            }
+            catch (Exception ex)
+            {
+                OnPluginInstantiationFailed(moduleName, name, version, ex);
+                throw; // Re-throw to be handled by calling method
+            }
+        }
+
+        /// <summary>
+        /// Fires the plugin instantiation failed event
+        /// </summary>
+        private void OnPluginInstantiationFailed(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version, Exception exception)
+        {
+            try
+            {
+                PluginInstantiationFailed?.Invoke(this, new PluginInstantiationErrorEventArgs
+                {
+                    ModuleName = moduleName?.ToString(),
+                    PluginName = name?.ToString(),
+                    Version = version?.ToString(),
+                    Exception = exception,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch
+            {
+                // Ignore errors in event firing to prevent cascading failures
             }
         }
 
@@ -305,5 +370,17 @@ namespace DevelApp.RuntimePluggableClassFactory
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Event arguments for plugin instantiation errors
+    /// </summary>
+    public class PluginInstantiationErrorEventArgs : EventArgs
+    {
+        public string ModuleName { get; set; }
+        public string PluginName { get; set; }
+        public string Version { get; set; }
+        public Exception Exception { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }

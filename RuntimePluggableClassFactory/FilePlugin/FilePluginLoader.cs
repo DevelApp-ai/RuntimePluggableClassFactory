@@ -1,24 +1,42 @@
-﻿using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.RuntimePluggableClassFactory.Security;
 using DevelApp.Utility.Model;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 {
     public class FilePluginLoader<T>:IPluginLoader<T> where T:IPluginClass
     {
-        public FilePluginLoader(Uri pluginPathUri)
+        public FilePluginLoader(Uri pluginPathUri, IPluginSecurityValidator securityValidator = null)
         {
             PluginPathUri = pluginPathUri;
+            _securityValidator = securityValidator ?? new DefaultPluginSecurityValidator();
         }
 
         private Uri _pluginPathUri;
+        
+        // Track AssemblyLoadContext instances for unloading capability
+        private readonly ConcurrentDictionary<string, WeakReference> _loadContexts = new ConcurrentDictionary<string, WeakReference>();
+
+        // Security validator for plugin validation (TDS requirement)
+        private readonly IPluginSecurityValidator _securityValidator;
+
+        /// <summary>
+        /// Event fired when plugin loading fails
+        /// </summary>
+        public event EventHandler<PluginLoadingErrorEventArgs> PluginLoadingFailed;
+
+        /// <summary>
+        /// Event fired when security validation fails
+        /// </summary>
+        public event EventHandler<PluginSecurityValidationFailedEventArgs> SecurityValidationFailed;
 
         /// <summary>
         /// Url for the plugin path used
@@ -41,6 +59,39 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 }
                 _pluginPathUri = value;
             }
+        }
+
+        /// <summary>
+        /// Unloads a specific plugin assembly by path
+        /// </summary>
+        /// <param name="pluginPath">Path to the plugin to unload</param>
+        /// <returns>True if unloaded successfully, false if not found or already unloaded</returns>
+        public bool UnloadPlugin(string pluginPath)
+        {
+            if (_loadContexts.TryRemove(pluginPath, out WeakReference contextRef) && contextRef.IsAlive)
+            {
+                if (contextRef.Target is PluginLoadContext context)
+                {
+                    context.Unload();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Unloads all plugin assemblies
+        /// </summary>
+        public void UnloadAllPlugins()
+        {
+            foreach (var kvp in _loadContexts.ToList())
+            {
+                if (kvp.Value.IsAlive && kvp.Value.Target is PluginLoadContext context)
+                {
+                    context.Unload();
+                }
+            }
+            _loadContexts.Clear();
         }
 
         /// <summary>
@@ -68,29 +119,51 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// Loads all assemblies from the pluginPath and returns all types from IPluginClass
         /// </summary>
         /// <returns></returns>
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadUnfilteredPluginsAsync()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> typeList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
 
             // Isolate plugin context per subfolder
             foreach (string pluginSubfolder in Directory.GetDirectories(_pluginPathUri.AbsolutePath))
             {
-                //Isolate plugins from other parts of the program
+                //Isolate plugins from other parts of the program with collectible context
                 PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginSubfolder);
+                
+                // Track the context for potential unloading
+                _loadContexts.TryAdd(pluginSubfolder, new WeakReference(pluginLoadContext));
 
                 // Load from each assembly in folder
                 foreach (string fileName in Directory.GetFiles(pluginSubfolder, "*.dll", SearchOption.AllDirectories))
                 {
                     try
                     {
+                        // Security validation before loading (TDS requirement)
+                        var securityResult = await _securityValidator.ValidateAssemblyAsync(fileName);
+                        if (!securityResult.IsValid)
+                        {
+                            OnSecurityValidationFailed(fileName, pluginSubfolder, securityResult);
+                            continue; // Skip loading this plugin
+                        }
+
+                        // Log security warnings if any
+                        if (securityResult.Warnings.Any())
+                        {
+                            OnSecurityValidationFailed(fileName, pluginSubfolder, securityResult);
+                        }
 
                         //TODO check if assembly certificate is valid to improve security
 
                         //TODO exclude interface assembly from context loaded via typeof(T).Assembly.FullName
 
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
+                        
+                        // Additional security validation on loaded assembly
+                        var loadedSecurityResult = _securityValidator.ValidateLoadedAssembly(assembly);
+                        if (!loadedSecurityResult.IsValid)
+                        {
+                            OnSecurityValidationFailed(fileName, pluginSubfolder, loadedSecurityResult);
+                            continue; // Skip this assembly
+                        }
 
                         //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not needed and to avoid
                         Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
@@ -126,9 +199,10 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        //TODO add logging reject reason via logging.abstractions
+                        // Enhanced error handling with detailed logging (TDS requirement)
+                        OnPluginLoadingFailed(fileName, pluginSubfolder, ex);
                     }
                 }
             }
@@ -162,5 +236,69 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         {
             return await LoadUnfilteredPluginsAsync();
         }
+
+        /// <summary>
+        /// Fires the plugin loading failed event
+        /// </summary>
+        private void OnPluginLoadingFailed(string fileName, string pluginPath, Exception exception)
+        {
+            try
+            {
+                PluginLoadingFailed?.Invoke(this, new PluginLoadingErrorEventArgs
+                {
+                    FileName = fileName,
+                    PluginPath = pluginPath,
+                    Exception = exception,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch
+            {
+                // Ignore errors in event firing to prevent cascading failures
+            }
+        }
+
+        /// <summary>
+        /// Fires the security validation failed event
+        /// </summary>
+        private void OnSecurityValidationFailed(string fileName, string pluginPath, PluginSecurityValidationResult validationResult)
+        {
+            try
+            {
+                SecurityValidationFailed?.Invoke(this, new PluginSecurityValidationFailedEventArgs
+                {
+                    FileName = fileName,
+                    PluginPath = pluginPath,
+                    ValidationResult = validationResult,
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+            catch
+            {
+                // Ignore errors in event firing to prevent cascading failures
+            }
+        }
+    }
+
+    /// <summary>
+    /// Event arguments for plugin loading errors
+    /// </summary>
+    public class PluginLoadingErrorEventArgs : EventArgs
+    {
+        public string FileName { get; set; }
+        public string PluginPath { get; set; }
+        public Exception Exception { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    /// <summary>
+    /// Event arguments for plugin security validation failures
+    /// </summary>
+    public class PluginSecurityValidationFailedEventArgs : EventArgs
+    {
+        public string FileName { get; set; }
+        public string PluginPath { get; set; }
+        public PluginSecurityValidationResult ValidationResult { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }
