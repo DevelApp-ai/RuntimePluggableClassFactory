@@ -44,7 +44,7 @@ namespace RuntimePluggableClassFactory.Test
 
             // Act
             await pluginFactory.RefreshPluginsAsync();
-            var plugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var plugins = await pluginFactory.GetPossiblePlugins();
 
             stopwatch.Stop();
 
@@ -68,7 +68,7 @@ namespace RuntimePluggableClassFactory.Test
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
             if (!availablePlugins.Any())
             {
@@ -112,7 +112,7 @@ namespace RuntimePluggableClassFactory.Test
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
             if (!availablePlugins.Any())
             {
@@ -160,7 +160,7 @@ namespace RuntimePluggableClassFactory.Test
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
             if (!availablePlugins.Any())
             {
@@ -255,7 +255,7 @@ namespace RuntimePluggableClassFactory.Test
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
             if (!availablePlugins.Any())
             {
@@ -318,7 +318,7 @@ namespace RuntimePluggableClassFactory.Test
                 filePluginLoader);
 
             await typedFactory.RefreshPluginsAsync();
-            var availablePlugins = await typedFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await typedFactory.GetPossiblePlugins();
             
             var typedPlugin = availablePlugins.FirstOrDefault(p => p.Type.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypedPluginClass<,>)));
@@ -371,7 +371,7 @@ namespace RuntimePluggableClassFactory.Test
                 
             // Load
             await pluginFactory.RefreshPluginsAsync();
-            var plugins = await filePluginLoader.ListAllPossiblePluginsAsync();
+            var plugins = await filePluginLoader.GetPossiblePlugins();
                 
                 // Execute a few plugins
                 foreach (var plugin in plugins.Take(2))

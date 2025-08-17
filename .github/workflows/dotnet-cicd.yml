@@ -40,8 +40,8 @@ jobs:
 
     - name: Test
       run: |
-        echo "Running core tests (excluding integration/performance tests with compilation issues)..."
-        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity normal --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~PerformanceTests"
+        echo "Running all tests..."
+        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity normal
 
     - name: Pack
       # Creates the NuGet package using the calculated version

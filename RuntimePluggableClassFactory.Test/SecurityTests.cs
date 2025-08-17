@@ -159,7 +159,7 @@ namespace RuntimePluggableClassFactory.Test
             };
             
             // This should work without throwing exceptions
-            var possiblePlugins = filePluginLoader.ListAllPossiblePluginsAsync().Result;
+            var possiblePlugins = filePluginLoader.GetPossiblePlugins().Result;
             Assert.NotNull(possiblePlugins);
             
             // Security event might fire for warnings, which is expected
@@ -183,7 +183,7 @@ namespace RuntimePluggableClassFactory.Test
                 Assert.True(args.ValidationResult.Issues.Any() || args.ValidationResult.Warnings.Any());
             };
             
-            var possiblePlugins = await filePluginLoader.ListAllPossiblePluginsAsync();
+            var possiblePlugins = await filePluginLoader.GetPossiblePlugins();
             Assert.NotNull(possiblePlugins);
             
             // With strict settings, security events are likely to fire

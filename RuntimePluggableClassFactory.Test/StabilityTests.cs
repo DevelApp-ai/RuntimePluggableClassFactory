@@ -138,7 +138,7 @@ namespace RuntimePluggableClassFactory.Test
             
             // This test verifies that the error handling infrastructure is in place
             // Actual errors would be triggered by corrupted DLLs or other loading issues
-            var possiblePlugins = filePluginLoader.ListAllPossiblePluginsAsync().Result;
+            var possiblePlugins = filePluginLoader.GetPossiblePlugins().Result;
             
             // Test passes if no exceptions are thrown during plugin discovery
             Assert.NotNull(possiblePlugins);
