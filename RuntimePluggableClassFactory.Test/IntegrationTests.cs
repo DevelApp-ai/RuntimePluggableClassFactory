@@ -175,7 +175,7 @@ namespace RuntimePluggableClassFactory.Test
 
             // Act - Execute plugin concurrently from multiple threads
             var tasks = new Task[10];
-            var results = new string[10];
+            var results = new bool?[10];
             var exceptions = new Exception[10];
 
             for (int i = 0; i < 10; i++)

@@ -371,7 +371,7 @@ namespace RuntimePluggableClassFactory.Test
                 
             // Load
             await pluginFactory.RefreshPluginsAsync();
-            var plugins = await filePluginLoader.GetPossiblePlugins();
+            var plugins = await filePluginLoader.ListAllPossiblePluginsAsync();
                 
                 // Execute a few plugins
                 foreach (var plugin in plugins.Take(2))
