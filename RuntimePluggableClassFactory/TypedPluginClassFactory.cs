@@ -58,6 +58,11 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// Lists all possible plugins that can be loaded
         /// </summary>
         /// <returns>Enumerable of plugin information</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> GetPossiblePlugins()
+        {
+            return await _underlyingFactory.GetPossiblePlugins();
+        }
+
         public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync()
         {
             return await _underlyingFactory.PluginLoader.ListAllPossiblePluginsAsync();
