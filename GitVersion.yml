@@ -2,38 +2,29 @@ mode: ContinuousDeployment
 next-version: 2.0.1
 branches:
   master:
+    regex: ^master$
     mode: ContinuousDeployment
-    tag: ''
+    label: ''
     increment: Patch
-    prevent-increment-of-merged-branch-version: true
-    track-merge-target: false
-    tracks-release-branches: false
     is-release-branch: true
   develop:
+    regex: ^develop$
     mode: ContinuousDeployment
-    tag: alpha
+    label: alpha
     increment: Minor
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: true
-    tracks-release-branches: true
     is-release-branch: false
   feature:
+    regex: ^features?[/-]
     mode: ContinuousDeployment
-    tag: alpha
+    label: alpha
     increment: Minor
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: false
-    tracks-release-branches: false
     is-release-branch: false
   hotfix:
+    regex: ^hotfix(es)?[/-]
     mode: ContinuousDeployment
-    tag: beta
+    label: beta
     increment: Patch
-    prevent-increment-of-merged-branch-version: false
-    track-merge-target: false
-    tracks-release-branches: false
     is-release-branch: false
 ignore:
   sha: []
-merge-message-formats: {}
 
