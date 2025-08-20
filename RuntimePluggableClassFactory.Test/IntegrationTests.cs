@@ -60,7 +60,7 @@ namespace RuntimePluggableClassFactory.Test
 
             // 2. Get a plugin instance
             var firstPlugin = availablePlugins.First();
-            var pluginInstance = pluginFactory.GetInstance(firstPlugin.ModuleName, firstPlugin.PluginName);
+            var pluginInstance = pluginFactory.GetInstance(firstPlugin.moduleName, firstPlugin.pluginName);
             Assert.NotNull(pluginInstance);
 
             // 3. Execute plugin
@@ -69,9 +69,9 @@ namespace RuntimePluggableClassFactory.Test
 
             // 4. Test versioned access
             var versionedInstance = pluginFactory.GetInstance(
-                firstPlugin.ModuleName, 
-                firstPlugin.PluginName, 
-                firstPlugin.Version);
+                firstPlugin.moduleName, 
+                firstPlugin.pluginName, 
+                firstPlugin.version);
             Assert.NotNull(versionedInstance);
 
             // 5. Test unloading
@@ -185,7 +185,7 @@ namespace RuntimePluggableClassFactory.Test
                 {
                     try
                     {
-                        var instance = pluginFactory.GetInstance(firstPlugin.ModuleName, firstPlugin.PluginName);
+                        var instance = pluginFactory.GetInstance(firstPlugin.moduleName, firstPlugin.pluginName);
                         results[index] = instance?.Execute($"concurrent test {index}");
                     }
                     catch (Exception ex)
@@ -232,8 +232,8 @@ namespace RuntimePluggableClassFactory.Test
             Assert.Equal(initialCount, reloadedCount);
             
             // Verify plugin names match (order may differ)
-            var initialNames = initialPlugins.Select(p => $"{p.ModuleName}.{p.PluginName}").OrderBy(n => n);
-            var reloadedNames = reloadedPlugins.Select(p => $"{p.ModuleName}.{p.PluginName}").OrderBy(n => n);
+            var initialNames = initialPlugins.Select(p => $"{p.moduleName}.{p.pluginName}").OrderBy(n => n);
+            var reloadedNames = reloadedPlugins.Select(p => $"{p.moduleName}.{p.pluginName}").OrderBy(n => n);
             Assert.Equal(initialNames, reloadedNames);
         }
 
@@ -249,7 +249,7 @@ namespace RuntimePluggableClassFactory.Test
             bool pluginLoadingErrorFired = false;
             bool securityValidationFailed = false;
 
-            pluginFactory.PluginInstantiationError += (sender, args) =>
+            pluginFactory.PluginInstantiationFailed += (sender, args) =>
             {
                 pluginInstantiationErrorFired = true;
                 Assert.NotNull(args.Exception);
@@ -283,8 +283,8 @@ namespace RuntimePluggableClassFactory.Test
             {
                 var firstPlugin = availablePlugins.First();
                 var invalidVersionPlugin = pluginFactory.GetInstance(
-                    firstPlugin.ModuleName, 
-                    firstPlugin.PluginName, 
+                    firstPlugin.moduleName, 
+                    firstPlugin.pluginName, 
                     new DevelApp.Utility.Model.SemanticVersionNumber(99, 99, 99));
                 Assert.Null(invalidVersionPlugin);
             }
@@ -311,7 +311,7 @@ namespace RuntimePluggableClassFactory.Test
                 // Create instances
                 foreach (var plugin in plugins.Take(2)) // Limit to first 2 to avoid excessive testing
                 {
-                    var instance = pluginFactory.GetInstance(plugin.ModuleName, plugin.PluginName);
+                    var instance = pluginFactory.GetInstance(plugin.moduleName, plugin.pluginName);
                     if (instance != null)
                     {
                         var result = instance.Execute("memory test");
@@ -340,7 +340,7 @@ namespace RuntimePluggableClassFactory.Test
             var securityValidator = new DefaultPluginSecurityValidator(PluginSecuritySettings.CreateDefault());
             var filePluginLoader = new FilePluginLoader<ITypedSpecificInterface>(_pluginUri, securityValidator);
             var typedFactory = new TypedPluginClassFactory<ITypedSpecificInterface, WordGuessInput, WordGuessOutput>(
-                new PluginClassFactory<ITypedSpecificInterface>(filePluginLoader));
+                filePluginLoader);
 
             await typedFactory.RefreshPluginsAsync();
             var availablePlugins = await typedFactory.GetPossiblePlugins();

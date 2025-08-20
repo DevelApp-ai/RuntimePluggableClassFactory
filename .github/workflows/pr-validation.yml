@@ -139,11 +139,13 @@ jobs:
         path: ./packages/*.nupkg
 
   compatibility-check:
-    name: Compatibility Check
+    name: Compatibility Check (.NET 8.0+)
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: ['6.0.x', '7.0.x', '8.0.x']
+        # Project targets .NET 8.0, so we test compatibility with .NET 8.0+
+        # Future: Add 9.0.x when widely available
+        dotnet-version: ['8.0.x']
     
     steps:
     - name: Checkout code
