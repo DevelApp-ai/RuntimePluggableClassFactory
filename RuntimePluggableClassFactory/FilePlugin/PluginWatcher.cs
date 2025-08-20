@@ -105,7 +105,10 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 if (_factory.PluginLoader is FilePluginLoader<T> fileLoader)
                 {
                     var pluginDir = Path.GetDirectoryName(e.FullPath);
-                    fileLoader.UnloadPlugin(pluginDir);
+                    if (pluginDir != null)
+                    {
+                        fileLoader.UnloadPlugin(pluginDir);
+                    }
                 }
 
                 // Refresh the factory to remove deleted plugins
@@ -139,7 +142,10 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 if (_factory.PluginLoader is FilePluginLoader<T> fileLoader)
                 {
                     var oldPluginDir = Path.GetDirectoryName(e.OldFullPath);
-                    fileLoader.UnloadPlugin(oldPluginDir);
+                    if (oldPluginDir != null)
+                    {
+                        fileLoader.UnloadPlugin(oldPluginDir);
+                    }
                 }
 
                 var result = await _factory.RefreshPluginsAsync();
@@ -184,12 +190,12 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
     public class PluginChangedEventArgs : EventArgs
     {
         public WatcherChangeTypes ChangeType { get; set; }
-        public string FullPath { get; set; }
-        public string Name { get; set; }
-        public string OldFullPath { get; set; }
-        public string OldName { get; set; }
+        public string? FullPath { get; set; }
+        public string? Name { get; set; }
+        public string? OldFullPath { get; set; }
+        public string? OldName { get; set; }
         public (bool Success, int Count)? RefreshResult { get; set; }
-        public Exception Error { get; set; }
+        public Exception? Error { get; set; }
     }
 }
 
