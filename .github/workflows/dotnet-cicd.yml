@@ -22,7 +22,7 @@ jobs:
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v0.10.2
       with:
-        versionSpec: '5.x'
+        versionSpec: '6.x'
 
     - name: Determine Version
       id: gitversion # The output of this step is used later
@@ -35,7 +35,6 @@ jobs:
       run: |
         echo "GitVersion failed, using fallback version"
         echo "semVer=2.0.1-fallback.${{ github.run_number }}" >> $GITHUB_OUTPUT
-        echo "nuGetVersionV2=2.0.1-fallback.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -50,11 +49,11 @@ jobs:
       run: |
         if [ "${{ steps.gitversion.outcome }}" == "success" ]; then
           echo "semver=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
-          echo "nugetversion=${{ steps.gitversion.outputs.nuGetVersionV2 }}" >> $GITHUB_OUTPUT
+          echo "nugetversion=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
           echo "Using GitVersion: ${{ steps.gitversion.outputs.semVer }}"
         else
           echo "semver=${{ steps.fallback-version.outputs.semVer }}" >> $GITHUB_OUTPUT
-          echo "nugetversion=${{ steps.fallback-version.outputs.nuGetVersionV2 }}" >> $GITHUB_OUTPUT
+          echo "nugetversion=${{ steps.fallback-version.outputs.semVer }}" >> $GITHUB_OUTPUT
           echo "Using fallback version: ${{ steps.fallback-version.outputs.semVer }}"
         fi
 
