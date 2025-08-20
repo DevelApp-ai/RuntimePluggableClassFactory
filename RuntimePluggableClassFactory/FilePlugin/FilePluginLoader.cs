@@ -68,7 +68,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// <returns>True if unloaded successfully, false if not found or already unloaded</returns>
         public bool UnloadPlugin(string pluginPath)
         {
-            if (_loadContexts.TryRemove(pluginPath, out WeakReference contextRef) && contextRef.IsAlive)
+            if (_loadContexts.TryRemove(pluginPath, out WeakReference? contextRef) && contextRef?.IsAlive == true)
             {
                 if (contextRef.Target is PluginLoadContext context)
                 {
@@ -166,7 +166,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                         }
 
                         //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not needed and to avoid
-                        Assembly defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
+                        Assembly? defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
                         if (defaultAssembly != null)
                         {
                             assembly = defaultAssembly;
@@ -191,7 +191,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
                             if (typeof(T).IsAssignableFrom(identifiedType) && !identifiedType.IsAbstract && !identifiedType.IsInterface)
                             {
-                                T identifiedTypeInstance = (T)Activator.CreateInstance(identifiedType);
+                                T? identifiedTypeInstance = (T?)Activator.CreateInstance(identifiedType);
                                 if (identifiedTypeInstance != null)
                                 {
                                     typeList.Add((identifiedTypeInstance.Module, identifiedTypeInstance.Name, identifiedTypeInstance.Version, identifiedTypeInstance.Description, identifiedType));

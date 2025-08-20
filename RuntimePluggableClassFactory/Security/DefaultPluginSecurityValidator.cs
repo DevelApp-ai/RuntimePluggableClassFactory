@@ -142,7 +142,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
                 if (!string.IsNullOrEmpty(assembly.Location))
                 {
                     var assemblyDir = Path.GetDirectoryName(assembly.Location);
-                    if (!_settings.TrustedPaths.Any(tp => assemblyDir.StartsWith(tp, StringComparison.OrdinalIgnoreCase)))
+                    if (assemblyDir != null && !_settings.TrustedPaths.Any(tp => assemblyDir.StartsWith(tp, StringComparison.OrdinalIgnoreCase)))
                     {
                         result.Warnings.Add(new SecurityWarning
                         {
@@ -202,7 +202,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
                             Code = "SEC201",
                             Description = $"Type inherits from prohibited base type",
                             Severity = SecurityRiskLevel.High,
-                            Location = type.FullName
+                            Location = type.FullName ?? "Unknown"
                         });
                     }
 
@@ -214,7 +214,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
                             Code = "SEC202",
                             Description = $"Type is in prohibited namespace: {type.Namespace}",
                             Severity = SecurityRiskLevel.High,
-                            Location = type.FullName
+                            Location = type.FullName ?? "Unknown"
                         });
                     }
 
@@ -238,7 +238,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
                     {
                         Code = "SEC203",
                         Description = $"Error validating type {type.FullName}: {ex.Message}",
-                        Location = type.FullName
+                        Location = type.FullName ?? "Unknown"
                     });
                 }
             }

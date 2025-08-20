@@ -99,7 +99,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 var pluginTypeTuples = await PluginLoader.LoadPluginsAsync(_allowedPlugins);
                 foreach (var pluginTypeTuple in pluginTypeTuples)
                 {
-                    if (pluginClassStore.TryGetValue((pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName), out PluginClass outPluginClass))
+                    if (pluginClassStore.TryGetValue((pluginTypeTuple.ModuleName, pluginTypeTuple.PluginName), out PluginClass? outPluginClass))
                     {
                         outPluginClass.UpsertVersion(pluginTypeTuple.Version, pluginTypeTuple.Type);
                         outPluginClass.Description = pluginTypeTuple.Description;
@@ -127,9 +127,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(NamespaceString moduleName, IdentifierString name)
+        public T? GetInstance(NamespaceString moduleName, IdentifierString name)
         {
-            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
             {
                 try
                 {
@@ -155,9 +155,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public T GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
+        public T? GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
         {
-            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
             {
                 if (pluginClass.TryGetVersion(version, out Type type))
                 {
@@ -191,11 +191,11 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <summary>
         /// Safely creates a plugin instance with error handling
         /// </summary>
-        private T CreateInstanceSafely(Type type, NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version = null)
+        private T? CreateInstanceSafely(Type type, NamespaceString moduleName, IdentifierString name, SemanticVersionNumber? version = null)
         {
             try
             {
-                var instance = (T)Activator.CreateInstance(type);
+                var instance = (T?)Activator.CreateInstance(type);
                 return instance;
             }
             catch (Exception ex)
@@ -208,7 +208,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <summary>
         /// Fires the plugin instantiation failed event
         /// </summary>
-        private void OnPluginInstantiationFailed(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version, Exception exception)
+        private void OnPluginInstantiationFailed(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber? version, Exception exception)
         {
             try
             {
@@ -235,7 +235,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <param name="version"></param>
         internal void RemovePluginClassVersion(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
         {
-            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass pluginClass))
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
             {
                 pluginClass.RemoveVersion(version);
             }
@@ -288,8 +288,8 @@ namespace DevelApp.RuntimePluggableClassFactory
                 {
                     throw new PluginClassFactoryException("Somehow there is no plugin versions");
                 }
-                SemanticVersionNumber highestKey = pluginVersions.Keys.Max();
-                if (TryGetVersion(highestKey, out Type type))
+                SemanticVersionNumber? highestKey = pluginVersions.Keys.Max();
+                if (highestKey != null && TryGetVersion(highestKey, out Type type))
                 {
                     return type;
                 }
@@ -311,7 +311,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 {
                     throw new PluginClassFactoryException("Somehow there is no plugin versions");
                 }
-                if (pluginVersions.TryGetValue(version, out Type innerType))
+                if (pluginVersions.TryGetValue(version, out Type? innerType))
                 {
                     type = innerType;
                     return true;
@@ -344,7 +344,7 @@ namespace DevelApp.RuntimePluggableClassFactory
 
                         foreach (SemanticVersionNumber deletableVersion in pluginVersions.Keys.Where(s => !retainKeys.Contains(s)))
                         {
-                            if (pluginVersions.Remove(deletableVersion, out Type value))
+                            if (pluginVersions.Remove(deletableVersion, out Type? value))
                             {
                                 //TODO Log removed type or use as observable
                             }
@@ -366,7 +366,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             {
                 if (pluginVersions.ContainsKey(version))
                 {
-                    pluginVersions.Remove(version, out Type ignoredType);
+                    pluginVersions.Remove(version, out Type? ignoredType);
                 }
             }
         }
@@ -377,10 +377,10 @@ namespace DevelApp.RuntimePluggableClassFactory
     /// </summary>
     public class PluginInstantiationErrorEventArgs : EventArgs
     {
-        public string ModuleName { get; set; }
-        public string PluginName { get; set; }
-        public string Version { get; set; }
-        public Exception Exception { get; set; }
+        public string? ModuleName { get; set; }
+        public string? PluginName { get; set; }
+        public string? Version { get; set; }
+        public Exception? Exception { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

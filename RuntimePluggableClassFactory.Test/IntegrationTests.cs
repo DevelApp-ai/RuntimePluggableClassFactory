@@ -46,7 +46,7 @@ namespace RuntimePluggableClassFactory.Test
                 securityEventFired = true;
             };
 
-            pluginFactory.PluginInstantiationError += (sender, args) =>
+            pluginFactory.PluginInstantiationFailed += (sender, args) =>
             {
                 pluginErrorFired = true;
             };
@@ -55,23 +55,23 @@ namespace RuntimePluggableClassFactory.Test
             
             // 1. Refresh plugins (discovery phase)
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             Assert.NotEmpty(availablePlugins);
 
             // 2. Get a plugin instance
             var firstPlugin = availablePlugins.First();
-            var pluginInstance = pluginFactory.GetInstance(firstPlugin.ModuleName, firstPlugin.PluginName);
+            var pluginInstance = pluginFactory.GetInstance(firstPlugin.moduleName, firstPlugin.pluginName);
             Assert.NotNull(pluginInstance);
 
             // 3. Execute plugin
             var result = pluginInstance.Execute("test input");
-            Assert.NotNull(result);
+            // result is a bool, so just verify it's defined
 
             // 4. Test versioned access
             var versionedInstance = pluginFactory.GetInstance(
-                firstPlugin.ModuleName, 
-                firstPlugin.PluginName, 
-                firstPlugin.Version);
+                firstPlugin.moduleName, 
+                firstPlugin.pluginName, 
+                firstPlugin.version);
             Assert.NotNull(versionedInstance);
 
             // 5. Test unloading
@@ -79,6 +79,8 @@ namespace RuntimePluggableClassFactory.Test
 
             // Verify events (may or may not fire depending on plugin content)
             // These are informational and don't affect test success
+            _ = securityEventFired; // Suppress unused variable warning
+            _ = pluginErrorFired; // Suppress unused variable warning
         }
 
         [Fact]
@@ -94,13 +96,13 @@ namespace RuntimePluggableClassFactory.Test
             
             // 1. Refresh and discover typed plugins
             await typedFactory.RefreshPluginsAsync();
-            var availablePlugins = await typedFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await typedFactory.GetPossiblePlugins();
             
             // Find a typed plugin (may not exist in test environment)
             var typedPlugin = availablePlugins.FirstOrDefault(p => p.Type.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypedPluginClass<,>)));
             
-            if (typedPlugin != null)
+            if (!typedPlugin.Equals(default))
             {
                 // 2. Execute with strongly-typed input/output
                 var input = new WordGuessInput { Word = "test", CaseSensitive = false };
@@ -140,7 +142,7 @@ namespace RuntimePluggableClassFactory.Test
 
             // Act
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
 
             // Assert - With strict settings, some plugins may be rejected
             // This is expected behavior and validates security integration
@@ -163,7 +165,7 @@ namespace RuntimePluggableClassFactory.Test
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
             await pluginFactory.RefreshPluginsAsync();
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
             if (!availablePlugins.Any())
             {
@@ -175,7 +177,7 @@ namespace RuntimePluggableClassFactory.Test
 
             // Act - Execute plugin concurrently from multiple threads
             var tasks = new Task[10];
-            var results = new string[10];
+            var results = new bool?[10];
             var exceptions = new Exception[10];
 
             for (int i = 0; i < 10; i++)
@@ -185,7 +187,7 @@ namespace RuntimePluggableClassFactory.Test
                 {
                     try
                     {
-                        var instance = pluginFactory.GetInstance(firstPlugin.ModuleName, firstPlugin.PluginName);
+                        var instance = pluginFactory.GetInstance(firstPlugin.moduleName, firstPlugin.pluginName);
                         results[index] = instance?.Execute($"concurrent test {index}");
                     }
                     catch (Exception ex)
@@ -217,7 +219,7 @@ namespace RuntimePluggableClassFactory.Test
             
             // 1. Initial load
             await pluginFactory.RefreshPluginsAsync();
-            var initialPlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var initialPlugins = await pluginFactory.GetPossiblePlugins();
             var initialCount = initialPlugins.Count();
 
             // 2. Unload all plugins
@@ -225,15 +227,15 @@ namespace RuntimePluggableClassFactory.Test
 
             // 3. Reload plugins
             await pluginFactory.RefreshPluginsAsync();
-            var reloadedPlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var reloadedPlugins = await pluginFactory.GetPossiblePlugins();
             var reloadedCount = reloadedPlugins.Count();
 
             // 4. Verify same plugins are available after reload
             Assert.Equal(initialCount, reloadedCount);
             
             // Verify plugin names match (order may differ)
-            var initialNames = initialPlugins.Select(p => $"{p.ModuleName}.{p.PluginName}").OrderBy(n => n);
-            var reloadedNames = reloadedPlugins.Select(p => $"{p.ModuleName}.{p.PluginName}").OrderBy(n => n);
+            var initialNames = initialPlugins.Select(p => $"{p.moduleName}.{p.pluginName}").OrderBy(n => n);
+            var reloadedNames = reloadedPlugins.Select(p => $"{p.moduleName}.{p.pluginName}").OrderBy(n => n);
             Assert.Equal(initialNames, reloadedNames);
         }
 
@@ -249,7 +251,7 @@ namespace RuntimePluggableClassFactory.Test
             bool pluginLoadingErrorFired = false;
             bool securityValidationFailed = false;
 
-            pluginFactory.PluginInstantiationError += (sender, args) =>
+            pluginFactory.PluginInstantiationFailed += (sender, args) =>
             {
                 pluginInstantiationErrorFired = true;
                 Assert.NotNull(args.Exception);
@@ -278,13 +280,13 @@ namespace RuntimePluggableClassFactory.Test
             Assert.Null(nonExistentPlugin);
 
             // Try to get a plugin with invalid version
-            var availablePlugins = await pluginFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await pluginFactory.GetPossiblePlugins();
             if (availablePlugins.Any())
             {
                 var firstPlugin = availablePlugins.First();
                 var invalidVersionPlugin = pluginFactory.GetInstance(
-                    firstPlugin.ModuleName, 
-                    firstPlugin.PluginName, 
+                    firstPlugin.moduleName, 
+                    firstPlugin.pluginName, 
                     new DevelApp.Utility.Model.SemanticVersionNumber(99, 99, 99));
                 Assert.Null(invalidVersionPlugin);
             }
@@ -292,6 +294,9 @@ namespace RuntimePluggableClassFactory.Test
             // Assert - Error handling should be robust
             // Events may or may not fire depending on the specific plugins and environment
             // The important thing is that the system doesn't crash and handles errors gracefully
+            _ = pluginInstantiationErrorFired; // Suppress unused variable warning
+            _ = pluginLoadingErrorFired; // Suppress unused variable warning
+            _ = securityValidationFailed; // Suppress unused variable warning
         }
 
         [Fact]
@@ -306,16 +311,16 @@ namespace RuntimePluggableClassFactory.Test
             for (int i = 0; i < 3; i++)
             {
                 await pluginFactory.RefreshPluginsAsync();
-                var plugins = await pluginFactory.ListAllPossiblePluginsAsync();
+                var plugins = await pluginFactory.GetPossiblePlugins();
                 
                 // Create instances
                 foreach (var plugin in plugins.Take(2)) // Limit to first 2 to avoid excessive testing
                 {
-                    var instance = pluginFactory.GetInstance(plugin.ModuleName, plugin.PluginName);
+                    var instance = pluginFactory.GetInstance(plugin.moduleName, plugin.pluginName);
                     if (instance != null)
                     {
                         var result = instance.Execute("memory test");
-                        Assert.NotNull(result);
+                        // result is a bool, so just verify it's defined
                     }
                 }
 
@@ -340,15 +345,15 @@ namespace RuntimePluggableClassFactory.Test
             var securityValidator = new DefaultPluginSecurityValidator(PluginSecuritySettings.CreateDefault());
             var filePluginLoader = new FilePluginLoader<ITypedSpecificInterface>(_pluginUri, securityValidator);
             var typedFactory = new TypedPluginClassFactory<ITypedSpecificInterface, WordGuessInput, WordGuessOutput>(
-                new PluginClassFactory<ITypedSpecificInterface>(filePluginLoader));
+                filePluginLoader);
 
             await typedFactory.RefreshPluginsAsync();
-            var availablePlugins = await typedFactory.ListAllPossiblePluginsAsync();
+            var availablePlugins = await typedFactory.GetPossiblePlugins();
             
             var typedPlugin = availablePlugins.FirstOrDefault(p => p.Type.GetInterfaces()
                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypedPluginClass<,>)));
             
-            if (typedPlugin != null)
+            if (!typedPlugin.Equals(default))
             {
                 // Create execution context with cancellation
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
