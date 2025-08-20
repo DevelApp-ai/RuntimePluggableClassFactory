@@ -20,13 +20,22 @@ jobs:
         fetch-depth: 0 # Fetches all history for GitVersion
 
     - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v1.1.1
+      uses: gittools/actions/gitversion/setup@v0.10.2
       with:
         versionSpec: '5.x'
 
     - name: Determine Version
       id: gitversion # The output of this step is used later
-      uses: gittools/actions/gitversion/execute@v1.1.1
+      uses: gittools/actions/gitversion/execute@v0.10.2
+      continue-on-error: true
+
+    - name: Set fallback version
+      id: fallback-version
+      if: failure()
+      run: |
+        echo "GitVersion failed, using fallback version"
+        echo "semVer=2.0.1-fallback.${{ github.run_number }}" >> $GITHUB_OUTPUT
+        echo "nuGetVersionV2=2.0.1-fallback.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -36,16 +45,29 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore RuntimePluggableClassFactory.sln
 
-    - name: Build
-      # Use the version calculated by GitVersion - exclude test project due to API compatibility issues
+    - name: Set version variables
+      id: version
       run: |
-        dotnet build RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
-        dotnet build RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
-        dotnet build PluginImplementations/PluginImplementations.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
-        dotnet build PluginImplementations_1_2_1/PluginImplementations_1_2_1.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
-        dotnet build PluginImplementations_1_2_2/PluginImplementations_1_2_2.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
-        dotnet build PluginImplementations_1_3_1/PluginImplementations_1_3_1.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
-        dotnet build PluginImplementations_1_4_1/PluginImplementations_1_4_1.csproj --configuration Release --no-restore /p:Version=${{ steps.gitversion.outputs.semVer }}
+        if [ "${{ steps.gitversion.outcome }}" == "success" ]; then
+          echo "semver=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
+          echo "nugetversion=${{ steps.gitversion.outputs.nuGetVersionV2 }}" >> $GITHUB_OUTPUT
+          echo "Using GitVersion: ${{ steps.gitversion.outputs.semVer }}"
+        else
+          echo "semver=${{ steps.fallback-version.outputs.semVer }}" >> $GITHUB_OUTPUT
+          echo "nugetversion=${{ steps.fallback-version.outputs.nuGetVersionV2 }}" >> $GITHUB_OUTPUT
+          echo "Using fallback version: ${{ steps.fallback-version.outputs.semVer }}"
+        fi
+
+    - name: Build
+      # Use the version calculated by GitVersion or fallback - exclude test project due to API compatibility issues
+      run: |
+        dotnet build RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build PluginImplementations/PluginImplementations.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build PluginImplementations_1_2_1/PluginImplementations_1_2_1.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build PluginImplementations_1_2_2/PluginImplementations_1_2_2.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build PluginImplementations_1_3_1/PluginImplementations_1_3_1.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build PluginImplementations_1_4_1/PluginImplementations_1_4_1.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
 
     - name: Test
       run: |
@@ -56,8 +78,8 @@ jobs:
     - name: Pack
       # Creates the NuGet package using the calculated version
       run: |
-        dotnet pack RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
-        dotnet pack RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
+        dotnet pack RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
+        dotnet pack RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -73,16 +95,14 @@ jobs:
     - name: Create GitHub Release
       # This step only runs for pushes to the 'master' branch, not for PRs
       if: github.event_name == 'push'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ steps.gitversion.outputs.semVer }}
-        release_name: Release v${{ steps.gitversion.outputs.semVer }}
+        tag_name: v${{ steps.version.outputs.semver }}
+        name: Release v${{ steps.version.outputs.semver }}
         body: |
           ## 📦 NuGet Packages
-          - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ steps.gitversion.outputs.semVer }}
-          - [DevelApp.RuntimePluggableClassFactory.Interface](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Interface) v${{ steps.gitversion.outputs.semVer }}
+          - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ steps.version.outputs.semver }}
+          - [DevelApp.RuntimePluggableClassFactory.Interface](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Interface) v${{ steps.version.outputs.semver }}
 
           ## 🚀 Features
           - Dynamic plugin loading and unloading with AssemblyLoadContext
@@ -100,4 +120,5 @@ jobs:
           - Memory growth: < 50MB under load
         draft: false
         prerelease: false
+        files: ./artifacts/*.nupkg
 
