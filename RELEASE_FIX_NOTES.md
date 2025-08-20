@@ -16,6 +16,7 @@ The NuGet package was incorrectly published with version `v2.0.1-ci.28` instead 
 ### 2. GitHub Actions Workflow Update
 - **File**: `.github/workflows/dotnet-cicd.yml`
 - **Changes**:
+  - Updated GitVersion from v5.x to v6.x for consistency
   - Replaced deprecated `actions/create-release@v1` with `softprops/action-gh-release@v2`
   - Added NuGet package files to the release assets
   - Improved release creation reliability
@@ -31,6 +32,15 @@ The NuGet package was incorrectly published with version `v2.0.1-ci.28` instead 
 ### For feature/hotfix branches:
 - Will continue to get pre-release versions with appropriate labels
 - No impact on existing development workflow
+
+## Workflow Simulation Results ✅
+
+Successfully tested the complete workflow simulation:
+```
+GitVersion Output (master branch): 2.0.1
+Build Status: ✅ Success  
+Package Creation: ✅ DevelApp.RuntimePluggableClassFactory.2.0.1.nupkg
+```
 
 ## Manual Steps Required (if needed)
 
@@ -69,8 +79,8 @@ After the workflow runs on master:
 - **Feature branches**: Maintains pre-release labeling for development
 
 ### GitHub Actions Changes:
-- **Before**: `actions/create-release@v1` (deprecated)
-- **After**: `softprops/action-gh-release@v2` (modern, maintained)
-- **Benefits**: Better reliability, asset upload support, continued maintenance
+- **Before**: `actions/create-release@v1` (deprecated) + GitVersion v5.x
+- **After**: `softprops/action-gh-release@v2` (modern, maintained) + GitVersion v6.x
+- **Benefits**: Better reliability, asset upload support, continued maintenance, version consistency
 
 This fix ensures proper semantic versioning and package publishing for future releases.
