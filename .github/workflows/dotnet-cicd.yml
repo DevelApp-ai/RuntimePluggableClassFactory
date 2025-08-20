@@ -1,3 +1,5 @@
+permissions:
+  contents: write
 name: .NET CI/CD
 
 # Triggers the workflow on pushes and pull requests to the master branch
