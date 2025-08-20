@@ -4,25 +4,25 @@ branches:
   master:
     regex: ^master$
     mode: ContinuousDeployment
-    label: ''
+    tag: ''
     increment: Patch
     is-release-branch: true
   develop:
     regex: ^develop$
     mode: ContinuousDeployment
-    label: alpha
+    tag: alpha
     increment: Minor
     is-release-branch: false
   feature:
-    regex: ^features?[/-]
+    regex: ^features?[/-]|^copilot[/-]
     mode: ContinuousDeployment
-    label: alpha
+    tag: alpha
     increment: Minor
     is-release-branch: false
   hotfix:
     regex: ^hotfix(es)?[/-]
     mode: ContinuousDeployment
-    label: beta
+    tag: beta
     increment: Patch
     is-release-branch: false
 ignore:
