@@ -186,11 +186,11 @@ namespace DevelApp.RuntimePluggableClassFactory
     {
         public bool Success { get; set; }
         public T Result { get; set; }
-        public string Error { get; set; }
-        public Exception Exception { get; set; }
-        public string PluginName { get; set; }
-        public string PluginModule { get; set; }
-        public string PluginVersion { get; set; }
+        public string? Error { get; set; }
+        public Exception? Exception { get; set; }
+        public string? PluginName { get; set; }
+        public string? PluginModule { get; set; }
+        public string? PluginVersion { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public TimeSpan Duration { get; set; }
@@ -201,11 +201,11 @@ namespace DevelApp.RuntimePluggableClassFactory
     /// </summary>
     public class PluginExecutionErrorEventArgs : EventArgs
     {
-        public string PluginName { get; set; }
-        public string PluginModule { get; set; }
-        public string PluginVersion { get; set; }
-        public string Error { get; set; }
-        public Exception Exception { get; set; }
+        public string? PluginName { get; set; }
+        public string? PluginModule { get; set; }
+        public string? PluginVersion { get; set; }
+        public string? Error { get; set; }
+        public Exception? Exception { get; set; }
         public TimeSpan Duration { get; set; }
     }
 }

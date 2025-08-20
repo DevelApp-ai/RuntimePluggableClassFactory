@@ -65,7 +65,7 @@ namespace RuntimePluggableClassFactory.Test
 
             // 3. Execute plugin
             var result = pluginInstance.Execute("test input");
-            Assert.NotNull(result);
+            // result is a bool, so just verify it's defined
 
             // 4. Test versioned access
             var versionedInstance = pluginFactory.GetInstance(
@@ -79,6 +79,8 @@ namespace RuntimePluggableClassFactory.Test
 
             // Verify events (may or may not fire depending on plugin content)
             // These are informational and don't affect test success
+            _ = securityEventFired; // Suppress unused variable warning
+            _ = pluginErrorFired; // Suppress unused variable warning
         }
 
         [Fact]
@@ -292,6 +294,9 @@ namespace RuntimePluggableClassFactory.Test
             // Assert - Error handling should be robust
             // Events may or may not fire depending on the specific plugins and environment
             // The important thing is that the system doesn't crash and handles errors gracefully
+            _ = pluginInstantiationErrorFired; // Suppress unused variable warning
+            _ = pluginLoadingErrorFired; // Suppress unused variable warning
+            _ = securityValidationFailed; // Suppress unused variable warning
         }
 
         [Fact]
@@ -315,7 +320,7 @@ namespace RuntimePluggableClassFactory.Test
                     if (instance != null)
                     {
                         var result = instance.Execute("memory test");
-                        Assert.NotNull(result);
+                        // result is a bool, so just verify it's defined
                     }
                 }
 
