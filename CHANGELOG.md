@@ -137,5 +137,5 @@ For questions, issues, or support:
 - Review the comprehensive test suite (48 tests)
 - Check the [TDS Implementation Guide](TDS_IMPLEMENTATION.md)
 - Examine the [Testing Strategy](TestingStrategy.md)
-- Create an issue on [GitHub](https://github.com/DevelApp-dk/RuntimePluggableClassFactory/issues)
+- Create an issue on [GitHub](https://github.com/DevelApp-ai/RuntimePluggableClassFactory/issues)
 

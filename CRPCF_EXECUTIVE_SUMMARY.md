@@ -369,6 +369,6 @@ The CRPCF project provides a clear path to modernizing plugin architecture while
 
 **Document Information**
 - **Version**: 2.0.0
-- **Last Updated**: 2024
+- **Last Updated**: 2025
 - **Classification**: Technical Design Specification
 - **Approval Required**: Architecture Review Board, Security Team, Executive Sponsor
