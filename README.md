@@ -227,7 +227,7 @@ All performance targets are validated by automated tests:
 
 ```bash
 # Clone repository
-git clone https://github.com/DevelApp-dk/RuntimePluggableClassFactory.git
+git clone https://github.com/DevelApp-ai/RuntimePluggableClassFactory.git
 
 # Build solution
 dotnet build RuntimePluggableClassFactory.sln
@@ -275,5 +275,3 @@ For questions, issues, or support:
 ---
 
 **TDS Implementation Status**: ✅ Complete - All requirements implemented and validated
-
-# Test change

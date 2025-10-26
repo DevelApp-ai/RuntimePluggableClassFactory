@@ -329,7 +329,7 @@ dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.
 
 ```bash
 # Clone repository
-git clone https://github.com/DevelApp-dk/RuntimePluggableClassFactory.git
+git clone https://github.com/DevelApp-ai/RuntimePluggableClassFactory.git
 cd RuntimePluggableClassFactory
 
 # Build solution
