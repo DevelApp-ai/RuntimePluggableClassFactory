@@ -263,7 +263,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
                     {
                         return typedProxy;
                     }
-                    return (T)(object)proxy; // Force cast for basic compatibility
+                    throw new InvalidOperationException($"Containerized plugin proxy cannot be cast to {typeof(T).Name}");
                 }
 
                 return default;
