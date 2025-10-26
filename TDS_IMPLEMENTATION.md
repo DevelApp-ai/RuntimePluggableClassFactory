@@ -30,7 +30,7 @@ This document describes the complete implementation of the Technical Design Spec
 - **PluginExecutionSandbox.cs**: Isolated execution environment for plugins
 - **Enhanced PluginClassFactory.cs**: Comprehensive error handling with events
 - **FilePluginLoader.cs**: Robust error handling for plugin loading failures
-- **StabilityTests.cs**: 3 tests validating error resilience
+- **StabilityTests.cs**: 5 tests validating error resilience
 
 **Key Features**:
 - Plugin execution sandboxing
@@ -79,10 +79,10 @@ This document describes the complete implementation of the Technical Design Spec
 
 **Implementation**:
 - **48 tests across 7 categories**:
-  1. **Unit Tests** (8 tests) - Core functionality
-  2. **Stability Tests** (3 tests) - Error handling and resilience
+  1. **Unit Tests** (4 tests) - Core functionality
+  2. **Stability Tests** (5 tests) - Error handling and resilience
   3. **Unloading Tests** (2 tests) - Dynamic plugin unloading
-  4. **Typed Plugin Tests** (6 tests) - Type-safe plugin system
+  4. **Typed Plugin Tests** (8 tests) - Type-safe plugin system
   5. **Security Tests** (13 tests) - Security hardening validation
   6. **Integration Tests** (8 tests) - End-to-end workflows
   7. **Performance Tests** (8 tests) - Performance and scalability
@@ -124,23 +124,27 @@ This document describes the complete implementation of the Technical Design Spec
 ### Key Interfaces
 
 ```csharp
-// Core plugin interface
+// Core plugin interface (provides metadata only)
 public interface IPluginClass
 {
-    string Execute(string input);
+    IdentifierString Name { get; }
+    NamespaceString Module { get; }
+    string Description { get; }
+    SemanticVersionNumber Version { get; }
 }
 
 // Type-safe plugin interface
 public interface ITypedPluginClass<TInput, TOutput> : IPluginClass
 {
-    PluginExecutionResult<TOutput> Execute(TInput input, IPluginExecutionContext context = null);
+    PluginExecutionResult<TOutput> Execute(IPluginExecutionContext context, TInput input);
 }
 
 // Plugin loader interface
 public interface IPluginLoader<T> where T : IPluginClass
 {
     Task<IEnumerable<(NamespaceString, IdentifierString, SemanticVersionNumber, string, Type)>> ListAllPossiblePluginsAsync();
-    void UnloadPlugin(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version);
+    Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins);
+    bool UnloadPlugin(string pluginPath);
     void UnloadAllPlugins();
 }
 
@@ -270,12 +274,12 @@ var validator = new DefaultPluginSecurityValidator(strictSettings);
 
 ### Test Categories
 
-1. **Unit Tests** (RuntimeTests.cs) - 8 tests
+1. **Unit Tests** (RuntimeTests.cs) - 4 tests
    - Core plugin loading and execution
    - Version handling and plugin metadata
    - Basic error scenarios
 
-2. **Stability Tests** (StabilityTests.cs) - 3 tests
+2. **Stability Tests** (StabilityTests.cs) - 5 tests
    - Plugin loading failure handling
    - Error event propagation
    - System recovery scenarios
@@ -284,7 +288,7 @@ var validator = new DefaultPluginSecurityValidator(strictSettings);
    - Individual plugin unloading
    - Bulk plugin unloading with memory cleanup
 
-4. **Typed Plugin Tests** (TypedPluginTests.cs) - 6 tests
+4. **Typed Plugin Tests** (TypedPluginTests.cs) - 8 tests
    - Type-safe plugin discovery and execution
    - Execution context functionality
    - Async execution with timeout

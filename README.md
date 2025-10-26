@@ -92,12 +92,19 @@ if (result.Success)
 ```csharp
 public interface IMyPluginInterface : IPluginClass
 {
-    // Inherits: string Execute(string input);
+    // Custom execution method for this specific interface
+    string ProcessData(string input);
 }
 
 public class MyPlugin : IMyPluginInterface
 {
-    public string Execute(string input)
+    // Implement IPluginClass properties
+    public IdentifierString Name => "MyPlugin";
+    public NamespaceString Module => "MyModule";
+    public string Description => "Example plugin implementation";
+    public SemanticVersionNumber Version => new SemanticVersionNumber(1, 0, 0);
+
+    public string ProcessData(string input)
     {
         return $"Processed: {input}";
     }
@@ -114,9 +121,13 @@ public interface IMyTypedPlugin : ITypedPluginClass<MyInput, MyOutput>
 
 public class MyTypedPlugin : IMyTypedPlugin
 {
-    public string Execute(string input) => Execute(JsonSerializer.Deserialize<MyInput>(input)).Data.Result;
+    // Implement IPluginClass properties
+    public IdentifierString Name => "MyTypedPlugin";
+    public NamespaceString Module => "MyModule";
+    public string Description => "Example typed plugin implementation";
+    public SemanticVersionNumber Version => new SemanticVersionNumber(1, 0, 0);
     
-    public PluginExecutionResult<MyOutput> Execute(MyInput input, IPluginExecutionContext context = null)
+    public PluginExecutionResult<MyOutput> Execute(IPluginExecutionContext context, MyInput input)
     {
         context?.Logger?.LogInformation($"Processing: {input.Data}");
         
@@ -140,10 +151,10 @@ dotnet test
 ```
 
 ### Test Categories
-- **Unit Tests** (8) - Core functionality
-- **Stability Tests** (3) - Error handling
+- **Unit Tests** (4) - Core functionality
+- **Stability Tests** (5) - Error handling
 - **Unloading Tests** (2) - Dynamic unloading
-- **Typed Plugin Tests** (6) - Type safety
+- **Typed Plugin Tests** (8) - Type safety
 - **Security Tests** (13) - Security validation
 - **Integration Tests** (8) - End-to-end workflows
 - **Performance Tests** (8) - Performance benchmarks
@@ -205,7 +216,6 @@ All performance targets are validated by automated tests:
 
 - [TDS Implementation Details](TDS_IMPLEMENTATION.md) - Complete TDS implementation documentation
 - [Testing Strategy](TestingStrategy.md) - Comprehensive testing approach
-- [Architecture Analysis](architecture_analysis.md) - Technical architecture details
 
 ## Requirements
 
