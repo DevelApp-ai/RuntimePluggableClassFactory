@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RuntimePluggableClassFactory.Containerized\RuntimePluggableClassFactory.Containerized.csproj" />
-    <PackageReference Include="KubernetesClient" Version="12.1.1" />
+    <PackageReference Include="KubernetesClient" Version="17.0.14" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
   </ItemGroup>
