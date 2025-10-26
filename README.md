@@ -216,7 +216,6 @@ All performance targets are validated by automated tests:
 
 - [TDS Implementation Details](TDS_IMPLEMENTATION.md) - Complete TDS implementation documentation
 - [Testing Strategy](TestingStrategy.md) - Comprehensive testing approach
-- [Architecture Analysis](architecture_analysis.md) - Technical architecture details
 
 ## Requirements
 
