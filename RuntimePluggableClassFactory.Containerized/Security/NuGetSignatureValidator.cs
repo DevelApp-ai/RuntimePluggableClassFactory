@@ -196,8 +196,6 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
             }
         }
 
-        // Removed - signature validation is now handled in ValidateSignatureAsync method
-
         private SignatureValidationInternalResult ValidateCertificateChain(X509Certificate2 certificate)
         {
             try
