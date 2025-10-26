@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>DevelApp.RuntimePluggableClassFactory.Containerized</AssemblyName>
+    <RootNamespace>DevelApp.RuntimePluggableClassFactory.Containerized</RootNamespace>
+    <Authors>Lars Shakya Buch-Jepsen</Authors>
+    <Copyright>Copyright © DevelApp 2020-2025</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Company>DevelApp Denmark (CVR 33211740)</Company>
+    <Product>RuntimePluggableClassFactory Containerized</Product>
+    <Description>Containerized RuntimePluggableClassFactory (CRPCF) for secure execution of NuGet packages within isolated containers. Supports digital signature validation, whitelisted signers, and multiple container orchestration platforms.</Description>
+    <PackageTags>plugin;container;kubernetes;docker;security;signed-packages;orchestration</PackageTags>
+    <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</PackageProjectUrl>
+    <Version>2.1.0</Version>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
+    <ProjectReference Include="..\RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj" />
+    <PackageReference Include="DevelApp.Utility" Version="1.0.7" />
+    <PackageReference Include="NuGet.Packaging" Version="6.7.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

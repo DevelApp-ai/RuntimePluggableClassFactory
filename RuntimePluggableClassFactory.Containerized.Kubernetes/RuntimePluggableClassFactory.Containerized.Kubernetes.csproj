@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes</AssemblyName>
+    <RootNamespace>DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes</RootNamespace>
+    <Authors>Lars Shakya Buch-Jepsen</Authors>
+    <Copyright>Copyright © DevelApp 2020-2025</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Company>DevelApp Denmark (CVR 33211740)</Company>
+    <Product>RuntimePluggableClassFactory Containerized Kubernetes</Product>
+    <Description>Kubernetes orchestrator implementation for CRPCF (Containerized RuntimePluggableClassFactory).</Description>
+    <PackageTags>plugin;container;kubernetes;orchestration;crpcf</PackageTags>
+    <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</PackageProjectUrl>
+    <Version>2.1.0</Version>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Containerized\RuntimePluggableClassFactory.Containerized.csproj" />
+    <PackageReference Include="KubernetesClient" Version="12.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
