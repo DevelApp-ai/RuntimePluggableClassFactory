@@ -119,23 +119,50 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
             return await ExtractPackageInfoInternalAsync(package);
         }
 
-        private Task<SignedPackageInfo> ExtractPackageInfoInternalAsync(PackageArchiveReader package)
+        private async Task<SignedPackageInfo> ExtractPackageInfoInternalAsync(PackageArchiveReader package)
         {
             var identity = package.GetIdentity();
-            
-            // Calculate package hash - simplified for basic implementation
-            var packageBytes = new byte[1024]; // Placeholder for demo
-            var hash = SHA256.HashData(packageBytes);
 
-            return Task.FromResult(new SignedPackageInfo
+            // Calculate package hash using actual package content
+            byte[] hash;
+            long packageSize;
+            using (var stream = package.GetStream())
+            {
+                (hash, packageSize) = await ComputeHashAndSizeAsync(stream);
+            }
+
+            return new SignedPackageInfo
             {
                 PackageId = identity.Id,
                 Version = identity.Version.ToString(),
                 PackageHash = hash,
-                PackageSize = packageBytes.Length
-            });
+                PackageSize = packageSize
+            };
         }
 
+        /// <summary>
+        /// Computes the SHA256 hash and size of a stream.
+        /// </summary>
+        private static async Task<(byte[] hash, long size)> ComputeHashAndSizeAsync(Stream stream)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            using (var sha256 = SHA256.Create())
+            {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                long totalBytes = 0;
+                // Use CryptoStream to compute hash as we read
+                using (var cryptoStream = new CryptoStream(Stream.Null, sha256, CryptoStreamMode.Write))
+                {
+                    while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        await cryptoStream.WriteAsync(buffer, 0, bytesRead);
+                        totalBytes += bytesRead;
+                    }
+                }
+                return (sha256.Hash, totalBytes);
+            }
+        }
         private async Task<SignatureValidationInternalResult> ValidateSignatureAsync(PackageArchiveReader package)
         {
             // Simplified signature validation for basic implementation
