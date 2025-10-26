@@ -17,7 +17,7 @@ This document outlines the comprehensive testing strategy for the RuntimePluggab
 - Error handling for missing plugins
 - Plugin metadata validation
 
-**Test Count**: 8 tests
+**Test Count**: 4 tests
 
 ### 2. Stability Tests (StabilityTests.cs)
 **Purpose**: Validate system stability and error resilience
@@ -29,7 +29,7 @@ This document outlines the comprehensive testing strategy for the RuntimePluggab
 - System stability during plugin failures
 - Graceful degradation scenarios
 
-**Test Count**: 3 tests
+**Test Count**: 5 tests
 
 ### 3. Unloading Tests (UnloadingTests.cs)
 **Purpose**: Test dynamic plugin unloading capabilities
@@ -54,7 +54,7 @@ This document outlines the comprehensive testing strategy for the RuntimePluggab
 - Type safety enforcement
 - Async execution with timeout handling
 
-**Test Count**: 6 tests
+**Test Count**: 8 tests
 
 ### 5. Security Tests (SecurityTests.cs)
 **Purpose**: Validate security hardening features
