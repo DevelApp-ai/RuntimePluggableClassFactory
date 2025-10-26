@@ -4,6 +4,7 @@ using DevelApp.RuntimePluggableClassFactory.Interface;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RuntimePluggableClassFactory.Containerized.Tests
@@ -327,31 +328,4 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
     }
 
     #endregion
-}
-
-// Extension methods for LINQ
-public static class LinqExtensions
-{
-    public static bool Any<T>(this IEnumerable<T> source)
-    {
-        return source.GetEnumerator().MoveNext();
-    }
-
-    public static TSource? FirstOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
-    {
-        foreach (var item in source)
-        {
-            if (predicate(item))
-                return item;
-        }
-        return default;
-    }
-
-    public static IEnumerable<TResult> Select<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector)
-    {
-        foreach (var item in source)
-        {
-            yield return selector(item);
-        }
-    }
 }
