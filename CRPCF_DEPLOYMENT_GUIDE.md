@@ -715,7 +715,7 @@ spec:
         severity: warning
       annotations:
         summary: "High plugin failure rate"
-        description: "Plugin execution failure rate is {{ $value }} failures per second."
+        description: "Plugin execution failure rate is {% raw %}{{ $value }}{% endraw %} failures per second."
     
     - alert: CRPCFHighMemoryUsage
       expr: container_memory_usage_bytes{pod=~"crpcf-orchestrator-.*"} / container_spec_memory_limit_bytes > 0.8
@@ -744,7 +744,7 @@ spec:
         "targets": [
           {
             "expr": "crpcf_plugin_deployments_total",
-            "legendFormat": "{{status}}"
+            "legendFormat": "{% raw %}{{status}}{% endraw %}"
           }
         ],
         "fieldConfig": {
@@ -771,7 +771,7 @@ spec:
         "targets": [
           {
             "expr": "crpcf_active_containers",
-            "legendFormat": "{{platform}}"
+            "legendFormat": "{% raw %}{{platform}}{% endraw %}"
           }
         ]
       },
@@ -782,7 +782,7 @@ spec:
         "targets": [
           {
             "expr": "crpcf_plugin_execution_duration_seconds_bucket",
-            "legendFormat": "{{le}}"
+            "legendFormat": "{% raw %}{{le}}{% endraw %}"
           }
         ]
       }

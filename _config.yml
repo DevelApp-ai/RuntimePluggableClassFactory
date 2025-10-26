@@ -2,7 +2,6 @@
 # Using the Leap Day theme
 
 # Theme configuration
-theme: jekyll-theme-leap-day
 remote_theme: pages-themes/leap-day@v0.2.0
 
 # Site metadata
