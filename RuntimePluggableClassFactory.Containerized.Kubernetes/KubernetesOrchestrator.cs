@@ -335,22 +335,17 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes
             };
         }
 
+        /// <summary>
+        /// WARNING: This is a placeholder simulation method. 
+        /// It MUST be replaced with actual Kubernetes exec API calls before production deployment.
+        /// Throws NotImplementedException to prevent accidental use in production.
+        /// </summary>
         private async Task<MockExecutionResult> SimulateExecution(
             KubernetesContainerInstance container,
             string[] command,
             CancellationToken cancellationToken)
         {
-            // This is a simulation for the basic implementation
-            // In a real implementation, you would use the Kubernetes API to execute commands
-            await Task.Delay(100, cancellationToken); // Simulate execution time
-
-            return new MockExecutionResult
-            {
-                Output = "Plugin executed successfully",
-                Error = string.Empty,
-                ExitCode = 0,
-                Duration = TimeSpan.FromMilliseconds(100)
-            };
+            throw new NotImplementedException("SimulateExecution is a placeholder and must be replaced with actual Kubernetes exec API calls before production deployment.");
         }
 
         private static ContainerInstanceStatus MapPodStatusToContainerStatus(string? podPhase)
