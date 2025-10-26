@@ -122,9 +122,10 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
                         {
                             output = JsonSerializer.Deserialize<object>(result.Data.ToString()!);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // If deserialization fails, return as string
+                            // If deserialization fails, log and return as string
+                            _logger?.LogWarning(ex, "Failed to deserialize plugin output, returning as string");
                             output = result.Data.ToString();
                         }
                     }
