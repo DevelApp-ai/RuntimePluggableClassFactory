@@ -1,0 +1,88 @@
+# GitHub Pages configuration for RuntimePluggableClassFactory
+# Using the Leap Day theme
+
+# Theme configuration
+theme: jekyll-theme-leap-day
+remote_theme: pages-themes/leap-day@v0.2.0
+
+# Site metadata
+title: "RuntimePluggableClassFactory"
+description: "A comprehensive .NET library for dynamic plugin loading, execution, and management with enhanced stability, type safety, and security features."
+url: "https://develapp-ai.github.io"
+baseurl: "/RuntimePluggableClassFactory"
+
+# Author/Organization information
+author:
+  name: "DevelApp-ai"
+  email: ""
+
+# Repository information
+repository: "DevelApp-ai/RuntimePluggableClassFactory"
+
+# GitHub Pages specific settings
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-readme-index
+  - jekyll-default-layout
+  - jekyll-titles-from-headings
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Exclude files from processing
+exclude:
+  - .git/
+  - .gitignore
+  - .github/
+  - bin/
+  - obj/
+  - packages/
+  - "*.sln"
+  - "*.csproj"
+  - "*.cs"
+  - "*.dll"
+  - "*.exe"
+  - "*.pdb"
+  - RuntimePluggableClassFactory/
+  - RuntimePluggableClassFactory.Interface/
+  - RuntimePluggableClassFactory.Test/
+  - PluginFolder/
+  - PluginImplementations*/
+  - packages-microsoft-prod.deb
+  - GitVersion.yml
+
+# Include files that start with underscores or dots (except those excluded above)
+include:
+  - _config.yml
+
+# Navigation and site structure
+navigation:
+  - name: "Home"
+    url: "/"
+  - name: "TDS Implementation"
+    url: "/TDS_IMPLEMENTATION"
+  - name: "Testing Strategy"
+    url: "/TestingStrategy"
+  - name: "Changelog"
+    url: "/CHANGELOG"
+  - name: "GitHub Repository"
+    url: "https://github.com/DevelApp-ai/RuntimePluggableClassFactory"
+
+# SEO and social
+social:
+  - name: "GitHub"
+    url: "https://github.com/DevelApp-ai/RuntimePluggableClassFactory"
+
+# Enable syntax highlighting
+highlighter: rouge
+
+# Leap Day theme specific settings
+leap_day:
+  show_downloads: true
+  github:
+    repository_url: "https://github.com/DevelApp-ai/RuntimePluggableClassFactory"
+    zip_url: "https://github.com/DevelApp-ai/RuntimePluggableClassFactory/zipball/master"
+    tar_url: "https://github.com/DevelApp-ai/RuntimePluggableClassFactory/tarball/master"
