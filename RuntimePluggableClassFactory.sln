@@ -21,10 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginImplementations_1_3_1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PluginImplementations_1_4_1", "PluginImplementations_1_4_1\PluginImplementations_1_4_1.csproj", "{5F6D1B67-B978-4C04-B959-5B9C8AC78FB4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimePluggableClassFactory.Containerized", "RuntimePluggableClassFactory.Containerized\RuntimePluggableClassFactory.Containerized.csproj", "{A1B2C3D4-E5F6-7890-1234-567890ABCDEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimePluggableClassFactory.Containerized.Tests", "RuntimePluggableClassFactory.Containerized.Tests\RuntimePluggableClassFactory.Containerized.Tests.csproj", "{C1D2E3F4-G567-8901-2345-6789ABCDEF01}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RuntimePluggableClassFactory.Containerized.Kubernetes", "RuntimePluggableClassFactory.Containerized.Kubernetes\RuntimePluggableClassFactory.Containerized.Kubernetes.csproj", "{B2C3D4E5-F678-9012-3456-7890ABCDEF12}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,14 +62,11 @@ Global
 		{5F6D1B67-B978-4C04-B959-5B9C8AC78FB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F6D1B67-B978-4C04-B959-5B9C8AC78FB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F6D1B67-B978-4C04-B959-5B9C8AC78FB4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A1B2C3D4-E5F6-7890-1234-567890ABCDEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1B2C3D4-E5F6-7890-1234-567890ABCDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A1B2C3D4-E5F6-7890-1234-567890ABCDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1B2C3D4-E5F6-7890-1234-567890ABCDEF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B2C3D4E5-F678-9012-3456-7890ABCDEF12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B2C3D4E5-F678-9012-3456-7890ABCDEF12}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B2C3D4E5-F678-9012-3456-7890ABCDEF12}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B2C3D4E5-F678-9012-3456-7890ABCDEF12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1D2E3F4-G567-8901-2345-6789ABCDEF01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1D2E3F4-G567-8901-2345-6789ABCDEF01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1D2E3F4-G567-8901-2345-6789ABCDEF01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1D2E3F4-G567-8901-2345-6789ABCDEF01}.Release|Any CPU.Build.0 = Release|Any CPU
+
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

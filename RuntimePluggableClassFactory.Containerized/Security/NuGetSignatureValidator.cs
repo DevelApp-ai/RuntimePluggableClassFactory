@@ -119,7 +119,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
             return await ExtractPackageInfoInternalAsync(package);
         }
 
-        private async Task<SignedPackageInfo> ExtractPackageInfoInternalAsync(PackageArchiveReader package)
+        private Task<SignedPackageInfo> ExtractPackageInfoInternalAsync(PackageArchiveReader package)
         {
             var identity = package.GetIdentity();
             
@@ -127,13 +127,13 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
             var packageBytes = new byte[1024]; // Placeholder for demo
             var hash = SHA256.HashData(packageBytes);
 
-            return new SignedPackageInfo
+            return Task.FromResult(new SignedPackageInfo
             {
                 PackageId = identity.Id,
                 Version = identity.Version.ToString(),
                 PackageHash = hash,
                 PackageSize = packageBytes.Length
-            };
+            });
         }
 
         private async Task<SignatureValidationInternalResult> ValidateSignatureAsync(PackageArchiveReader package)

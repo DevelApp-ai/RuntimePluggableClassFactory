@@ -206,12 +206,12 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
             }
         }
 
-        private async Task<T?> GetTraditionalPluginAsync(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber? version)
+        private Task<T?> GetTraditionalPluginAsync(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber? version)
         {
             if (_traditionalFactory == null)
             {
                 _logger.LogDebug("Traditional factory not available");
-                return default;
+                return Task.FromResult<T?>(default);
             }
 
             try
@@ -226,13 +226,13 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
                     _logger.LogDebug("Found traditional plugin {ModuleName}.{PluginName}", moduleName, pluginName);
                 }
 
-                return plugin;
+                return Task.FromResult(plugin);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Traditional plugin {ModuleName}.{PluginName} not found or failed to load", 
                     moduleName, pluginName);
-                return default;
+                return Task.FromResult<T?>(default);
             }
         }
 

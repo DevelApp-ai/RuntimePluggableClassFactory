@@ -68,12 +68,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error executing containerized plugin {PluginId}", _pluginId);
-                return new PluginExecutionResult<object>
-                {
-                    Success = false,
-                    ErrorMessage = $"Plugin execution failed: {ex.Message}",
-                    Exception = ex
-                };
+                return PluginExecutionResult<object>.CreateFailure($"Plugin execution failed: {ex.Message}", ex);
             }
         }
 
@@ -134,34 +129,22 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
                         }
                     }
 
-                    return new PluginExecutionResult<object>
-                    {
-                        Success = true,
-                        Data = output
-                    };
+                    return PluginExecutionResult<object>.CreateSuccess(output!);
                 }
                 else
                 {
                     _logger?.LogWarning("Containerized plugin {PluginId} execution failed: {Error}", 
                         _pluginId, result.ErrorMessage);
                     
-                    return new PluginExecutionResult<object>
-                    {
-                        Success = false,
-                        ErrorMessage = result.ErrorMessage ?? "Unknown error",
-                        Exception = result.Exception
-                    };
+                    return PluginExecutionResult<object>.CreateFailure(
+                        result.ErrorMessage ?? "Unknown error", 
+                        result.Exception);
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error executing containerized plugin {PluginId}", _pluginId);
-                return new PluginExecutionResult<object>
-                {
-                    Success = false,
-                    ErrorMessage = $"Plugin execution failed: {ex.Message}",
-                    Exception = ex
-                };
+                return PluginExecutionResult<object>.CreateFailure($"Plugin execution failed: {ex.Message}", ex);
             }
         }
     }
