@@ -379,3 +379,9 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
+
+# Jekyll local testing files
+Gemfile
+Gemfile.lock
+.bundle/
+vendor/

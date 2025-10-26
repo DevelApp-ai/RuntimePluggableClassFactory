@@ -21,6 +21,7 @@ repository: "DevelApp-ai/RuntimePluggableClassFactory"
 
 # GitHub Pages specific settings
 plugins:
+  - jekyll-remote-theme
   - jekyll-optional-front-matter
   - jekyll-readme-index
   - jekyll-default-layout
