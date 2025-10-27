@@ -7,8 +7,8 @@ remote_theme: pages-themes/leap-day@v0.2.0
 # Site metadata
 title: "RuntimePluggableClassFactory"
 description: "A comprehensive .NET library for dynamic plugin loading, execution, and management with enhanced stability, type safety, and security features."
-url: "https://develapp-ai.github.io"
-baseurl: "/RuntimePluggableClassFactory"
+url: "https://develapp-ai.github.io/RuntimePluggableClassFactory"
+baseurl: ""
 
 # Author/Organization information
 author:
