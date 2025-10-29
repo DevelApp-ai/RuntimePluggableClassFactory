@@ -25,6 +25,7 @@ plugins:
   - jekyll-readme-index
   - jekyll-default-layout
   - jekyll-titles-from-headings
+  - jekyll-sitemap
 
 # Markdown settings
 markdown: kramdown
