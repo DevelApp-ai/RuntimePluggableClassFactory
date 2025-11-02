@@ -84,17 +84,16 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
                 // Check assembly metadata
                 try
                 {
-                    using (var stream = File.OpenRead(assemblyPath))
+                    // Note: LoadFrom will load the assembly - we cannot unload it easily
+                    // This is a known limitation of assembly validation
+                    var assembly = Assembly.LoadFrom(assemblyPath);
+                    var loadedResult = ValidateLoadedAssembly(assembly);
+                    result.Issues.AddRange(loadedResult.Issues);
+                    result.Warnings.AddRange(loadedResult.Warnings);
+                    
+                    if (loadedResult.RiskLevel > result.RiskLevel)
                     {
-                        var assembly = Assembly.LoadFrom(assemblyPath);
-                        var loadedResult = ValidateLoadedAssembly(assembly);
-                        result.Issues.AddRange(loadedResult.Issues);
-                        result.Warnings.AddRange(loadedResult.Warnings);
-                        
-                        if (loadedResult.RiskLevel > result.RiskLevel)
-                        {
-                            result.RiskLevel = loadedResult.RiskLevel;
-                        }
+                        result.RiskLevel = loadedResult.RiskLevel;
                     }
                 }
                 catch (Exception ex)

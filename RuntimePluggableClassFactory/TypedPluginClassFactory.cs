@@ -14,10 +14,11 @@ namespace DevelApp.RuntimePluggableClassFactory
     /// <typeparam name="TPlugin">Plugin interface type</typeparam>
     /// <typeparam name="TInput">Input data type</typeparam>
     /// <typeparam name="TOutput">Output data type</typeparam>
-    public class TypedPluginClassFactory<TPlugin, TInput, TOutput> 
+    public class TypedPluginClassFactory<TPlugin, TInput, TOutput> : IDisposable
         where TPlugin : class, IPluginClass, ITypedPluginClass<TInput, TOutput>
     {
         private readonly PluginClassFactory<TPlugin> _underlyingFactory;
+        private bool _disposed = false;
 
         public TypedPluginClassFactory(IPluginLoader<TPlugin> pluginLoader, int retainOldVersions = 1)
         {
@@ -219,12 +220,12 @@ namespace DevelApp.RuntimePluggableClassFactory
                     {
                         cts.CancelAfter(timeout.Value);
                         var newContext = new PluginExecutionContext(context.Logger, cts.Token, context.Properties);
-                        return await Task.Run(() => plugin.Execute(newContext, input), cts.Token);
+                        return await Task.Run(() => plugin.Execute(newContext, input), cts.Token).ConfigureAwait(false);
                     }
                 }
                 else
                 {
-                    return await Task.Run(() => plugin.Execute(context, input), context.CancellationToken);
+                    return await Task.Run(() => plugin.Execute(context, input), context.CancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException ex) when (timeout.HasValue)
@@ -238,6 +239,33 @@ namespace DevelApp.RuntimePluggableClassFactory
                 context.Logger.LogError($"Plugin execution failed: {ex.Message}", ex);
                 return Interface.PluginExecutionResult<TOutput>.CreateFailure(
                     $"Plugin execution failed: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Disposes of the typed plugin class factory and its resources
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected implementation of Dispose pattern
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose(), false if called from finalizer</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose the underlying factory
+                    _underlyingFactory?.Dispose();
+                }
+
+                _disposed = true;
             }
         }
     }
