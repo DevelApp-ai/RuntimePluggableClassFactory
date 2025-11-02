@@ -12,8 +12,10 @@ using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 {
-    public class FilePluginLoader<T>:IPluginLoader<T> where T:IPluginClass
+    public class FilePluginLoader<T>:IPluginLoader<T>, IDisposable where T:IPluginClass
     {
+        private bool _disposed = false;
+
         public FilePluginLoader(Uri pluginPathUri, IPluginSecurityValidator securityValidator = null)
         {
             PluginPathUri = pluginPathUri;
@@ -101,6 +103,8 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// <returns></returns>
         public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins)
         {
+            ThrowIfDisposed();
+
             List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> filteredList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
 
             foreach (var tuple in await LoadUnfilteredPluginsAsync())
@@ -234,6 +238,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// <returns></returns>
         public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync()
         {
+            ThrowIfDisposed();
             return await LoadUnfilteredPluginsAsync();
         }
 
@@ -276,6 +281,50 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
             catch
             {
                 // Ignore errors in event firing to prevent cascading failures
+            }
+        }
+
+        /// <summary>
+        /// Disposes of the file plugin loader and its resources
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected implementation of Dispose pattern
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose(), false if called from finalizer</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Unload all plugin contexts
+                    UnloadAllPlugins();
+
+                    // Dispose security validator if it's disposable
+                    if (_securityValidator is IDisposable disposableValidator)
+                    {
+                        disposableValidator.Dispose();
+                    }
+                }
+
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Throws if this object has been disposed
+        /// </summary>
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(FilePluginLoader<T>));
             }
         }
     }

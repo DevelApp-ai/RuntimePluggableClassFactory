@@ -176,9 +176,32 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected implementation of Dispose pattern
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose(), false if called from finalizer</param>
+        protected virtual void Dispose(bool disposing)
+        {
             if (!_disposed)
             {
-                _watcher?.Dispose();
+                if (disposing)
+                {
+                    // Dispose managed resources
+                    if (_watcher != null)
+                    {
+                        _watcher.EnableRaisingEvents = false;
+                        _watcher.Created -= OnPluginFileChanged;
+                        _watcher.Changed -= OnPluginFileChanged;
+                        _watcher.Deleted -= OnPluginFileDeleted;
+                        _watcher.Renamed -= OnPluginFileRenamed;
+                        _watcher.Dispose();
+                    }
+                }
+
                 _disposed = true;
             }
         }

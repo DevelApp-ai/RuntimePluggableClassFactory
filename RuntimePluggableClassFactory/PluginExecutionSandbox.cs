@@ -51,7 +51,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                     using (var cts = new CancellationTokenSource(timeout.Value))
                     {
                         var task = Task.Run(() => operation(plugin), cts.Token);
-                        result.Result = task.Result;
+                        result.Result = task.GetAwaiter().GetResult();
                     }
                 }
                 else

@@ -15,8 +15,10 @@ namespace DevelApp.RuntimePluggableClassFactory
 {
     //TODO Link pluginclass version to plugin files
     //TODO Example project to make single dll output with references internalized Fody ? Otherwise compressed zip deployment with definition file
-    public class PluginClassFactory<T> where T : IPluginClass
+    public class PluginClassFactory<T> : IDisposable where T : IPluginClass
     {
+        private bool _disposed = false;
+
         public PluginClassFactory(IPluginLoader<T> pluginLoader, int retainOldVersions = 1)
         {
             PluginLoader = pluginLoader;
@@ -94,6 +96,9 @@ namespace DevelApp.RuntimePluggableClassFactory
 
         public async Task<(bool Success,int Count)> RefreshPluginsAsync()
         {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
+
             try
             {
                 var pluginTypeTuples = await PluginLoader.LoadPluginsAsync(_allowedPlugins);
@@ -129,6 +134,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
+
             if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
             {
                 try
@@ -157,6 +165,9 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
+
             if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
             {
                 if (pluginClass.TryGetVersion(version, out Type type))
@@ -238,6 +249,39 @@ namespace DevelApp.RuntimePluggableClassFactory
             if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
             {
                 pluginClass.RemoveVersion(version);
+            }
+        }
+
+        /// <summary>
+        /// Disposes of the plugin class factory and its resources
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected implementation of Dispose pattern
+        /// </summary>
+        /// <param name="disposing">True if called from Dispose(), false if called from finalizer</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose managed resources
+                    if (PluginLoader is IDisposable disposableLoader)
+                    {
+                        disposableLoader.Dispose();
+                    }
+
+                    // Clear the plugin store
+                    pluginClassStore.Clear();
+                }
+
+                _disposed = true;
             }
         }
 
