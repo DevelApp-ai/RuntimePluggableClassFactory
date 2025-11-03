@@ -59,7 +59,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
         /// <param name="context">Execution context</param>
         /// <param name="input">Input data</param>
         /// <returns>Execution result</returns>
-        public PluginExecutionResult<object> ExecuteTyped(IPluginExecutionContext context, object input)
+        public Interface.PluginExecutionResult<object> ExecuteTyped(IPluginExecutionContext context, object input)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error executing containerized plugin {PluginId}", _pluginId);
-                return PluginExecutionResult<object>.CreateFailure($"Plugin execution failed: {ex.Message}", ex);
+                return Interface.PluginExecutionResult<object>.CreateFailure($"Plugin execution failed: {ex.Message}", ex);
             }
         }
 
@@ -78,7 +78,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
         /// <param name="context">Execution context</param>
         /// <param name="input">Input data</param>
         /// <returns>Execution result</returns>
-        public async Task<PluginExecutionResult<object>> ExecuteAsync(IPluginExecutionContext context, object input)
+        public async Task<Interface.PluginExecutionResult<object>> ExecuteAsync(IPluginExecutionContext context, object input)
         {
             try
             {
@@ -130,22 +130,22 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
                         }
                     }
 
-                    return PluginExecutionResult<object>.CreateSuccess(output!);
+                    return Interface.PluginExecutionResult<object>.CreateSuccess(output!);
                 }
                 else
                 {
                     _logger?.LogWarning("Containerized plugin {PluginId} execution failed: {Error}", 
                         _pluginId, result.ErrorMessage);
                     
-                    return PluginExecutionResult<object>.CreateFailure(
+                    return Interface.PluginExecutionResult<object>.CreateFailure(
                         result.ErrorMessage ?? "Unknown error", 
-                        result.Exception);
+                        result.Exception ?? null!);
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error executing containerized plugin {PluginId}", _pluginId);
-                return PluginExecutionResult<object>.CreateFailure($"Plugin execution failed: {ex.Message}", ex);
+                return Interface.PluginExecutionResult<object>.CreateFailure($"Plugin execution failed: {ex.Message}", ex);
             }
         }
     }

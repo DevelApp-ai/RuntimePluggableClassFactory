@@ -50,7 +50,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
                 using var package = new PackageArchiveReader(packageStream);
 
                 // Extract package information
-                var packageInfo = await ExtractPackageInfoInternalAsync(package);
+                var packageInfo = await ExtractPackageInfoInternalAsync(package, packageStream);
 
                 // Check if signature is required
                 if (options.RequireSignature)
@@ -116,20 +116,25 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
         {
             packageStream.Seek(0, SeekOrigin.Begin);
             using var package = new PackageArchiveReader(packageStream);
-            return await ExtractPackageInfoInternalAsync(package);
+            return await ExtractPackageInfoInternalAsync(package, packageStream);
         }
 
-        private async Task<SignedPackageInfo> ExtractPackageInfoInternalAsync(PackageArchiveReader package)
+        private async Task<SignedPackageInfo> ExtractPackageInfoInternalAsync(PackageArchiveReader package, Stream packageStream)
         {
             var identity = package.GetIdentity();
 
             // Calculate package hash using actual package content
             byte[] hash;
             long packageSize;
-            using (var stream = package.GetStream())
-            {
-                (hash, packageSize) = await ComputeHashAndSizeAsync(stream);
-            }
+            
+            // Save current position
+            var originalPosition = packageStream.Position;
+            
+            // Compute hash from the package stream
+            (hash, packageSize) = await ComputeHashAndSizeAsync(packageStream);
+            
+            // Restore stream position
+            packageStream.Seek(originalPosition, SeekOrigin.Begin);
 
             return new SignedPackageInfo
             {
@@ -160,7 +165,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Security
                         totalBytes += bytesRead;
                     }
                 }
-                return (sha256.Hash, totalBytes);
+                return (sha256.Hash ?? Array.Empty<byte>(), totalBytes);
             }
         }
         private async Task<SignatureValidationInternalResult> ValidateSignatureAsync(PackageArchiveReader package)

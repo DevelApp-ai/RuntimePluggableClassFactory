@@ -6,13 +6,15 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
+namespace DevelApp.RuntimePluggableClassFactory.Containerized
 {
     /// <summary>
-    /// Example factory that can use both traditional (in-process) and containerized plugins
-    /// This demonstrates how the CRPCF can coexist with the existing RuntimePluggableClassFactory
+    /// Factory that can use both traditional (in-process) and containerized plugins.
+    /// Enables async module-based plugin loading from Kubernetes/remote sources and local directories.
+    /// This allows the CRPCF to coexist with the existing RuntimePluggableClassFactory.
     /// </summary>
     /// <typeparam name="T">Plugin interface type</typeparam>
     public class HybridPluginFactory<T> where T : IPluginClass
@@ -46,12 +48,14 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
         /// <param name="pluginName">Plugin name</param>
         /// <param name="version">Plugin version (optional)</param>
         /// <param name="executionMode">Preferred execution mode</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Plugin instance or null if not found</returns>
         public async Task<T?> GetPluginAsync(
             NamespaceString moduleName,
             IdentifierString pluginName,
             SemanticVersionNumber? version = null,
-            PluginExecutionMode executionMode = PluginExecutionMode.Auto)
+            PluginExecutionMode executionMode = PluginExecutionMode.Auto,
+            CancellationToken cancellationToken = default)
         {
             _logger.LogDebug("Getting plugin {ModuleName}.{PluginName} with execution mode {ExecutionMode}",
                 moduleName, pluginName, executionMode);
@@ -64,14 +68,14 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
                         return await GetTraditionalPluginAsync(moduleName, pluginName, version);
 
                     case PluginExecutionMode.Containerized:
-                        return await GetContainerizedPluginAsync(moduleName, pluginName, version);
+                        return await GetContainerizedPluginAsync(moduleName, pluginName, version, cancellationToken);
 
                     case PluginExecutionMode.Auto:
                     default:
                         // Try preferred mode first, then fallback
                         if (_options.PreferContainerized)
                         {
-                            var containerized = await GetContainerizedPluginAsync(moduleName, pluginName, version);
+                            var containerized = await GetContainerizedPluginAsync(moduleName, pluginName, version, cancellationToken);
                             if (containerized != null) return containerized;
 
                             return await GetTraditionalPluginAsync(moduleName, pluginName, version);
@@ -81,7 +85,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
                             var traditional = await GetTraditionalPluginAsync(moduleName, pluginName, version);
                             if (traditional != null) return traditional;
 
-                            return await GetContainerizedPluginAsync(moduleName, pluginName, version);
+                            return await GetContainerizedPluginAsync(moduleName, pluginName, version, cancellationToken);
                         }
                 }
             }
@@ -95,8 +99,10 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
         /// <summary>
         /// Lists all available plugins from both traditional and containerized sources
         /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Available plugins with their execution modes</returns>
-        public async Task<IEnumerable<PluginInfo>> ListAvailablePluginsAsync()
+        public async Task<IEnumerable<PluginInfo>> ListAvailablePluginsAsync(
+            CancellationToken cancellationToken = default)
         {
             var plugins = new List<PluginInfo>();
 
@@ -120,7 +126,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
                 // Get containerized plugins
                 if (_containerizedOrchestrator != null)
                 {
-                    var containerizedPlugins = await _containerizedOrchestrator.ListPluginsAsync();
+                    var containerizedPlugins = await _containerizedOrchestrator.ListPluginsAsync(null, cancellationToken);
                     plugins.AddRange(containerizedPlugins.Select(p => new PluginInfo
                     {
                         ModuleName = p.PluginId.Namespace,
@@ -150,8 +156,11 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
         /// Deploys a NuGet package as a containerized plugin
         /// </summary>
         /// <param name="request">Deployment request</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Deployment result</returns>
-        public async Task<PluginDeploymentResult> DeployContainerizedPluginAsync(PluginDeploymentRequest request)
+        public async Task<PluginDeploymentResult> DeployContainerizedPluginAsync(
+            PluginDeploymentRequest request,
+            CancellationToken cancellationToken = default)
         {
             if (_containerizedOrchestrator == null)
             {
@@ -162,7 +171,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
 
             try
             {
-                return await _containerizedOrchestrator.DeployPluginAsync(request);
+                return await _containerizedOrchestrator.DeployPluginAsync(request, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -236,7 +245,11 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
             }
         }
 
-        private async Task<T?> GetContainerizedPluginAsync(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber? version)
+        private async Task<T?> GetContainerizedPluginAsync(
+            NamespaceString moduleName, 
+            IdentifierString pluginName, 
+            SemanticVersionNumber? version,
+            CancellationToken cancellationToken = default)
         {
             if (_containerizedOrchestrator == null)
             {
@@ -250,10 +263,10 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
                 {
                     Namespace = moduleName,
                     Name = pluginName,
-                    Version = version ?? new SemanticVersionNumber(0, 0, 0) // Will match latest if version not specified
+                    Version = version ?? new SemanticVersionNumber(0, 0, 0) // Use 0.0.0 as placeholder when version not specified
                 };
 
-                var pluginInfo = await _containerizedOrchestrator.GetPluginInfoAsync(pluginId);
+                var pluginInfo = await _containerizedOrchestrator.GetPluginInfoAsync(pluginId, cancellationToken);
                 if (pluginInfo != null)
                 {
                     var proxy = ContainerizedPluginProxyFactory.Create<T>(_containerizedOrchestrator, pluginInfo);

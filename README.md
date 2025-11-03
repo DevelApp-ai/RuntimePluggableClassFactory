@@ -205,12 +205,71 @@ All performance targets are validated by automated tests:
 - **TypedPluginClassFactory**: Type-safe plugin execution
 - **PluginExecutionSandbox**: Isolated execution environment
 - **DefaultPluginSecurityValidator**: Comprehensive security validation
+- **HybridPluginFactory** (v2.1.0+): Hybrid factory for both traditional and containerized plugins
+- **ContainerizedPluginLoader** (v2.1.0+): Async loader for containerized plugins from Kubernetes/remote sources
 
 ### Key Interfaces
 - `IPluginClass`: Basic plugin interface
 - `ITypedPluginClass<TInput, TOutput>`: Type-safe plugin interface
 - `IPluginLoader<T>`: Plugin loading interface
 - `IPluginSecurityValidator`: Security validation interface
+- `IContainerizedPluginOrchestrator` (v2.1.0+): Interface for containerized plugin orchestration
+
+## Async Module-Based Plugin Loading (v2.1.0+)
+
+### Hybrid Plugin Loading
+
+The `HybridPluginFactory` enables seamless mixing of traditional in-process plugins with containerized plugins loaded from Kubernetes or other remote sources:
+
+```csharp
+using DevelApp.RuntimePluggableClassFactory.Containerized;
+using DevelApp.RuntimePluggableClassFactory.Containerized.Interfaces;
+
+// Setup traditional plugin loader
+var traditionalLoader = new FilePluginLoader<IMyPlugin>(pluginDirectory, securityValidator);
+var traditionalFactory = new PluginClassFactory<IMyPlugin>(traditionalLoader);
+
+// Setup containerized plugin orchestrator (e.g., Kubernetes)
+var containerizedOrchestrator = new KubernetesPluginOrchestrator(/* ... */);
+
+// Create hybrid factory
+var hybridFactory = new HybridPluginFactory<IMyPlugin>(
+    traditionalFactory,
+    containerizedOrchestrator,
+    logger,
+    new HybridPluginFactoryOptions 
+    { 
+        PreferContainerized = true,
+        AutoDeployContainerized = false 
+    });
+
+// Load plugins from either source
+var plugin = await hybridFactory.GetPluginAsync(
+    new NamespaceString("MyCompany.Plugins"),
+    new IdentifierString("DataProcessor"),
+    version: new SemanticVersionNumber(1, 0, 0),
+    executionMode: PluginExecutionMode.Auto);
+
+// List all available plugins
+var availablePlugins = await hybridFactory.ListAvailablePluginsAsync();
+foreach (var pluginInfo in availablePlugins)
+{
+    Console.WriteLine($"{pluginInfo.ModuleName}.{pluginInfo.PluginName} ({pluginInfo.ExecutionMode})");
+}
+```
+
+### Module Identification Types
+
+The following types are now exposed in the public API for implementing custom async module-based plugin loading:
+
+- **PluginIdentifier**: Identifies plugins by namespace, name, and version
+- **PluginInfo**: Plugin metadata including execution mode and container information
+- **PluginExecutionMode**: Enum values - Auto, Traditional, Containerized
+- **ContainerizedPluginInfo**: Metadata for deployed containerized plugins
+- **ContainerizedPluginLoader<T>**: Async loader for containerized plugins
+- **ContainerizedPluginLoaderOptions**: Configuration for async loading
+
+These types enable dynamic module loading from Kubernetes/remote sources as an alternative to traditional directory-based scanning.
 
 ## Documentation
 
