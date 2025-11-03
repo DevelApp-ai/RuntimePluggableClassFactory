@@ -5,6 +5,33 @@ All notable changes to the RuntimePluggableClassFactory project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-11-03
+
+### Added - Async Module-Based Plugin Loading Support
+
+#### Expanded Async Loading Capabilities
+- **HybridPluginFactory<T>**: Officially exposed factory for working with both traditional and containerized plugins
+- **PluginInfo**: Public type for plugin metadata including execution mode and container information
+- **PluginExecutionMode**: Enum for specifying plugin execution mode (Auto, Traditional, Containerized)
+- **HybridPluginFactoryOptions**: Configuration options for hybrid plugin loading
+- Moved hybrid plugin types from Examples namespace to main public API namespace
+
+#### Module Identification Types (Already Public, Now Documented)
+- **PluginIdentifier**: Identifies plugins by namespace, name, and version
+- **ContainerizedPluginInfo**: Information about deployed containerized plugins
+- **ContainerizedPluginLoader<T>**: Async loader for containerized plugins
+- **ContainerizedPluginProxy<T>**: Proxy for bridging traditional and containerized plugin execution
+- **ContainerizedPluginLoaderOptions**: Configuration for containerized plugin loading
+
+### Changed
+- Moved `HybridPluginFactory` and related types from `.Examples` namespace to `.Containerized` namespace
+- Elevated hybrid plugin loading from example code to officially supported public API
+
+### Use Cases Enabled
+- **Dynamic Module Loading from Kubernetes/Remote Sources**: Full support for async loading of plugins from containerized environments
+- **Hybrid Plugin Architectures**: Seamlessly mix traditional in-process plugins with containerized plugins
+- **Custom Async Plugin Loaders**: All types needed for implementing custom module-based async plugin loading are now publicly exposed
+
 ## [2.0.0] - 2025-07-24
 
 ### Added - TDS Implementation Complete

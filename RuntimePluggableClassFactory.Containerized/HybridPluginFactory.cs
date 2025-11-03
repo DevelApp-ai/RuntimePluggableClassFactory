@@ -8,11 +8,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DevelApp.RuntimePluggableClassFactory.Containerized.Examples
+namespace DevelApp.RuntimePluggableClassFactory.Containerized
 {
     /// <summary>
-    /// Example factory that can use both traditional (in-process) and containerized plugins
-    /// This demonstrates how the CRPCF can coexist with the existing RuntimePluggableClassFactory
+    /// Factory that can use both traditional (in-process) and containerized plugins.
+    /// Enables async module-based plugin loading from Kubernetes/remote sources and local directories.
+    /// This allows the CRPCF to coexist with the existing RuntimePluggableClassFactory.
     /// </summary>
     /// <typeparam name="T">Plugin interface type</typeparam>
     public class HybridPluginFactory<T> where T : IPluginClass
