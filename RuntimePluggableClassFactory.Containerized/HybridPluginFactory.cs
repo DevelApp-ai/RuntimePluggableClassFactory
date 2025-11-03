@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.Containerized
@@ -262,7 +263,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized
                 {
                     Namespace = moduleName,
                     Name = pluginName,
-                    Version = version ?? new SemanticVersionNumber(0, 0, 0) // Will match latest if version not specified
+                    Version = version ?? new SemanticVersionNumber(0, 0, 0) // Use 0.0.0 as placeholder when version not specified
                 };
 
                 var pluginInfo = await _containerizedOrchestrator.GetPluginInfoAsync(pluginId, cancellationToken);
