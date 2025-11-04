@@ -27,6 +27,19 @@
   <ItemGroup>
     <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
     <ProjectReference Include="..\RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj" />
+    <!-- Plugin versions needed for runtime tests -->
+    <ProjectReference Include="..\PluginImplementations_1_2_1\PluginImplementations_1_2_1.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\PluginImplementations_1_2_2\PluginImplementations_1_2_2.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\PluginImplementations_1_3_1\PluginImplementations_1_3_1.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\PluginImplementations_1_4_1\PluginImplementations_1_4_1.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ bin
 .vs
 *.backup
 /PluginFolder/**/*.dll
+*Undefined*
 
 # Build artifacts
 artifacts/
