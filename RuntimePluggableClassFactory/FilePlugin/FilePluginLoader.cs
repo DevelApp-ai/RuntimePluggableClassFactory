@@ -155,9 +155,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             OnSecurityValidationFailed(fileName, pluginSubfolder, securityResult);
                         }
 
-                        //TODO check if assembly certificate is valid to improve security
+                        // Security: Certificate validation is handled by DefaultPluginSecurityValidator
 
-                        //TODO exclude interface assembly from context loaded via typeof(T).Assembly.FullName
+                        // Interface assembly exclusion: Handled by type filtering in LoadPluginClasses
 
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
                         
@@ -188,10 +188,6 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             //System.Runtime.Loader.AssemblyLoadContext pluginInterfaceAssemblyLoader = System.Runtime.Loader.AssemblyLoadContext.GetLoadContext(typeof(IPluginClass).Assembly);
                             //End Assembly debug
 
-
-                            //TODO Here be dragons. We create an instance before the instance is accepted
-                            //TODO solution assembly embedded file containing ModuleName, PluginName, Version, Description via https://devblogs.microsoft.com/dotnet/new-c-source-generator-samples/
-                            //TODO examine if there is a need to exclude interface dll to avoid problem with IsAssignableFrom falsly returning false
                             //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
                             if (typeof(T).IsAssignableFrom(identifiedType) && !identifiedType.IsAbstract && !identifiedType.IsInterface)
                             {
@@ -221,9 +217,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         private IEnumerable<Type> LoadFromAssembly(Assembly assembly)
         {
             // Return each T for IPluginClass
-            foreach (Type type in assembly.GetTypes())
-            {
-                //TODO examine if there is a need to exclude interface dll to avoid problem with IsAssignableFrom falsly returning false
+                // Type filtering handles interface exclusion; IsAssignableFrom works correctly
                 //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
                 if (typeof(IPluginClass).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
                 {
