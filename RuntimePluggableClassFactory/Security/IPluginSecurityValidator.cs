@@ -16,21 +16,21 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
         /// </summary>
         /// <param name="assemblyPath">Path to the assembly to validate</param>
         /// <returns>Validation result with security assessment</returns>
-        Task<PluginSecurityValidationResult> ValidateAssemblyAsync(string assemblyPath);
+        Task<PluginSecurityValidationResult> ValidateAssemblyAsync(string? assemblyPath);
 
         /// <summary>
         /// Validates a loaded assembly for security compliance
         /// </summary>
         /// <param name="assembly">The loaded assembly to validate</param>
         /// <returns>Validation result with security assessment</returns>
-        PluginSecurityValidationResult ValidateLoadedAssembly(Assembly assembly);
+        PluginSecurityValidationResult ValidateLoadedAssembly(Assembly? assembly);
 
         /// <summary>
         /// Validates plugin types for security compliance
         /// </summary>
         /// <param name="pluginTypes">Types to validate</param>
         /// <returns>Validation result with security assessment</returns>
-        PluginSecurityValidationResult ValidatePluginTypes(IEnumerable<Type> pluginTypes);
+        PluginSecurityValidationResult ValidatePluginTypes(IEnumerable<Type>? pluginTypes);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
         /// <summary>
         /// Additional validation metadata
         /// </summary>
-        public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+        public Dictionary<string, object>? Metadata { get; set; } = new();
 
         /// <summary>
         /// Creates a successful validation result
@@ -88,7 +88,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
             {
                 IsValid = false,
                 RiskLevel = riskLevel,
-                Issues = new List<SecurityIssue>(issues)
+                Issues = new(issues)
             };
         }
     }
@@ -124,11 +124,11 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
     /// </summary>
     public class SecurityIssue
     {
-        public string Code { get; set; }
-        public string Description { get; set; }
+        public string? Code { get; set; }
+        public string? Description { get; set; }
         public SecurityRiskLevel Severity { get; set; }
-        public string Location { get; set; }
-        public Dictionary<string, object> Details { get; set; } = new Dictionary<string, object>();
+        public string? Location { get; set; }
+        public Dictionary<string, object>? Details { get; set; } = new();
     }
 
     /// <summary>
@@ -136,10 +136,10 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
     /// </summary>
     public class SecurityWarning
     {
-        public string Code { get; set; }
-        public string Description { get; set; }
-        public string Location { get; set; }
-        public Dictionary<string, object> Details { get; set; } = new Dictionary<string, object>();
+        public string? Code { get; set; }
+        public string? Description { get; set; }
+        public string? Location { get; set; }
+        public Dictionary<string, object>? Details { get; set; } = new Dictionary<string, object>();
     }
 }
 

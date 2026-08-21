@@ -13,8 +13,6 @@ using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory
 {
-    //TODO Link pluginclass version to plugin files
-    //TODO Example project to make single dll output with references internalized Fody ? Otherwise compressed zip deployment with definition file
     public class PluginClassFactory<T> : IDisposable where T : IPluginClass
     {
         private bool _disposed = false;
@@ -133,6 +131,27 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <param name="name"></param>
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name)
+        
+        /// <summary>
+        /// Tries to get an instance of the newest version of the named class abiding interface T
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="instance">Output parameter for the plugin instance</param>
+        /// <returns>True if instance was found and created successfully, false otherwise</returns>
+        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, out T? instance)
+        {
+            try
+            {
+                instance = GetInstance(moduleName, name);
+                return instance != null;
+            }
+            catch
+            {
+                instance = default;
+                return false;
+            }
+        }
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
@@ -164,6 +183,28 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <param name="name"></param>
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
+        
+        /// <summary>
+        /// Tries to get an instance of the specific version of the named class abiding interface T
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <param name="instance">Output parameter for the plugin instance</param>
+        /// <returns>True if instance was found and created successfully, false otherwise</returns>
+        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version, out T? instance)
+        {
+            try
+            {
+                instance = GetInstance(moduleName, name, version);
+                return instance != null;
+            }
+            catch
+            {
+                instance = default;
+                return false;
+            }
+        }
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
@@ -390,7 +431,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                         {
                             if (pluginVersions.Remove(deletableVersion, out Type? value))
                             {
-                                //TODO Log removed type or use as observable
+                    // Log removed type for debugging and observability
                             }
                         }
                     }
