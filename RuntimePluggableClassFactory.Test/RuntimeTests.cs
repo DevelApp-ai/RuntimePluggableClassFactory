@@ -18,7 +18,7 @@ namespace RuntimePluggableClassFactory.Test
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
-            Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
+            Assert.True(Directory.Exists(pluginDirectory.LocalPath));
 
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
@@ -46,7 +46,7 @@ namespace RuntimePluggableClassFactory.Test
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
-            Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
+            Assert.True(Directory.Exists(pluginDirectory.LocalPath));
 
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
@@ -74,7 +74,7 @@ namespace RuntimePluggableClassFactory.Test
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
-            Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
+            Assert.True(Directory.Exists(pluginDirectory.LocalPath));
 
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
@@ -102,7 +102,7 @@ namespace RuntimePluggableClassFactory.Test
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
-            Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
+            Assert.True(Directory.Exists(pluginDirectory.LocalPath));
 
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);

@@ -92,7 +92,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
             List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)> typeList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>();
 
             // Isolate plugin context per subfolder
-            foreach (string pluginSubfolder in Directory.GetDirectories(_pluginPathUri.AbsolutePath))
+            foreach (string pluginSubfolder in Directory.GetDirectories(_pluginPathUri.LocalPath))
             {
                 //Isolate plugins from other parts of the program with collectible context
                 PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginSubfolder);
