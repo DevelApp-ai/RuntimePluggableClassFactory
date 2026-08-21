@@ -1,4 +1,5 @@
-﻿using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.RuntimePluggableClassFactory.Interface;
+using DevelApp.RuntimePluggableClassFactory.SemanticVersioning;
 using DevelApp.Utility.Model;
 using System;
 using System.Collections.Concurrent;
@@ -64,25 +65,44 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
-        /// Retuens identified plugins
+        /// Returns identified plugins
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string Description, Type Type)>> GetPossiblePlugins()
+        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string? Description, Type Type)>> GetPossiblePlugins()
         {
             return await PluginLoader.ListAllPossiblePluginsAsync();
         }
-
 
         /// <summary>
         /// Returns all plugins of interface T currently in the store
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<(NamespaceString ModuleName, IdentifierString Name, string Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
+        public IEnumerable<(NamespaceString ModuleName, IdentifierString Name, string? Description, List<SemanticVersionNumber> Versions)> GetAllInstanceNamesDescriptionsAndVersions()
         {
             foreach (PluginClass pluginClass in pluginClassStore.Values)
             {
                 yield return (ModuleName: pluginClass.ModuleName, Name: pluginClass.Name, Description: pluginClass.Description, Versions: pluginClass.Versions);
             }
+        }
+
+        /// <summary>
+        /// Returns plugins matching a version range
+        /// </summary>
+        /// <param name="versionRange">Version range to match</param>
+        /// <returns>Plugins matching the version range</returns>
+        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string? Description, Type Type)>> GetPluginsByVersionRangeAsync(VersionRange versionRange)
+        {
+            return await PluginLoader.ListPluginsByVersionRangeAsync(versionRange);
+        }
+
+        /// <summary>
+        /// Returns plugins from a specific module
+        /// </summary>
+        /// <param name="moduleName">Module name to filter by</param>
+        /// <returns>Plugins from the specified module</returns>
+        public async Task<IEnumerable<(NamespaceString moduleName, IdentifierString pluginName, SemanticVersionNumber version, string? Description, Type Type)>> GetPluginsByModuleAsync(NamespaceString moduleName)
+        {
+            return await PluginLoader.ListPluginsByModuleAsync(moduleName);
         }
 
         /// <summary>
@@ -92,7 +112,7 @@ namespace DevelApp.RuntimePluggableClassFactory
 
         private int _retainOldVersions;
 
-        public async Task<(bool Success,int Count)> RefreshPluginsAsync()
+        public async Task<(bool Success, int Count)> RefreshPluginsAsync()
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
@@ -128,30 +148,10 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// Returns an instance of the newest version of the named class abiding interface T
         /// Enhanced with sandbox execution for stability (TDS requirement)
         /// </summary>
+        /// <param name="moduleName"></param>
         /// <param name="name"></param>
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name)
-        
-        /// <summary>
-        /// Tries to get an instance of the newest version of the named class abiding interface T
-        /// </summary>
-        /// <param name="moduleName"></param>
-        /// <param name="name"></param>
-        /// <param name="instance">Output parameter for the plugin instance</param>
-        /// <returns>True if instance was found and created successfully, false otherwise</returns>
-        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, out T? instance)
-        {
-            try
-            {
-                instance = GetInstance(moduleName, name);
-                return instance != null;
-            }
-            catch
-            {
-                instance = default;
-                return false;
-            }
-        }
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
@@ -177,26 +177,17 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
-        /// Returns an instance of the specific version of the named class abiding interface T
-        /// Enhanced with sandbox execution for stability (TDS requirement)
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public T? GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
-        
-        /// <summary>
-        /// Tries to get an instance of the specific version of the named class abiding interface T
+        /// Tries to get an instance of the newest version of the named class abiding interface T
         /// </summary>
         /// <param name="moduleName"></param>
         /// <param name="name"></param>
-        /// <param name="version"></param>
         /// <param name="instance">Output parameter for the plugin instance</param>
         /// <returns>True if instance was found and created successfully, false otherwise</returns>
-        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version, out T? instance)
+        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, out T? instance)
         {
             try
             {
-                instance = GetInstance(moduleName, name, version);
+                instance = GetInstance(moduleName, name);
                 return instance != null;
             }
             catch
@@ -205,6 +196,16 @@ namespace DevelApp.RuntimePluggableClassFactory
                 return false;
             }
         }
+
+        /// <summary>
+        /// Returns an instance of the specific version of the named class abiding interface T
+        /// Enhanced with sandbox execution for stability (TDS requirement)
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public T? GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
@@ -233,6 +234,69 @@ namespace DevelApp.RuntimePluggableClassFactory
             {
                 return default;
             }
+        }
+
+        /// <summary>
+        /// Tries to get an instance of the specific version of the named class abiding interface T
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <param name="instance">Output parameter for the plugin instance</param>
+        /// <returns>True if instance was found and created successfully, false otherwise</returns>
+        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version, out T? instance)
+        {
+            try
+            {
+                instance = GetInstance(moduleName, name, version);
+                return instance != null;
+            }
+            catch
+            {
+                instance = default;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks if a plugin is available
+        /// </summary>
+        /// <param name="moduleName">Module name</param>
+        /// <param name="name">Plugin name</param>
+        /// <returns>True if plugin is available</returns>
+        public bool IsPluginAvailable(NamespaceString moduleName, IdentifierString name)
+        {
+            return pluginClassStore.ContainsKey((moduleName, name));
+        }
+
+        /// <summary>
+        /// Gets the newest version of a plugin
+        /// </summary>
+        /// <param name="moduleName">Module name</param>
+        /// <param name="name">Plugin name</param>
+        /// <returns>Newest version or null</returns>
+        public SemanticVersionNumber? GetNewestVersion(NamespaceString moduleName, IdentifierString name)
+        {
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
+            {
+                return pluginClass.Versions.OrderByDescending(v => v).FirstOrDefault();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets all versions of a plugin
+        /// </summary>
+        /// <param name="moduleName">Module name</param>
+        /// <param name="name">Plugin name</param>
+        /// <returns>List of versions</returns>
+        public List<SemanticVersionNumber> GetAllVersions(NamespaceString moduleName, IdentifierString name)
+        {
+            if (pluginClassStore.TryGetValue((moduleName, name), out PluginClass? pluginClass))
+            {
+                return pluginClass.Versions;
+            }
+            return new List<SemanticVersionNumber>();
         }
 
         /// <summary>
@@ -329,7 +393,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         private sealed class PluginClass
         {
             private int _retainOldVersions;
-            internal PluginClass(int retainOldVersions, NamespaceString moduleName, IdentifierString name, string description, SemanticVersionNumber version, Type type)
+            internal PluginClass(int retainOldVersions, NamespaceString moduleName, IdentifierString name, string? description, SemanticVersionNumber version, Type type)
             {
                 _retainOldVersions = retainOldVersions;
                 ModuleName = moduleName;
@@ -350,7 +414,7 @@ namespace DevelApp.RuntimePluggableClassFactory
             /// <summary>
             /// The description of the plugin. Always containing the version last added plugin (assumed to be the newest)
             /// </summary>
-            internal string Description { get; set; }
+            internal string? Description { get; set; }
 
             /// <summary>
             /// Returns all the version numbers stored
@@ -403,7 +467,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                 }
                 else
                 {
-                    type = null;
+                    type = null!;
                     return false;
                 }
             }
@@ -431,7 +495,7 @@ namespace DevelApp.RuntimePluggableClassFactory
                         {
                             if (pluginVersions.Remove(deletableVersion, out Type? value))
                             {
-                    // Log removed type for debugging and observability
+                                // Log removed type for debugging and observability
                             }
                         }
                     }
