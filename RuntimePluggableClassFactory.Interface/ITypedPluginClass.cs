@@ -30,7 +30,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Interface
         /// <summary>
         /// Logger instance for plugin logging
         /// </summary>
-        IPluginLogger Logger { get; }
+        IPluginLogger? Logger { get; }
 
         /// <summary>
         /// Cancellation token for cooperative cancellation
@@ -40,7 +40,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Interface
         /// <summary>
         /// Additional properties that can be passed to plugins
         /// </summary>
-        IReadOnlyDictionary<string, object> Properties { get; }
+        IReadOnlyDictionary<string, object>? Properties { get; }
     }
 
     /// <summary>
@@ -52,26 +52,26 @@ namespace DevelApp.RuntimePluggableClassFactory.Interface
         /// Logs an informational message
         /// </summary>
         /// <param name="message">Message to log</param>
-        void LogInformation(string message);
+        void LogInformation(string? message);
 
         /// <summary>
         /// Logs a warning message
         /// </summary>
         /// <param name="message">Message to log</param>
-        void LogWarning(string message);
+        void LogWarning(string? message);
 
         /// <summary>
         /// Logs an error message
         /// </summary>
         /// <param name="message">Message to log</param>
         /// <param name="exception">Optional exception</param>
-        void LogError(string message, Exception exception = null);
+        void LogError(string? message, Exception? exception = null);
 
         /// <summary>
         /// Logs a debug message
         /// </summary>
         /// <param name="message">Message to log</param>
-        void LogDebug(string message);
+        void LogDebug(string? message);
     }
 
     /// <summary>
@@ -88,17 +88,17 @@ namespace DevelApp.RuntimePluggableClassFactory.Interface
         /// <summary>
         /// The output data from the plugin (only valid if Success is true)
         /// </summary>
-        public T Data { get; set; }
+        public T? Data { get; set; }
 
         /// <summary>
         /// Error message if execution failed
         /// </summary>
-        public string ErrorMessage { get; set; }
+        public string? ErrorMessage { get; set; }
 
         /// <summary>
         /// Exception that caused the failure (if any)
         /// </summary>
-        public Exception Exception { get; set; }
+        public Exception? Exception { get; set; }
 
         /// <summary>
         /// Creates a successful result

@@ -65,9 +65,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
-    <PackageReference Include="develapp.utility" Version="1.0.7" />
-    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="develapp.utility" Version="1.0.8" />
+    <PackageReference Include="System.Runtime.Loader Version="4.3.1" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub Version="8.0.1" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

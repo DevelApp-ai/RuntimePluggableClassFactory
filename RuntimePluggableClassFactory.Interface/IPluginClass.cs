@@ -23,7 +23,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Interface
         /// <summary>
         /// Description of the plugin class used in the factory
         /// </summary>
-        string Description { get; }
+        string? Description { get; }
 
         /// <summary>
         /// Returns the version of the plugin class to determine if it is a replacement of an existing as a hotfix or a new supported version
