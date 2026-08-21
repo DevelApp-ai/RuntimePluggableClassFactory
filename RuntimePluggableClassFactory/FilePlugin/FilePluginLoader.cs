@@ -1,5 +1,6 @@
 using DevelApp.RuntimePluggableClassFactory.Interface;
 using DevelApp.RuntimePluggableClassFactory.Security;
+using DevelApp.RuntimePluggableClassFactory.SemanticVersioning;
 using DevelApp.Utility.Model;
 using System;
 using System.Collections.Concurrent;
@@ -12,18 +13,18 @@ using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 {
-    public class FilePluginLoader<T>:IPluginLoader<T>, IDisposable where T:IPluginClass
+    public class FilePluginLoader<T> : IPluginLoader<T>, IDisposable where T : IPluginClass
     {
         private bool _disposed = false;
 
-        public FilePluginLoader(Uri pluginPathUri, IPluginSecurityValidator securityValidator = null)
+        public FilePluginLoader(Uri pluginPathUri, IPluginSecurityValidator? securityValidator = null)
         {
             PluginPathUri = pluginPathUri;
             _securityValidator = securityValidator ?? new DefaultPluginSecurityValidator();
         }
 
         private Uri _pluginPathUri;
-        
+
         // Track AssemblyLoadContext instances for unloading capability
         private readonly ConcurrentDictionary<string, WeakReference> _loadContexts = new ConcurrentDictionary<string, WeakReference>();
 
@@ -33,12 +34,12 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// <summary>
         /// Event fired when plugin loading fails
         /// </summary>
-        public event EventHandler<PluginLoadingErrorEventArgs> PluginLoadingFailed;
+        public event EventHandler<PluginLoadingErrorEventArgs>? PluginLoadingFailed;
 
         /// <summary>
         /// Event fired when security validation fails
         /// </summary>
-        public event EventHandler<PluginSecurityValidationFailedEventArgs> SecurityValidationFailed;
+        public event EventHandler<PluginSecurityValidationFailedEventArgs>? SecurityValidationFailed;
 
         /// <summary>
         /// Url for the plugin path used
@@ -51,49 +52,12 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
             }
             set
             {
-                if (!value.IsAbsoluteUri)
+                if (_disposed)
                 {
-                    throw new PluginClassFactoryException($"The supplied uri in {nameof(value)} is not an absolute uri but is required to be");
-                }
-                if (!Directory.Exists(value.AbsolutePath))
-                {
-                    throw new PluginClassFactoryException($"Plugin directory {value.AbsolutePath} does not exist");
+                    throw new ObjectDisposedException(nameof(FilePluginLoader<T>));
                 }
                 _pluginPathUri = value;
             }
-        }
-
-        /// <summary>
-        /// Unloads a specific plugin assembly by path
-        /// </summary>
-        /// <param name="pluginPath">Path to the plugin to unload</param>
-        /// <returns>True if unloaded successfully, false if not found or already unloaded</returns>
-        public bool UnloadPlugin(string pluginPath)
-        {
-            if (_loadContexts.TryRemove(pluginPath, out WeakReference? contextRef) && contextRef?.IsAlive == true)
-            {
-                if (contextRef.Target is PluginLoadContext context)
-                {
-                    context.Unload();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Unloads all plugin assemblies
-        /// </summary>
-        public void UnloadAllPlugins()
-        {
-            foreach (var kvp in _loadContexts.ToList())
-            {
-                if (kvp.Value.IsAlive && kvp.Value.Target is PluginLoadContext context)
-                {
-                    context.Unload();
-                }
-            }
-            _loadContexts.Clear();
         }
 
         /// <summary>
@@ -101,15 +65,15 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// </summary>
         /// <param name="allowedPlugins"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins)
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> LoadPluginsAsync(List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins)
         {
             ThrowIfDisposed();
 
-            List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> filteredList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
+            List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)> filteredList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>();
 
             foreach (var tuple in await LoadUnfilteredPluginsAsync())
             {
-                //filter based on allowed plugins   
+                //filter based on allowed plugins  
                 if (allowedPlugins.Contains((tuple.ModuleName, tuple.PluginName, tuple.Version)))
                 {
                     filteredList.Add((tuple.ModuleName, tuple.PluginName, tuple.Version, tuple.Description, tuple.Type));
@@ -123,16 +87,16 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// Loads all assemblies from the pluginPath and returns all types from IPluginClass
         /// </summary>
         /// <returns></returns>
-        private async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadUnfilteredPluginsAsync()
+        private async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> LoadUnfilteredPluginsAsync()
         {
-            List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)> typeList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>();
+            List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)> typeList = new List<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>();
 
             // Isolate plugin context per subfolder
             foreach (string pluginSubfolder in Directory.GetDirectories(_pluginPathUri.AbsolutePath))
             {
                 //Isolate plugins from other parts of the program with collectible context
                 PluginLoadContext pluginLoadContext = new PluginLoadContext(pluginSubfolder);
-                
+
                 // Track the context for potential unloading
                 _loadContexts.TryAdd(pluginSubfolder, new WeakReference(pluginLoadContext));
 
@@ -160,7 +124,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                         // Interface assembly exclusion: Handled by type filtering in LoadPluginClasses
 
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
-                        
+
                         // Additional security validation on loaded assembly
                         var loadedSecurityResult = _securityValidator.ValidateLoadedAssembly(assembly);
                         if (!loadedSecurityResult.IsValid)
@@ -216,7 +180,8 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// <returns></returns>
         private IEnumerable<Type> LoadFromAssembly(Assembly assembly)
         {
-            // Return each T for IPluginClass
+            foreach (Type type in assembly.GetTypes())
+            {
                 // Type filtering handles interface exclusion; IsAssignableFrom works correctly
                 //Workaround if needed https://makolyte.com/csharp-generic-plugin-loader/
                 if (typeof(IPluginClass).IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface)
@@ -230,10 +195,81 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
         /// Returns all possible plugins located in the file folder
         /// </summary>
         /// <returns></returns>
-        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync()
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListAllPossiblePluginsAsync()
         {
             ThrowIfDisposed();
             return await LoadUnfilteredPluginsAsync();
+        }
+
+        /// <summary>
+        /// Lists all plugins matching a version range
+        /// </summary>
+        /// <param name="versionRange">Version range to match</param>
+        /// <returns>Plugins matching the version range</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListPluginsByVersionRangeAsync(VersionRange versionRange)
+        {
+            ThrowIfDisposed();
+            var allPlugins = await LoadUnfilteredPluginsAsync();
+            return allPlugins.Where(p => versionRange.Contains(p.Version));
+        }
+
+        /// <summary>
+        /// Lists all plugins matching a specific module
+        /// </summary>
+        /// <param name="moduleName">Module name to filter by</param>
+        /// <returns>Plugins from the specified module</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListPluginsByModuleAsync(NamespaceString moduleName)
+        {
+            ThrowIfDisposed();
+            var allPlugins = await LoadUnfilteredPluginsAsync();
+            return allPlugins.Where(p => p.ModuleName == moduleName);
+        }
+
+        /// <summary>
+        /// Unloads a specific plugin assembly by path (TDS requirement)
+        /// </summary>
+        /// <param name="pluginPath">Path to the plugin to unload</param>
+        /// <returns>True if unloaded successfully, false if not found or already unloaded</returns>
+        public bool UnloadPlugin(string? pluginPath)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(pluginPath))
+            {
+                return false;
+            }
+
+            // Try to find the plugin path in our tracked contexts
+            foreach (var contextRef in _loadContexts.Values)
+            {
+                if (contextRef.IsAlive && contextRef.Target is PluginLoadContext context)
+                {
+                    // Check if this context loaded the plugin
+                    if (context.Assemblies.Any(a => a.Location.Equals(pluginPath, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        context.Unload();
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Unloads all plugin assemblies (TDS requirement)
+        /// </summary>
+        public void UnloadAllPlugins()
+        {
+            ThrowIfDisposed();
+            foreach (var contextRef in _loadContexts.Values)
+            {
+                if (contextRef.IsAlive && contextRef.Target is PluginLoadContext context)
+                {
+                    context.Unload();
+                }
+            }
+            _loadContexts.Clear();
         }
 
         /// <summary>
@@ -328,9 +364,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
     /// </summary>
     public class PluginLoadingErrorEventArgs : EventArgs
     {
-        public string FileName { get; set; }
-        public string PluginPath { get; set; }
-        public Exception Exception { get; set; }
+        public string? FileName { get; set; }
+        public string? PluginPath { get; set; }
+        public Exception? Exception { get; set; }
         public DateTime Timestamp { get; set; }
     }
 
@@ -339,9 +375,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
     /// </summary>
     public class PluginSecurityValidationFailedEventArgs : EventArgs
     {
-        public string FileName { get; set; }
-        public string PluginPath { get; set; }
-        public PluginSecurityValidationResult ValidationResult { get; set; }
+        public string? FileName { get; set; }
+        public string? PluginPath { get; set; }
+        public PluginSecurityValidationResult? ValidationResult { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }
