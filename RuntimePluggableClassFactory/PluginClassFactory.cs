@@ -131,6 +131,27 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <param name="name"></param>
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name)
+        
+        /// <summary>
+        /// Tries to get an instance of the newest version of the named class abiding interface T
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="instance">Output parameter for the plugin instance</param>
+        /// <returns>True if instance was found and created successfully, false otherwise</returns>
+        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, out T? instance)
+        {
+            try
+            {
+                instance = GetInstance(moduleName, name);
+                return instance != null;
+            }
+            catch
+            {
+                instance = default;
+                return false;
+            }
+        }
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
@@ -162,6 +183,28 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <param name="name"></param>
         /// <returns></returns>
         public T? GetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version)
+        
+        /// <summary>
+        /// Tries to get an instance of the specific version of the named class abiding interface T
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <param name="instance">Output parameter for the plugin instance</param>
+        /// <returns>True if instance was found and created successfully, false otherwise</returns>
+        public bool TryGetInstance(NamespaceString moduleName, IdentifierString name, SemanticVersionNumber version, out T? instance)
+        {
+            try
+            {
+                instance = GetInstance(moduleName, name, version);
+                return instance != null;
+            }
+            catch
+            {
+                instance = default;
+                return false;
+            }
+        }
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(PluginClassFactory<T>));
