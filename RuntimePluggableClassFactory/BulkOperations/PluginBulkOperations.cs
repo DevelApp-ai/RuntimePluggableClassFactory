@@ -159,7 +159,7 @@ namespace DevelApp.RuntimePluggableClassFactory.BulkOperations
 
             public override string ToString()
             {
-                return $[{(int)Code} {Code}: {Message} at {Timestamp:yyyy-MM-dd HH:mm:ss}];
+                return $"{(int)Code} {Code}: {Message} at {Timestamp:yyyy-MM-dd HH:mm:ss}"
             }
         }
 
@@ -195,7 +195,7 @@ namespace DevelApp.RuntimePluggableClassFactory.BulkOperations
 
             public override string ToString()
             {
-                return $[{(int)Code} {Code}: {Message} at {Timestamp:yyyy-MM-dd HH:mm:ss}];
+                return $"{(int)Code} {Code}: {Message} at {Timestamp:yyyy-MM-dd HH:mm:ss}"
             }
         }
 
