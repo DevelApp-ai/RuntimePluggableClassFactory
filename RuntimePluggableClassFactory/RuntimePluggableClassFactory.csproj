@@ -5,7 +5,7 @@
     <AssemblyName>DevelApp.RuntimePluggableClassFactory</AssemblyName>
     <RootNamespace>DevelApp.RuntimePluggableClassFactory</RootNamespace>
     <Authors>Lars Shakya Buch-Jepsen</Authors>
-    <Copyright>Copyright © DevelApp 2020-2025</Copyright>
+    <Copyright>Copyright \u00a9 DevelApp 2020-2025</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Company>DevelApp Denmark (CVR 33211740)</Company>
     <Product>RuntimePluggableClassFactory</Product>
@@ -66,9 +66,9 @@
   <ItemGroup>
     <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
     <PackageReference Include="develapp.utility" Version="1.0.8" />
-    <PackageReference Include="System.Runtime.Loader Version="4.3.1" />
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.1" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub Version="8.0.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.1" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
