@@ -21,7 +21,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
             _settings = settings ?? new PluginSecuritySettings();
         }
 
-        public async Task<PluginSecurityValidationResult> ValidateAssemblyAsync(string assemblyPath)
+        public async Task<PluginSecurityValidationResult> ValidateAssemblyAsync(string? assemblyPath)
         {
             var result = new PluginSecurityValidationResult();
 
@@ -131,7 +131,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
             }
         }
 
-        public PluginSecurityValidationResult ValidateLoadedAssembly(Assembly assembly)
+        public PluginSecurityValidationResult ValidateLoadedAssembly(Assembly? assembly)
         {
             var result = new PluginSecurityValidationResult();
 
@@ -185,7 +185,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Security
             }
         }
 
-        public PluginSecurityValidationResult ValidatePluginTypes(IEnumerable<Type> pluginTypes)
+        public PluginSecurityValidationResult ValidatePluginTypes(IEnumerable<Type>? pluginTypes)
         {
             var result = new PluginSecurityValidationResult();
 

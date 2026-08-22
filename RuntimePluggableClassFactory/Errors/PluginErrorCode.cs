@@ -250,7 +250,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Errors
 
         public override string ToString()
         {
-            return $[{(int)Code} {Code}] {Message} - {ModuleName}.{PluginName}@{Version} at {Timestamp:yyyy-MM-dd HH:mm:ss}];
+            return $"[{(int)Code} {Code}] {Message} - {ModuleName}.{PluginName}@{Version} at {Timestamp:yyyy-MM-dd HH:mm:ss}";
         }
     }
 
@@ -299,7 +299,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Errors
 
         public override string ToString()
         {
-            return $[{(int)Code} {Code}] {Message} - {ModuleName}.{PluginName}@{Version}];
+            return $"[{(int)Code} {Code}] {Message} - {ModuleName}.{PluginName}@{Version}";
         }
     }
 }

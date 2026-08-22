@@ -192,4 +192,41 @@ namespace DevelApp.RuntimePluggableClassFactory.Async
             return new AsyncPluginLoader<T>(fileLoader);
         }
     }
-}
+
+        /// <summary>
+        /// Lists plugins by version range asynchronously
+        /// </summary>
+        /// <param name="versionRange">Version range to filter by</param>
+        /// <returns>List of plugins in the version range</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListPluginsByVersionRangeAsync(SemanticVersioning.VersionRange versionRange)
+        {
+            if (!_isLoaded && !_initialLoadTask.IsCompleted)
+            {
+                await _initialLoadTask.ConfigureAwait(false);
+            }
+            return await Task.Run(() => _innerLoader.ListPluginsByVersionRangeAsync(versionRange)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Lists plugins by module asynchronously
+        /// </summary>
+        /// <param name="moduleName">Module name to filter by</param>
+        /// <returns>List of plugins in the module</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListPluginsByModuleAsync(NamespaceString moduleName)
+        {
+            if (!_isLoaded && !_initialLoadTask.IsCompleted)
+            {
+                await _initialLoadTask.ConfigureAwait(false);
+            }
+            return await Task.Run(() => _innerLoader.ListPluginsByModuleAsync(moduleName)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Disposes the loader
+        /// </summary>
+        public void Dispose()
+        {
+            _innerLoader.Dispose();
+        }
+
+    }

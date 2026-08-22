@@ -115,7 +115,7 @@ namespace DevelApp.RuntimePluggableClassFactory
         /// <summary>
         /// Security validation result
         /// </summary>
-        public Security.ValidationResult? ValidationResult { get; set; }
+        public Security.PluginSecurityValidationResult? ValidationResult { get; set; }
 
         /// <summary>
         /// Timestamp

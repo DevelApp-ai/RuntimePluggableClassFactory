@@ -18,7 +18,7 @@ namespace RuntimePluggableClassFactory.Test
             string assemblyPath = GetType().Assembly.Location;
             string pathStringExpanded = Path.GetFullPath(pathString, assemblyPath);
             Uri pluginDirectory = new Uri(pathStringExpanded);
-            Assert.True(Directory.Exists(pluginDirectory.AbsolutePath));
+            Assert.True(Directory.Exists(pluginDirectory.LocalPath));
             
             FilePluginLoader<ISpecificInterface> filePluginLoader = new FilePluginLoader<ISpecificInterface>(pluginDirectory);
             PluginClassFactory<ISpecificInterface> pluginClassFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
@@ -35,7 +35,7 @@ namespace RuntimePluggableClassFactory.Test
             Assert.True(instance.Execute("Monster"));
             
             // Test unloading functionality
-            string pluginPath = Path.Combine(pluginDirectory.AbsolutePath, "PluginImplementations_1_2_1");
+            string pluginPath = Path.Combine(pluginDirectory.LocalPath, "PluginImplementations_1_2_1");
             bool unloadResult = filePluginLoader.UnloadPlugin(pluginPath);
             
             // Note: The unload result might be false if the plugin wasn't loaded in a separate context

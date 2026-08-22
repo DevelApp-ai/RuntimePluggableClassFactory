@@ -69,22 +69,20 @@ namespace DevelApp.RuntimePluggableClassFactory.Async
         /// <param name="name">Plugin name</param>
         /// <param name="instance">Output parameter for the plugin instance</param>
         /// <returns>True if instance was found and created successfully</returns>
-        public async Task<bool> TryGetInstanceAsync(
+        public Task<bool> TryGetInstanceAsync(
             NamespaceString moduleName,
-            IdentifierString name,
-            out T? instance)
+            IdentifierString name)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(AsyncPluginClassFactory<T>));
 
             try
             {
-                instance = await GetInstanceAsync(moduleName, name).ConfigureAwait(false);
-                return instance != null;
+                var inst = await GetInstanceAsync(moduleName, name).ConfigureAwait(false);
+                return inst != null;
             }
             catch
             {
-                instance = default;
                 return false;
             }
         }
@@ -97,23 +95,21 @@ namespace DevelApp.RuntimePluggableClassFactory.Async
         /// <param name="version">Version</param>
         /// <param name="instance">Output parameter for the plugin instance</param>
         /// <returns>True if instance was found and created successfully</returns>
-        public async Task<bool> TryGetInstanceAsync(
+        public Task<bool> TryGetInstanceAsync(
             NamespaceString moduleName,
             IdentifierString name,
-            SemanticVersionNumber version,
-            out T? instance)
+            SemanticVersionNumber version)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(AsyncPluginClassFactory<T>));
 
             try
             {
-                instance = await GetInstanceAsync(moduleName, name, version).ConfigureAwait(false);
-                return instance != null;
+                var inst = await GetInstanceAsync(moduleName, name, version).ConfigureAwait(false);
+                return inst != null;
             }
             catch
             {
-                instance = default;
                 return false;
             }
         }
