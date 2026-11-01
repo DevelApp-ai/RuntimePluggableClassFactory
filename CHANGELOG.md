@@ -2,10 +2,24 @@
 
 All notable changes to the RuntimePluggableClassFactory project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0.html),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - 2025-11-03
+## [2.1.1] - 2026-11-01
+
+### Added
+- **GitHub Packages publishing**: all versions (beta/prerelease and stable) are now published as NuGet packages to GitHub Packages
+- NuGet.org publishing is now limited to stable (non-prerelease) releases only
+
+### Changed
+- GitHub Packages publishing runs before NuGet.org publishing and is no longer affected by NuGet.org failures or missing NuGet access
+- Every release (beta and stable) is tagged and published as a GitHub Release; prerelease versions are marked as pre-releases
+- CI/CD workflow now triggers on the `main` branch (was incorrectly configured for `master`)
+
+### Removed
+- Removed unused repository files: packages-microsoft-prod.deb, ci_fix_analysis.md, RELEASE_FIX_NOTES.md, PRODUCTION_ANALYSIS_REPORT.md, IDISPOSABLE_FIXES_SUMMARY.md, QUICK_WINS_PLAN.md, CRPCF_EXECUTIVE_SUMMARY.md, CONTAINERIZED_RPCF_TDS.md
+
+2.1.0] - 2025-11-03
 
 ### Added - Async Module-Based Plugin Loading Support
 
