@@ -281,8 +281,7 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
             {
                 PluginLoadingFailed?.Invoke(this, new PluginLoadingErrorEventArgs
                 {
-                    FileName = fileName,
-                    PluginPath = pluginPath,
+                    Message = $"Failed to load plugin '{fileName}' from '{pluginPath}'",
                     Exception = exception,
                     Timestamp = DateTime.UtcNow
                 });
@@ -302,8 +301,8 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
             {
                 SecurityValidationFailed?.Invoke(this, new PluginSecurityValidationFailedEventArgs
                 {
-                    FileName = fileName,
                     PluginPath = pluginPath,
+                    PluginFolder = fileName,
                     ValidationResult = validationResult,
                     Timestamp = DateTime.UtcNow
                 });
@@ -357,27 +356,5 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                 throw new ObjectDisposedException(nameof(FilePluginLoader<T>));
             }
         }
-    }
-
-    /// <summary>
-    /// Event arguments for plugin loading errors
-    /// </summary>
-    public class PluginLoadingErrorEventArgs : EventArgs
-    {
-        public string? FileName { get; set; }
-        public string? PluginPath { get; set; }
-        public Exception? Exception { get; set; }
-        public DateTime Timestamp { get; set; }
-    }
-
-    /// <summary>
-    /// Event arguments for plugin security validation failures
-    /// </summary>
-    public class PluginSecurityValidationFailedEventArgs : EventArgs
-    {
-        public string? FileName { get; set; }
-        public string? PluginPath { get; set; }
-        public PluginSecurityValidationResult? ValidationResult { get; set; }
-        public DateTime Timestamp { get; set; }
     }
 }

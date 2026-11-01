@@ -80,8 +80,8 @@ namespace DevelApp.RuntimePluggableClassFactory.BulkOperations
             /// <summary>
             /// Successfully executed plugins with results
             /// </summary>
-            public Dictionary<(NamespaceString ModuleName, IdentifierString Name), PluginExecutionResult<TOutput>> Successes { get; } = 
-                new Dictionary<(NamespaceString, IdentifierString), PluginExecutionResult<TOutput>>();
+            public Dictionary<(NamespaceString ModuleName, IdentifierString Name), Interface.PluginExecutionResult<TOutput>> Successes { get; } = 
+                new Dictionary<(NamespaceString, IdentifierString), Interface.PluginExecutionResult<TOutput>>();
 
             /// <summary>
             /// Failed plugin executions with error information
@@ -115,7 +115,7 @@ namespace DevelApp.RuntimePluggableClassFactory.BulkOperations
             public void AddSuccess(
                 NamespaceString moduleName,
                 IdentifierString name,
-                PluginExecutionResult<TOutput> result)
+                Interface.PluginExecutionResult<TOutput> result)
             {
                 Successes[(moduleName, name)] = result;
             }
@@ -312,7 +312,7 @@ namespace DevelApp.RuntimePluggableClassFactory.BulkOperations
             TypedPluginClassFactory<T, TInput, TOutput> factory,
             IEnumerable<(NamespaceString ModuleName, IdentifierString Name)> pluginIdentifiers,
             TInput input,
-            bool parallel = true) where T : ITypedPluginClass<TInput, TOutput>
+            bool parallel = true) where T : class, ITypedPluginClass<TInput, TOutput>
         {
             var result = new BulkExecuteResult<T, TInput, TOutput>();
 
@@ -398,9 +398,9 @@ namespace DevelApp.RuntimePluggableClassFactory.BulkOperations
                 TypedPluginClassFactory<T, TInput, TOutput> factory,
                 IEnumerable<(NamespaceString ModuleName, IdentifierString Name)> pluginIdentifiers,
                 TInput input,
-                bool parallel = true) where T : ITypedPluginClass<TInput, TOutput>
+                bool parallel = true) where T : class, ITypedPluginClass<TInput, TOutput>
         {
-            var loadResult = LoadPlugins(factory, pluginIdentifiers, parallel);
+            var loadResult = LoadPlugins(factory.UnderlyingFactory, pluginIdentifiers, parallel);
             var executeResult = new BulkExecuteResult<T, TInput, TOutput>();
 
             // Execute only successfully loaded plugins
