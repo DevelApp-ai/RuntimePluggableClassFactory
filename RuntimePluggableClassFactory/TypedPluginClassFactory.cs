@@ -26,6 +26,11 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
 
         /// <summary>
+        /// The underlying plugin factory
+        /// </summary>
+        public PluginClassFactory<TPlugin> UnderlyingFactory => _underlyingFactory;
+
+        /// <summary>
         /// The underlying plugin loader
         /// </summary>
         public IPluginLoader<TPlugin> PluginLoader => _underlyingFactory.PluginLoader;
@@ -270,4 +275,3 @@ namespace DevelApp.RuntimePluggableClassFactory
         }
     }
 }
-

@@ -12,6 +12,38 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
     public class VersionRange : IEquatable<VersionRange>
     {
         /// <summary>
+        /// Lowest possible semantic version
+        /// </summary>
+        private static readonly SemanticVersionNumber MinValue = new SemanticVersionNumber(0, 0, 0);
+
+        /// <summary>
+        /// Highest possible semantic version
+        /// </summary>
+        private static readonly SemanticVersionNumber MaxValue = new SemanticVersionNumber(int.MaxValue, int.MaxValue, int.MaxValue);
+
+        /// <summary>
+        /// Parses a semantic version string (e.g., "1.2.3")
+        /// </summary>
+        private static SemanticVersionNumber ParseVersion(string versionString)
+        {
+            var trimmed = versionString.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                throw new FormatException("Version string cannot be empty");
+            }
+
+            var parts = trimmed.Split('.');
+            if (parts.Length < 2 || parts.Length > 3)
+            {
+                throw new FormatException($"Invalid version format: '{versionString}'. Expected Major.Minor[.Patch]");
+            }
+
+            return new SemanticVersionNumber(
+                int.Parse(parts[0]),
+                int.Parse(parts[1]),
+                parts.Length == 3 ? int.Parse(parts[2]) : 0);
+        }
+        /// <summary>
         /// Minimum version (inclusive)
         /// </summary>
         public SemanticVersionNumber? MinVersion { get; }
@@ -44,7 +76,7 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             bool minInclusive = true,
             bool maxInclusive = true)
         {
-            if (minVersion != null && maxVersion != null && minVersion > maxVersion)
+            if (minVersion != null && maxVersion != null && minVersion.CompareTo(maxVersion) > 0)
             {
                 throw new ArgumentException("Min version cannot be greater than max version");
             }
@@ -72,35 +104,35 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             // Exact version
             if (rangeString.StartsWith("=") || !rangeString.Contains("-") && !rangeString.Contains(">") && !rangeString.Contains("<"))
             {
-                var version = SemanticVersionNumber.Parse(rangeString.TrimStart('='));
+                var version = ParseVersion(rangeString.TrimStart('='));
                 return new VersionRange(version, version);
             }
 
             // Greater than or equal
             if (rangeString.StartsWith(">="))
             {
-                var version = SemanticVersionNumber.Parse(rangeString.Substring(2));
+                var version = ParseVersion(rangeString.Substring(2));
                 return new VersionRange(version, null, true, true);
             }
 
             // Greater than
             if (rangeString.StartsWith(">"))
             {
-                var version = SemanticVersionNumber.Parse(rangeString.Substring(1));
+                var version = ParseVersion(rangeString.Substring(1));
                 return new VersionRange(version, null, false, true);
             }
 
             // Less than or equal
             if (rangeString.StartsWith("<="))
             {
-                var version = SemanticVersionNumber.Parse(rangeString.Substring(2));
+                var version = ParseVersion(rangeString.Substring(2));
                 return new VersionRange(null, version, true, true);
             }
 
             // Less than
             if (rangeString.StartsWith("<"))
             {
-                var version = SemanticVersionNumber.Parse(rangeString.Substring(1));
+                var version = ParseVersion(rangeString.Substring(1));
                 return new VersionRange(null, version, true, false);
             }
 
@@ -113,8 +145,8 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
                     throw new FormatException("Invalid range format. Use 'min-max' or prefix operators");
                 }
 
-                var minVersion = SemanticVersionNumber.Parse(parts[0]);
-                var maxVersion = SemanticVersionNumber.Parse(parts[1]);
+                var minVersion = ParseVersion(parts[0]);
+                var maxVersion = ParseVersion(parts[1]);
                 return new VersionRange(minVersion, maxVersion);
             }
 
@@ -136,12 +168,12 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             {
                 if (MinInclusive)
                 {
-                    if (version < MinVersion)
+                    if (version.CompareTo(MinVersion) < 0)
                         return false;
                 }
                 else
                 {
-                    if (version <= MinVersion)
+                    if (version.CompareTo(MinVersion) <= 0)
                         return false;
                 }
             }
@@ -151,12 +183,12 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             {
                 if (MaxInclusive)
                 {
-                    if (version > MaxVersion)
+                    if (version.CompareTo(MaxVersion) > 0)
                         return false;
                 }
                 else
                 {
-                    if (version >= MaxVersion)
+                    if (version.CompareTo(MaxVersion) >= 0)
                         return false;
                 }
             }
@@ -182,12 +214,12 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             }
 
             // Check if ranges overlap
-            var thisMin = MinVersion ?? SemanticVersionNumber.MinValue;
-            var thisMax = MaxVersion ?? SemanticVersionNumber.MaxValue;
-            var otherMin = other.MinVersion ?? SemanticVersionNumber.MinValue;
-            var otherMax = other.MaxVersion ?? SemanticVersionNumber.MaxValue;
+            var thisMin = MinVersion ?? MinValue;
+            var thisMax = MaxVersion ?? MaxValue;
+            var otherMin = other.MinVersion ?? MinValue;
+            var otherMax = other.MaxVersion ?? MaxValue;
 
-            return thisMin <= otherMax && otherMin <= thisMax;
+            return thisMin.CompareTo(otherMax) <= 0 && otherMin.CompareTo(thisMax) <= 0;
         }
 
         /// <summary>
@@ -220,12 +252,12 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
                 return true;
 
             if (MinVersion == null)
-                return (MaxVersion == null || other.MaxVersion == null || other.MaxVersion <= MaxVersion);
+                return (MaxVersion == null || other.MaxVersion == null || other.MaxVersion.CompareTo(MaxVersion) <= 0);
 
             if (MaxVersion == null)
-                return (MinVersion == null || other.MinVersion == null || other.MinVersion >= MinVersion);
+                return (MinVersion == null || other.MinVersion == null || other.MinVersion.CompareTo(MinVersion) >= 0);
 
-            return (MinVersion <= other.MinVersion && MaxVersion >= other.MaxVersion);
+            return (MinVersion.CompareTo(other.MinVersion) <= 0 && MaxVersion.CompareTo(other.MaxVersion) >= 0);
         }
 
         /// <summary>
@@ -341,14 +373,14 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
         {
             if (a == null) return b;
             if (b == null) return a;
-            return a > b ? a : b;
+            return a.CompareTo(b) > 0 ? a : b;
         }
 
         private static SemanticVersionNumber? Min(SemanticVersionNumber? a, SemanticVersionNumber? b)
         {
             if (a == null) return b;
             if (b == null) return a;
-            return a < b ? a : b;
+            return a.CompareTo(b) < 0 ? a : b;
         }
     }
 }

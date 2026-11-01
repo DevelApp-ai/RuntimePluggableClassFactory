@@ -69,7 +69,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Async
         /// <param name="name">Plugin name</param>
         /// <param name="instance">Output parameter for the plugin instance</param>
         /// <returns>True if instance was found and created successfully</returns>
-        public Task<bool> TryGetInstanceAsync(
+        public async Task<bool> TryGetInstanceAsync(
             NamespaceString moduleName,
             IdentifierString name)
         {
@@ -95,7 +95,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Async
         /// <param name="version">Version</param>
         /// <param name="instance">Output parameter for the plugin instance</param>
         /// <returns>True if instance was found and created successfully</returns>
-        public Task<bool> TryGetInstanceAsync(
+        public async Task<bool> TryGetInstanceAsync(
             NamespaceString moduleName,
             IdentifierString name,
             SemanticVersionNumber version)

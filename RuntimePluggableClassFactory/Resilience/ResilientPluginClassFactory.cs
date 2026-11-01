@@ -152,22 +152,20 @@ namespace DevelApp.RuntimePluggableClassFactory.Resilience
         /// </summary>
         /// <param name="moduleName">Module name</param>
         /// <param name="name">Plugin name</param>
-        /// <param name="instance">Output parameter for the plugin instance</param>
-        /// <returns>True if instance was found and created successfully</returns>
-        public async Task<bool> TryGetInstanceAsync(NamespaceString moduleName, IdentifierString name, out T? instance)
+        /// <returns>Success flag and the plugin instance if found and created successfully</returns>
+        public async Task<(bool Success, T? Instance)> TryGetInstanceAsync(NamespaceString moduleName, IdentifierString name)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(ResilientPluginClassFactory<T>));
 
             try
             {
-                instance = await GetInstanceAsync(moduleName, name);
-                return instance != null;
+                var instance = await GetInstanceAsync(moduleName, name);
+                return (instance != null, instance);
             }
             catch
             {
-                instance = default;
-                return false;
+                return (false, default);
             }
         }
 
