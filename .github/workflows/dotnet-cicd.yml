@@ -1,13 +1,14 @@
 permissions:
   contents: write
+  packages: write
 name: .NET CI/CD
 
-# Triggers the workflow on pushes and pull requests to the master branch
+# Triggers the workflow on pushes and pull requests to the main branch
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -39,7 +40,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x' # Use the .NET version your project targets
+        dotnet-version: '8.0.x'
 
     - name: Restore dependencies
       run: dotnet restore RuntimePluggableClassFactory.sln
@@ -51,14 +52,19 @@ jobs:
           echo "semver=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
           echo "nugetversion=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_OUTPUT
           echo "Using GitVersion: ${{ steps.gitversion.outputs.semVer }}"
+          if [[ "${{ steps.gitversion.outputs.semVer }}" == *-* ]]; then
+            echo "isprerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "isprerelease=false" >> $GITHUB_OUTPUT
+          fi
         else
           echo "semver=${{ steps.fallback-version.outputs.semVer }}" >> $GITHUB_OUTPUT
           echo "nugetversion=${{ steps.fallback-version.outputs.semVer }}" >> $GITHUB_OUTPUT
+          echo "isprerelease=true" >> $GITHUB_OUTPUT
           echo "Using fallback version: ${{ steps.fallback-version.outputs.semVer }}"
         fi
 
     - name: Build
-      # Use the version calculated by GitVersion or fallback - exclude test project due to API compatibility issues
       run: |
         dotnet build RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
         dotnet build RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
@@ -75,7 +81,6 @@ jobs:
         echo "Tests can be fixed in a separate PR after the main NuGet deployment workflow is working"
 
     - name: Pack
-      # Creates the NuGet package using the calculated version
       run: |
         dotnet pack RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
         dotnet pack RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
@@ -86,13 +91,21 @@ jobs:
         name: nuget-packages
         path: ./artifacts/*.nupkg
 
-    - name: Publish to NuGet
-      # This step only runs for pushes to the 'master' branch, not for PRs
+    - name: Publish to GitHub Packages
+      # Publishes ALL versions (beta/prerelease and stable) to GitHub Packages.
+      # Runs first and is not affected by any NuGet.org problems.
       if: github.event_name == 'push'
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
+
+    - name: Publish to NuGet.org
+      # Only stable (non-prerelease) versions are published to NuGet.org.
+      # A failure here must never block GitHub Packages publishing or the tagged release.
+      if: github.event_name == 'push' && steps.version.outputs.isprerelease == 'false'
+      continue-on-error: true
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
     - name: Create GitHub Release
-      # This step only runs for pushes to the 'master' branch, not for PRs
+      # Tags every push to main (stable and prerelease) as a GitHub Release
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
       with:
@@ -100,6 +113,12 @@ jobs:
         name: Release v${{ steps.version.outputs.semver }}
         body: |
           ## 📦 NuGet Packages
+
+          Published to GitHub Packages:
+          - DevelApp.RuntimePluggableClassFactory v${{ steps.version.outputs.semver }}
+          - DevelApp.RuntimePluggableClassFactory.Interface v${{ steps.version.outputs.semver }}
+
+          Stable releases are also published to NuGet.org:
           - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ steps.version.outputs.semver }}
           - [DevelApp.RuntimePluggableClassFactory.Interface](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Interface) v${{ steps.version.outputs.semver }}
 
@@ -118,6 +137,5 @@ jobs:
           - Security validation: < 500ms average
           - Memory growth: < 50MB under load
         draft: false
-        prerelease: false
+        prerelease: ${{ steps.version.outputs.isprerelease == 'true' }}
         files: ./artifacts/*.nupkg
-
