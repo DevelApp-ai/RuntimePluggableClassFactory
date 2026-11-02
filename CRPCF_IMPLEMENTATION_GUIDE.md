@@ -4,6 +4,8 @@
 
 This guide provides detailed implementation specifications for building the Containerized RuntimePluggableClassFactory (CRPCF) based on the Technical Design Specification.
 
+> **Shipped-surface note (read first):** the code sketches in this guide use the aspirational `CRPCF.Core/CRPCF.*` namespace and project layout from the TDS. The **actually shipped packages** are `DevelApp.RuntimePluggableClassFactory.Containerized` and `DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes` (namespace `DevelApp.RuntimePluggableClassFactory.Containerized[.Interfaces/.Implementations/.Security]`). When this guide and the shipped assemblies differ, the shipped API wins; the authoritative consumer-facing surface (dispatch, seams, timeout/cancellation, result shape, restore and signing policy) is documented in **§8 of CRPCF_DEPLOYMENT_GUIDE.md**.
+
 ## 1. Core Interface Definitions
 
 ### 1.1 Package and Signature Management

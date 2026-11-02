@@ -117,7 +117,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized
                         ModuleName = p.ModuleName,
                         PluginName = p.PluginName,
                         Version = p.Version,
-                        Description = p.Description,
+                        Description = p.Description ?? string.Empty,
                         ExecutionMode = PluginExecutionMode.Traditional,
                         Type = p.Type
                     }));

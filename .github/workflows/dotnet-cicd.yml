@@ -73,6 +73,8 @@ jobs:
         dotnet build PluginImplementations_1_2_2/PluginImplementations_1_2_2.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
         dotnet build PluginImplementations_1_3_1/PluginImplementations_1_3_1.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
         dotnet build PluginImplementations_1_4_1/PluginImplementations_1_4_1.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build RuntimePluggableClassFactory.Containerized/RuntimePluggableClassFactory.Containerized.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
+        dotnet build RuntimePluggableClassFactory.Containerized.Kubernetes/RuntimePluggableClassFactory.Containerized.Kubernetes.csproj --configuration Release --no-restore /p:Version=${{ steps.version.outputs.semver }}
 
     - name: Test
       run: |
@@ -84,6 +86,10 @@ jobs:
       run: |
         dotnet pack RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
         dotnet pack RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
+        # CRPCF packages are packed into a separate folder: they are published to
+        # GitHub Packages only and must never leak to NuGet.org or release assets.
+        dotnet pack RuntimePluggableClassFactory.Containerized/RuntimePluggableClassFactory.Containerized.csproj --no-build --configuration Release -o ./artifacts-containerized /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
+        dotnet pack RuntimePluggableClassFactory.Containerized.Kubernetes/RuntimePluggableClassFactory.Containerized.Kubernetes.csproj --no-build --configuration Release -o ./artifacts-containerized /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v6
@@ -91,11 +97,21 @@ jobs:
         name: nuget-packages
         path: ./artifacts/*.nupkg
 
+    - name: Upload containerized artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: nuget-packages-containerized
+        path: ./artifacts-containerized/*.nupkg
+
     - name: Publish to GitHub Packages
       # Publishes ALL versions (beta/prerelease and stable) to GitHub Packages.
       # Runs first and is not affected by any NuGet.org problems.
+      # The Containerized packages are private org packages: GitHub Packages only,
+      # never NuGet.org.
       if: github.event_name == 'push'
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
+      run: |
+        dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
+        dotnet nuget push ./artifacts-containerized/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
 
     - name: Publish to NuGet.org
       # Only stable (non-prerelease) versions are published to NuGet.org.
@@ -117,6 +133,8 @@ jobs:
           Published to GitHub Packages:
           - DevelApp.RuntimePluggableClassFactory v${{ steps.version.outputs.semver }}
           - DevelApp.RuntimePluggableClassFactory.Interface v${{ steps.version.outputs.semver }}
+          - DevelApp.RuntimePluggableClassFactory.Containerized v${{ steps.version.outputs.semver }} (GitHub Packages only, not on NuGet.org)
+          - DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes v${{ steps.version.outputs.semver }} (GitHub Packages only, not on NuGet.org)
 
           Stable releases are also published to NuGet.org:
           - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ steps.version.outputs.semver }}
