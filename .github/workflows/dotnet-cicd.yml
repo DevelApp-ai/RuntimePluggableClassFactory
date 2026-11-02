@@ -86,7 +86,7 @@ jobs:
         dotnet pack RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: nuget-packages
         path: ./artifacts/*.nupkg

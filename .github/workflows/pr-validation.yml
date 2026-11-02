@@ -51,7 +51,7 @@ jobs:
         dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~PerformanceTests"
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       if: always()
       with:
         name: test-results
@@ -135,7 +135,7 @@ jobs:
         done
 
     - name: Upload package artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: nuget-packages-preview
         path: ./packages/*.nupkg
