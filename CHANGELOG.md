@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shipped-surface note at the top of CRPCF_IMPLEMENTATION_GUIDE.md pointing readers to the authoritative consumer contract
 
 ### Fixed
+- **Added the Containerized and Containerized.Kubernetes projects to the solution** — `dotnet restore` on the `.sln` never restored them (no `project.assets.json`), which made the new CI build lines fail; CI now restores and builds both projects
 - **`ContainerizedPluginLoader<T>` brought up to the 2.1 `IPluginLoader<T>` contract** — the Containerized projects had not compiled since the base 2.1.0 interface changes; added `ListPluginsByVersionRangeAsync`/`ListPluginsByModuleAsync`, `PluginLoadingFailed`/`SecurityValidationFailed` events, `Dispose`, and fixed `UnloadPlugin` nullability
 - `KubernetesOrchestrator.ListContainersAsync`: `V1ObjectMeta.CreationTimestamp` is a `DateTime?` in KubernetesClient 17 — removed the invalid `.DateTime` member access
 - Nullable-annotation fixes in `HybridPluginFactory` and `ContainerizedPluginProxy` (CS8601/CS8619/CS0067 clean)
