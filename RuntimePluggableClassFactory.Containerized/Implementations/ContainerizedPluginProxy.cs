@@ -103,7 +103,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
                     Timeout = TimeSpan.FromMinutes(5), // Default timeout
                     Configuration = new System.Collections.Generic.Dictionary<string, object>
                     {
-                        ["context.properties"] = context.Properties
+                        ["context.properties"] = context.Properties ?? new System.Collections.Generic.Dictionary<string, object>()
                     }
                 };
 

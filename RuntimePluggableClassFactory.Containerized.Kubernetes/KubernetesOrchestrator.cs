@@ -192,7 +192,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes
                     Id = pod.Metadata.Name,
                     PodName = pod.Metadata.Name,
                     Namespace = pod.Metadata.NamespaceProperty,
-                    CreatedAt = pod.Metadata.CreationTimestamp?.DateTime ?? DateTime.MinValue,
+                    CreatedAt = pod.Metadata.CreationTimestamp ?? DateTime.MinValue,
                     Status = MapPodStatusToContainerStatus(pod.Status?.Phase),
                     Labels = pod.Metadata.Labels?.ToDictionary(kv => kv.Key, kv => kv.Value) ?? new Dictionary<string, string>()
                 }).Cast<ContainerInstance>();

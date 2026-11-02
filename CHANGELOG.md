@@ -5,6 +5,19 @@ All notable changes to the RuntimePluggableClassFactory project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0.html),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **CRPCF publication to the DevelApp-ai GitHub Packages org feed**: `DevelApp.RuntimePluggableClassFactory.Containerized` and `DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes` are now built, packed and published on every push to `main`; they are intentionally **not** published to nuget.org (org-private packages), and the base + Interface packages keep their existing dual-feed publication
+- **CRPCF consumption guide** (CRPCF_DEPLOYMENT_GUIDE.md §8): restore facts for the private feed (package IDs, TFM, exact dependency graph, NU1903-clean transitive audit), workstation/CI credential recipes (classic PAT with `read:packages`; `GITHUB_TOKEN` with `packages:read` plus the one-time package-sharing org step), the shipped dispatch API surface (orchestration seam, platform seam, hybrid facade, timeout/cancellation, result shape), the v1 signing/trusted-signers policy, the base image story and the version pin policy
+- Shipped-surface note at the top of CRPCF_IMPLEMENTATION_GUIDE.md pointing readers to the authoritative consumer contract
+
+### Fixed
+- **Added the Containerized and Containerized.Kubernetes projects to the solution** — `dotnet restore` on the `.sln` never restored them (no `project.assets.json`), which made the new CI build lines fail; CI now restores and builds both projects
+- **`ContainerizedPluginLoader<T>` brought up to the 2.1 `IPluginLoader<T>` contract** — the Containerized projects had not compiled since the base 2.1.0 interface changes; added `ListPluginsByVersionRangeAsync`/`ListPluginsByModuleAsync`, `PluginLoadingFailed`/`SecurityValidationFailed` events, `Dispose`, and fixed `UnloadPlugin` nullability
+- `KubernetesOrchestrator.ListContainersAsync`: `V1ObjectMeta.CreationTimestamp` is a `DateTime?` in KubernetesClient 17 — removed the invalid `.DateTime` member access
+- Nullable-annotation fixes in `HybridPluginFactory` and `ContainerizedPluginProxy` (CS8601/CS8619/CS0067 clean)
+
 ## [2.1.1] - 2026-11-01
 
 ### Added

@@ -1234,4 +1234,144 @@ echo "=== Configuration ==="
 kubectl get configmap crpcf-config -n crpcf-system -o yaml
 ```
 
+## 8. Consuming CRPCF from GitHub Packages
+
+This section documents how a .NET consumer (e.g. Taskhandler M10 Stage C) restores and codes against the Containerized (CRPCF) packages. It reflects the **shipped API** in the `RuntimePluggableClassFactory.Containerized*` projects, which is the authoritative surface — not the aspirational `CRPCF.Core` layout sketched elsewhere in this guide and in the implementation guide.
+
+### 8.1 Published packages, versions and dependency graph
+
+All four packages are built and published on **every push to `main`** (version = the release semver shown on the GitHub Release for that push):
+
+| Package ID | Feed | Notes |
+|---|---|---|
+| `DevelApp.RuntimePluggableClassFactory` | GitHub Packages **and** nuget.org (stable only) | base factory, `IPluginLoader<T>` |
+| `DevelApp.RuntimePluggableClassFactory.Interface` | GitHub Packages **and** nuget.org (stable only) | `IPluginClass`, `ITypedPluginClass<TIn,TOut>`, `IPluginExecutionContext`, `PluginExecutionResult<T>` |
+| `DevelApp.RuntimePluggableClassFactory.Containerized` | **GitHub Packages only** (org feed) | CRPCF: orchestrator contracts, `HybridPluginFactory<T>`, `ContainerizedPluginLoader<T>`, signature validation |
+| `DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes` | **GitHub Packages only** (org feed) | `KubernetesOrchestrator` (Talos/K3s platform backend) |
+
+- **Feed:** `https://nuget.pkg.github.com/DevelApp-ai/index.json`
+- **TFM:** `net8.0` (consumable from any ≥ net8.0 target, including `net10.0`)
+- **Dependency graph** (nuspec, exact version pins to the same published version — e.g. for 2.1.1):
+  - `...Containerized` → `...Interface` (=), `...` base package (=), `DevelApp.Utility 1.0.7`, `Microsoft.Extensions.Configuration.Abstractions 8.0.0`, `Microsoft.Extensions.DependencyInjection.Abstractions 8.0.0`, `Microsoft.Extensions.Logging.Abstractions 8.0.0`, `NuGet.Packaging 6.7.1`, `System.Security.Cryptography.Pkcs 8.0.2`
+  - `...Containerized.Kubernetes` → `...Containerized` (=), `KubernetesClient 17.0.14`, `Microsoft.Extensions.Logging.Abstractions 8.0.0`, `Microsoft.Extensions.Options 8.0.0`
+- **Transitive closure** (verified with `dotnet list package --vulnerable --include-transitive` on a net10.0 consumer under `TreatWarningsAsErrors`): adds `NuGet.Common/Configuration/Frameworks/Versioning 6.7.1`, `Newtonsoft.Json 13.0.1`, `Fractions 7.3.0`, `YamlDotNet 16.3.0`, `System.Security.Cryptography.ProtectedData 4.4.0` and the `Microsoft.Extensions.*` 8.0.0 abstractions. **NU1903-clean: no known-vulnerable transitive packages** as of this writing — no explicit transitive pins are needed under `TreatWarningsAsErrors`.
+
+### 8.2 Restore credentials (workstation and CI)
+
+The org feed requires authentication for **read** as well as write.
+
+**Workstation (Z13 machines):** a classic PAT with the `read:packages` scope, registered as a NuGet source (username = GitHub username, password = the PAT):
+
+```bash
+dotnet nuget add source \
+  --username <github-username> \
+  --password <PAT-with-read:packages> \
+  --store-password-in-clear-text \
+  --name DevelApp-ai \
+  https://nuget.pkg.github.com/DevelApp-ai/index.json
+```
+
+(Store the PAT in the OS credential store first — same pattern as other Taskhandler credentials — and note the NuGet source stores it in the user NuGet config, so use a dedicated machine-scope PAT.)
+
+**CI (GitHub-hosted runners):** the workflow `GITHUB_TOKEN` with `packages:read` can restore org packages, **provided the package has been shared with the consuming repository** — a one-time, org-settings step (GitHub → package page → *Package settings → Manage Actions access* → add the consuming repo, e.g. `DevelApp-ai/DevelApp-Repo-LocalTaskhandler`, role Read). Then in the consumer's CI, before restore:
+
+```yaml
+- name: Authenticate to DevelApp-ai GitHub Packages
+  run: dotnet nuget update source DevelApp-ai --username github --password "$GITHUB_TOKEN" --store-password-in-clear-text
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Fallback if package-sharing is not desired: a `PACKAGES_PAT` secret (classic PAT, `read:packages`) used the same way.
+
+**Consumer `nuget.config`** (restore mixes feeds — Containerized packages come from the org feed, their base-RPCF dependencies are on both feeds):
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+    <add key="DevelApp-ai" value="https://nuget.pkg.github.com/DevelApp-ai/index.json" />
+  </packageSources>
+</configuration>
+```
+
+GitHub Packages only serves packages published to that feed; with both sources configured, the base RPCF packages resolve from either (the org feed has every pushed version, nuget.org only stable).
+
+### 8.3 Dispatch API surface (the Stage C consumer contract)
+
+The shipped API is organized as **two seams plus a hybrid facade**:
+
+1. **`IContainerizedPluginOrchestrator`** (namespace `DevelApp.RuntimePluggableClassFactory.Containerized.Interfaces`) — the high-level orchestration seam. This is the interface to **fake in hermetic tests** (7 methods + 4 events, all in-memory fakeable):
+
+```csharp
+// Deploy a (signed) NuGet package as a containerized plugin
+PluginDeploymentResult result = await orchestrator.DeployPluginAsync(
+    new PluginDeploymentRequest {
+        PackageStream = packageStream,          // the plugin .nupkg
+        TargetPlatform = "kubernetes",          // platform key; free-form for custom backends
+        Configuration = new DeploymentConfiguration {
+            MemoryLimitMB = 512, CpuLimit = 0.5, DiskLimitMB = 1024,
+            ReadOnlyFileSystem = true, NetworkPolicy = NetworkPolicy.Isolated,
+            ExecutionTimeoutMinutes = 5,
+            EnvironmentVariables = new Dictionary<string, string>()
+        }
+    }, cancellationToken);
+
+// Dispatch one job execution
+ContainerizedPluginExecutionResult result = await orchestrator.ExecutePluginAsync(
+    new ContainerizedPluginExecutionRequest {
+        PluginId = new PluginIdentifier {
+            Namespace = new NamespaceString("Taskhandler.StepExecutors"),
+            Name = new IdentifierString("GithubCreatePr"),
+            Version = new SemanticVersionNumber(1, 0, 0)
+        },
+        InputData = jobDataJson,                 // string in, string-shaped result out
+        Configuration = new Dictionary<string, object>(),
+        Timeout = TimeSpan.FromMinutes(1)        // per-request timeout
+    }, cancellationToken);                        // cancellation on every call
+```
+
+   Result shape for the execution ledger (§8B.4 mapping):
+
+```csharp
+result.Success        // bool → ledger Completed / Failed
+result.Data           // object? → plugin output (JSON-deserializable)
+result.ErrorMessage   // string → structured errorCode source on failure
+result.Exception       // Exception? → preserved exception, if any
+result.ExecutionTime   // TimeSpan
+result.ExecutionId     // string → correlates orchestrator logs
+```
+
+   Additional members: `GetPluginInfoAsync`, `ListPluginsAsync` (status/namespace/label filters), `UndeployPluginAsync`, `GetPluginHealthAsync`, `NotifyPluginUpdateAsync`; events `PluginDeployed`, `PluginExecuted`, `PluginFailed`, `PluginUndeployed`.
+
+2. **`IContainerOrchestrator`** — the platform seam (`CreateContainerAsync`, `ExecuteAsync`, `GetStatusAsync`, `DestroyContainerAsync`, `ListContainersAsync` + `ContainerSpec`/`ContainerInstance`/`ContainerExecutionRequest`/`ContainerExecutionResult`). `KubernetesOrchestrator` (from the `.Kubernetes` package; ctor: `IKubernetes`, `IOptions<KubernetesOrchestratorOptions>`, `ILogger<...>`; options include `Namespace`) is the shipped platform backend. **A desktop Docker/Podman backend is NOT shipped**: a consumer that needs one (Taskhandler's `containerRuntime.backend = "desktop"`) implements this seam itself, driving Docker Desktop / Podman **over the local named pipe only** (`npipe:////./pipe/docker_engine` on Windows, `unix:///var/run/docker.sock` equivalent for Podman) — never a network listener. Backend selection from config happens in the consumer's composition root: `containerRuntime.backend` chooses which implementation is injected, exactly like the M9 MCP trio seam.
+
+3. **`HybridPluginFactory<T>`** — mixes a traditional `PluginClassFactory<T>` with an `IContainerizedPluginOrchestrator` behind one `GetPluginAsync(module, name, version, mode, ct)` call (`PluginExecutionMode.Traditional | Containerized | Auto`, `PreferContainerized` option). The returned containerized plugin is a `ContainerizedPluginProxy<T>`: an `IPluginClass`/`ITypedPluginClass` adapter whose `ExecuteAsync(context, input)` serializes input to JSON, calls `ExecutePluginAsync`, and returns `PluginExecutionResult<object>` — so containerized plugins flow through existing `TypedPluginClassFactory<T,TIn,TOut>` call sites unchanged.
+
+   `ContainerizedPluginLoader<T>` adapts the same orchestrator into the traditional `IPluginLoader<T>` contract (deployed plugins appear as proxy types), and `ISignedPackageManager`/`NuGetSignatureValidator` perform signed-package validation at deploy time (`ValidatePackageAsync`, `IsSignerTrustedAsync`, trusted-signer add/remove).
+
+**Testability:** the whole surface is interface + DTO — the two seams above are the fakes Taskhandler's hermetic suite injects (no Docker/Podman/Kubernetes in CI, no network, no listener), mirroring the M9/M10 seam pattern.
+
+### 8.4 Signature / trusted-signers policy (v1)
+
+GitHub Packages does not verify NuGet package signatures on push or restore. Policy for v1 org-internal packages:
+
+- **Signing is optional.** Feed access is the trust boundary (private org feed, `read:packages` org auth only), so unsigned org packages are acceptable for v1. Consumers configure `RequireSignedPackages = false` (and an empty trusted-signers list) in `containerRuntime` / CRPCF security configuration; `NuGetSignatureValidator` then records signer info without failing restore or deploy.
+- When author-signing is introduced (v2), sign with the org certificate, publish the thumbprint, and configure `containerRuntime.trustedSigners` accordingly; `ISignedPackageManager.IsSignerTrustedAsync` enforces it at deploy time.
+
+### 8.5 Base image story
+
+CRPCF currently publishes **NuGet packages only**. The `crpcf/plugin-runtime` Dockerfile in §2.2 is a reference template, not a published image: the `plugin-executor` entrypoint binary is part of the **consumer's contract** (it must read `InputData` and emit the execution result over the container runtime's stdio/IPC channel).
+
+Consequently, a desktop-backend consumer **builds and tags its own runtime image locally** through the Docker/Podman pipe (no registry pull required for the M10 Stage C acceptance criterion). If/when CRPCF ships an official runtime image, `ghcr.io/DevelApp-ai/...` is the natural home — tracked as future work; it is not a Stage C blocker.
+
+### 8.6 Version and breaking-change policy
+
+- A new version of all four packages is published to the org feed on **every push to `main`** (prerelease-labeled versions included; stable also go to nuget.org for the base pair).
+- Consumers should **pin the exact published version** (e.g. `Version="2.1.2"`) and treat the documented dispatch surface (§8.3) as the stable contract. Breaking API changes ride a minor/major bump per the repo's versioning policy; the 2.1.x line is additive-only.
+- The minimum version a consumer should pin is the release that first ships the Containerized packages on the org feed (see the linked release on this issue's tracker); anything earlier did not compile the Containerized projects.
+
+
 This comprehensive deployment guide provides everything needed to successfully deploy and operate the Containerized RuntimePluggableClassFactory in production environments.

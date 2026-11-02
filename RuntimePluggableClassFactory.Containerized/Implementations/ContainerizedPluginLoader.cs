@@ -1,5 +1,7 @@
+using DevelApp.RuntimePluggableClassFactory;
 using DevelApp.RuntimePluggableClassFactory.Interface;
 using DevelApp.RuntimePluggableClassFactory.Containerized.Interfaces;
+using DevelApp.RuntimePluggableClassFactory.SemanticVersioning;
 using DevelApp.Utility.Model;
 using Microsoft.Extensions.Logging;
 using System;
@@ -31,16 +33,33 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
         }
 
         /// <summary>
+        /// Event fired when plugin loading fails
+        /// </summary>
+        public event EventHandler<PluginLoadingErrorEventArgs>? PluginLoadingFailed;
+
+        /// <summary>
+        /// Event fired when security validation fails
+        /// </summary>
+        /// <remarks>
+        /// The containerized loader performs no security validation itself (validation happens
+        /// during deployment via ISignedPackageManager), so this event is never raised here;
+        /// it is declared to satisfy the IPluginLoader contract for consumers that subscribe.
+        /// </remarks>
+#pragma warning disable CS0067 // The event is never raised within this loader
+        public event EventHandler<PluginSecurityValidationFailedEventArgs>? SecurityValidationFailed;
+#pragma warning restore CS0067
+
+        /// <summary>
         /// Loads plugins that are already deployed as containers
         /// </summary>
-        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> LoadPluginsAsync(
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> LoadPluginsAsync(
             List<(NamespaceString ModuleName, IdentifierString Name, SemanticVersionNumber Version)> allowedPlugins)
         {
             try
             {
                 _logger.LogInformation("Loading {Count} containerized plugins", allowedPlugins.Count);
 
-                var result = new List<(NamespaceString, IdentifierString, SemanticVersionNumber, string, Type)>();
+                var result = new List<(NamespaceString, IdentifierString, SemanticVersionNumber, string?, Type)>();
 
                 // Get all deployed plugins
                 var deployedPlugins = await _orchestrator.ListPluginsAsync(new PluginListOptions
@@ -74,6 +93,14 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
                     {
                         _logger.LogWarning("Plugin {ModuleName}.{PluginName}@{Version} not found in deployed containers",
                             allowedPlugin.ModuleName, allowedPlugin.Name, allowedPlugin.Version);
+
+                        PluginLoadingFailed?.Invoke(this, new PluginLoadingErrorEventArgs
+                        {
+                            ModuleName = allowedPlugin.ModuleName,
+                            PluginName = allowedPlugin.Name,
+                            Version = allowedPlugin.Version,
+                            Message = $"Plugin {allowedPlugin.ModuleName}.{allowedPlugin.Name}@{allowedPlugin.Version} not found in deployed containers"
+                        });
                     }
                 }
 
@@ -83,6 +110,13 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading containerized plugins");
+
+                PluginLoadingFailed?.Invoke(this, new PluginLoadingErrorEventArgs
+                {
+                    Message = "Error loading containerized plugins",
+                    Exception = ex
+                });
+
                 throw;
             }
         }
@@ -90,14 +124,14 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
         /// <summary>
         /// Lists all possible containerized plugins that are deployed
         /// </summary>
-        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string Description, Type Type)>> ListAllPossiblePluginsAsync()
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListAllPossiblePluginsAsync()
         {
             try
             {
                 _logger.LogInformation("Listing all deployed containerized plugins");
 
                 var deployedPlugins = await _orchestrator.ListPluginsAsync();
-                var result = new List<(NamespaceString, IdentifierString, SemanticVersionNumber, string, Type)>();
+                var result = new List<(NamespaceString, IdentifierString, SemanticVersionNumber, string?, Type)>();
 
                 foreach (var plugin in deployedPlugins)
                 {
@@ -123,14 +157,100 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
         }
 
         /// <summary>
+        /// Lists all deployed containerized plugins matching a version range
+        /// </summary>
+        /// <param name="versionRange">Version range to match</param>
+        /// <returns>Deployed plugins matching the version range</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListPluginsByVersionRangeAsync(VersionRange versionRange)
+        {
+            try
+            {
+                _logger.LogInformation("Listing deployed containerized plugins in version range {VersionRange}", versionRange);
+
+                var deployedPlugins = await _orchestrator.ListPluginsAsync();
+                var result = new List<(NamespaceString, IdentifierString, SemanticVersionNumber, string?, Type)>();
+
+                foreach (var plugin in deployedPlugins)
+                {
+                    if (!versionRange.Contains(plugin.PluginId.Version))
+                    {
+                        continue;
+                    }
+
+                    var proxyType = typeof(ContainerizedPluginProxy<>).MakeGenericType(typeof(T));
+
+                    result.Add((
+                        plugin.PluginId.Namespace,
+                        plugin.PluginId.Name,
+                        plugin.PluginId.Version,
+                        plugin.Description,
+                        proxyType
+                    ));
+                }
+
+                _logger.LogInformation("Found {Count} deployed containerized plugins in version range {VersionRange}",
+                    result.Count, versionRange);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error listing containerized plugins in version range {VersionRange}", versionRange);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Lists all deployed containerized plugins matching a specific module
+        /// </summary>
+        /// <param name="moduleName">Module name to filter by</param>
+        /// <returns>Deployed plugins from the specified module</returns>
+        public async Task<IEnumerable<(NamespaceString ModuleName, IdentifierString PluginName, SemanticVersionNumber Version, string? Description, Type Type)>> ListPluginsByModuleAsync(NamespaceString moduleName)
+        {
+            try
+            {
+                _logger.LogInformation("Listing deployed containerized plugins for module {ModuleName}", moduleName);
+
+                var deployedPlugins = await _orchestrator.ListPluginsAsync();
+                var result = new List<(NamespaceString, IdentifierString, SemanticVersionNumber, string?, Type)>();
+
+                foreach (var plugin in deployedPlugins)
+                {
+                    if (!plugin.PluginId.Namespace.Equals(moduleName))
+                    {
+                        continue;
+                    }
+
+                    var proxyType = typeof(ContainerizedPluginProxy<>).MakeGenericType(typeof(T));
+
+                    result.Add((
+                        plugin.PluginId.Namespace,
+                        plugin.PluginId.Name,
+                        plugin.PluginId.Version,
+                        plugin.Description,
+                        proxyType
+                    ));
+                }
+
+                _logger.LogInformation("Found {Count} deployed containerized plugins for module {ModuleName}",
+                    result.Count, moduleName);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error listing containerized plugins for module {ModuleName}", moduleName);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Unloads a specific plugin (stops and removes the container)
         /// </summary>
-        public bool UnloadPlugin(string pluginPath)
+        public bool UnloadPlugin(string? pluginPath)
         {
             try
             {
                 // For containerized plugins, the pluginPath represents the plugin identifier
-                if (!TryParsePluginIdentifier(pluginPath, out var pluginId))
+                if (pluginPath == null || !TryParsePluginIdentifier(pluginPath, out var pluginId))
                 {
                     _logger.LogWarning("Invalid plugin path format: {PluginPath}", pluginPath);
                     return false;
@@ -187,6 +307,27 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.Implementations
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error unloading all containerized plugins");
+            }
+        }
+
+        /// <summary>
+        /// Disposes the loader and releases the underlying orchestrator if it is disposable
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes the loader
+        /// </summary>
+        /// <param name="disposing">True when disposing explicitly</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && _orchestrator is IDisposable disposableOrchestrator)
+            {
+                disposableOrchestrator.Dispose();
             }
         }
 
