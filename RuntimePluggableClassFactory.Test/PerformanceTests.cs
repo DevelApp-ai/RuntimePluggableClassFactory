@@ -68,6 +68,11 @@ namespace RuntimePluggableClassFactory.Test
             var filePluginLoader = new FilePluginLoader<ISpecificInterface>(_pluginUri, securityValidator);
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
+            // The factory uses a default-deny allow list, so allow all discovered plugins first
+            foreach (var possiblePlugin in await pluginFactory.GetPossiblePlugins())
+            {
+                pluginFactory.AllowPlugin(possiblePlugin.moduleName, possiblePlugin.pluginName, possiblePlugin.version);
+            }
             await pluginFactory.RefreshPluginsAsync();
             var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
@@ -112,6 +117,11 @@ namespace RuntimePluggableClassFactory.Test
             var filePluginLoader = new FilePluginLoader<ISpecificInterface>(_pluginUri, securityValidator);
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
+            // The factory uses a default-deny allow list, so allow all discovered plugins first
+            foreach (var possiblePlugin in await pluginFactory.GetPossiblePlugins())
+            {
+                pluginFactory.AllowPlugin(possiblePlugin.moduleName, possiblePlugin.pluginName, possiblePlugin.version);
+            }
             await pluginFactory.RefreshPluginsAsync();
             var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
@@ -160,6 +170,11 @@ namespace RuntimePluggableClassFactory.Test
             var filePluginLoader = new FilePluginLoader<ISpecificInterface>(_pluginUri, securityValidator);
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
+            // The factory uses a default-deny allow list, so allow all discovered plugins first
+            foreach (var possiblePlugin in await pluginFactory.GetPossiblePlugins())
+            {
+                pluginFactory.AllowPlugin(possiblePlugin.moduleName, possiblePlugin.pluginName, possiblePlugin.version);
+            }
             await pluginFactory.RefreshPluginsAsync();
             var availablePlugins = await pluginFactory.GetPossiblePlugins();
             
@@ -258,6 +273,11 @@ namespace RuntimePluggableClassFactory.Test
             var filePluginLoader = new FilePluginLoader<ISpecificInterface>(_pluginUri, securityValidator);
             var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
 
+            // The factory uses a default-deny allow list, so allow all discovered plugins first
+            foreach (var possiblePlugin in await pluginFactory.GetPossiblePlugins())
+            {
+                pluginFactory.AllowPlugin(possiblePlugin.moduleName, possiblePlugin.pluginName, possiblePlugin.version);
+            }
             await pluginFactory.RefreshPluginsAsync();
             var availablePlugins = await pluginFactory.GetPossiblePlugins();
             

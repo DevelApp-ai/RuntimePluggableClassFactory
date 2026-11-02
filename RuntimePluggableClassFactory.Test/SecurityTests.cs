@@ -154,7 +154,7 @@ namespace RuntimePluggableClassFactory.Test
             filePluginLoader.SecurityValidationFailed += (sender, args) =>
             {
                 Assert.NotNull(args.ValidationResult);
-                Assert.NotNull(args.FileName);
+                Assert.False(string.IsNullOrEmpty(args.PluginFolder));
                 Assert.NotNull(args.PluginPath);
             };
             

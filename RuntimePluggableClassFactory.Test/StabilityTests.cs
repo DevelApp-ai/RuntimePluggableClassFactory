@@ -132,8 +132,7 @@ namespace RuntimePluggableClassFactory.Test
             filePluginLoader.PluginLoadingFailed += (sender, args) =>
             {
                 Assert.NotNull(args.Exception);
-                Assert.NotNull(args.FileName);
-                Assert.NotNull(args.PluginPath);
+                Assert.False(string.IsNullOrEmpty(args.Message));
             };
             
             // This test verifies that the error handling infrastructure is in place

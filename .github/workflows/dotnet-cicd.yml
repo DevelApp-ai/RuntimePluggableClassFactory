@@ -78,9 +78,10 @@ jobs:
 
     - name: Test
       run: |
-        echo "Skipping test execution due to API compatibility issues in test files"
-        echo "Core functionality is validated through successful compilation of main projects"
-        echo "Tests can be fixed in a separate PR after the main NuGet deployment workflow is working"
+        # The test projects load plugin DLLs from PluginFolder/, which the
+        # PluginImplementations_* post-build targets populated during the Build step above.
+        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --nologo
+        dotnet test RuntimePluggableClassFactory.Containerized.Tests/RuntimePluggableClassFactory.Containerized.Tests.csproj --configuration Release --nologo
 
     - name: Pack
       run: |

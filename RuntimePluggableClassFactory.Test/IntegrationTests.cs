@@ -36,7 +36,7 @@ namespace RuntimePluggableClassFactory.Test
             // Arrange
             var securityValidator = new DefaultPluginSecurityValidator(PluginSecuritySettings.CreateDefault());
             var filePluginLoader = new FilePluginLoader<ISpecificInterface>(_pluginUri, securityValidator);
-            var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader);
+            var pluginFactory = new PluginClassFactory<ISpecificInterface>(filePluginLoader, retainOldVersions: 10);
 
             bool securityEventFired = false;
             bool pluginErrorFired = false;
@@ -54,6 +54,11 @@ namespace RuntimePluggableClassFactory.Test
             // Act & Assert - Complete workflow
             
             // 1. Refresh plugins (discovery phase)
+            // The factory uses a default-deny allow list, so allow all discovered plugins first
+            foreach (var possiblePlugin in await pluginFactory.GetPossiblePlugins())
+            {
+                pluginFactory.AllowPlugin(possiblePlugin.moduleName, possiblePlugin.pluginName, possiblePlugin.version);
+            }
             await pluginFactory.RefreshPluginsAsync();
             var availablePlugins = await pluginFactory.GetPossiblePlugins();
             Assert.NotEmpty(availablePlugins);
@@ -136,8 +141,13 @@ namespace RuntimePluggableClassFactory.Test
 
             filePluginLoader.SecurityValidationFailed += (sender, args) =>
             {
-                securityValidationFailed = true;
-                securityFailureReason = string.Join("; ", args.ValidationResult.Issues.Select(i => i.Description));
+                // The event also fires for warnings-only results (IsValid == true);
+                // only genuine validation failures count for this test
+                if (!args.ValidationResult.IsValid)
+                {
+                    securityValidationFailed = true;
+                    securityFailureReason = string.Join("; ", args.ValidationResult.Issues.Select(i => i.Description));
+                }
             };
 
             // Act
@@ -263,7 +273,7 @@ namespace RuntimePluggableClassFactory.Test
             {
                 pluginLoadingErrorFired = true;
                 Assert.NotNull(args.Exception);
-                Assert.NotNull(args.FileName);
+                Assert.False(string.IsNullOrEmpty(args.Message));
             };
 
             filePluginLoader.SecurityValidationFailed += (sender, args) =>
