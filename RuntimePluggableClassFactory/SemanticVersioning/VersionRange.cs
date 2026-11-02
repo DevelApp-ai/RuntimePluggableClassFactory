@@ -293,7 +293,7 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
         /// <summary>
         /// Checks if this range is for a specific version
         /// </summary>
-        public bool IsSpecificVersion => MinVersion != null && MaxVersion != null && MinVersion == MaxVersion;
+        public bool IsSpecificVersion => MinVersion != null && MaxVersion != null && VersionEquals(MinVersion, MaxVersion);
 
         /// <summary>
         /// Gets the specific version if this is a specific version range
@@ -336,8 +336,8 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             if (other == null)
                 return false;
 
-            return MinVersion == other.MinVersion &&
-                   MaxVersion == other.MaxVersion &&
+            return VersionEquals(MinVersion, other.MinVersion) &&
+                   VersionEquals(MaxVersion, other.MaxVersion) &&
                    MinInclusive == other.MinInclusive &&
                    MaxInclusive == other.MaxInclusive;
         }
@@ -347,8 +347,8 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
             unchecked
             {
                 int hash = 17;
-                hash = hash * 23 + (MinVersion?.GetHashCode() ?? 0);
-                hash = hash * 23 + (MaxVersion?.GetHashCode() ?? 0);
+                hash = hash * 23 + VersionHashCode(MinVersion);
+                hash = hash * 23 + VersionHashCode(MaxVersion);
                 hash = hash * 23 + MinInclusive.GetHashCode();
                 hash = hash * 23 + MaxInclusive.GetHashCode();
                 return hash;
@@ -367,6 +367,39 @@ namespace DevelApp.RuntimePluggableClassFactory.SemanticVersioning
         public static bool operator !=(VersionRange? left, VersionRange? right)
         {
             return !(left == right);
+        }
+
+        /// <summary>
+        /// Value-based equality for semantic versions.
+        /// SemanticVersionNumber (DevelApp.Utility) does not override == / Equals,
+        /// so reference equality would make equal ranges compare as different.
+        /// </summary>
+        private static bool VersionEquals(SemanticVersionNumber? a, SemanticVersionNumber? b)
+        {
+            if (ReferenceEquals(a, b))
+                return true;
+            if (a is null || b is null)
+                return false;
+            return a.CompareTo(b) == 0;
+        }
+
+        /// <summary>
+        /// Stable value-based hash code for semantic versions
+        /// (SemanticVersionNumber.GetHashCode is reference-based).
+        /// </summary>
+        private static int VersionHashCode(SemanticVersionNumber? version)
+        {
+            if (version is null)
+                return 0;
+
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + version.Major;
+                hash = hash * 23 + version.Minor;
+                hash = hash * 23 + version.Patch;
+                return hash;
+            }
         }
 
         private static SemanticVersionNumber? Max(SemanticVersionNumber? a, SemanticVersionNumber? b)

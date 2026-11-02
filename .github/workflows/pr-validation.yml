@@ -4,7 +4,7 @@ permissions:
 
 on:
   pull_request:
-    branches: [ master, develop ]
+    branches: [ main ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -47,8 +47,9 @@ jobs:
 
     - name: Run tests
       run: |
-        echo "Running core tests (excluding integration/performance tests with compilation issues)..."
-        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~PerformanceTests"
+        echo "Running full test suite (solution build populated PluginFolder/ with the plugin DLLs)..."
+        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
+        dotnet test RuntimePluggableClassFactory.Containerized.Tests/RuntimePluggableClassFactory.Containerized.Tests.csproj --configuration Release --no-build --verbosity normal --logger trx --results-directory TestResults
 
     - name: Upload test results
       uses: actions/upload-artifact@v6
@@ -166,8 +167,9 @@ jobs:
 
     - name: Test with .NET ${{ matrix.dotnet-version }}
       run: |
-        echo "Testing with .NET ${{ matrix.dotnet-version }} (excluding integration/performance tests)..."
-        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity minimal --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~PerformanceTests"
+        echo "Testing with .NET ${{ matrix.dotnet-version }}..."
+        dotnet test RuntimePluggableClassFactory.Test/RuntimePluggableClassFactory.Test.csproj --configuration Release --no-build --verbosity minimal
+        dotnet test RuntimePluggableClassFactory.Containerized.Tests/RuntimePluggableClassFactory.Containerized.Tests.csproj --configuration Release --no-build --verbosity minimal
 
   pr-summary:
     name: PR Summary

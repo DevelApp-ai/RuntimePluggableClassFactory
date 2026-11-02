@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="mkdir -p &quot;$(SolutionDir)PluginFolder/$(ProjectName)&quot; &amp;&amp; cp &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder/$(ProjectName)/&quot;" Condition="'$(OS)' != 'Windows_NT'" />
-    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(SolutionDir)PluginFolder$([System.IO.Path]::DirectorySeparatorChar)$(ProjectName)$([System.IO.Path]::DirectorySeparatorChar)&quot;" Condition="'$(OS)' == 'Windows_NT'" />
+    <Exec Command="mkdir -p &quot;$(MSBuildThisFileDirectory)..\PluginFolder\$(ProjectName)&quot; &amp;&amp; cp &quot;$(TargetPath)&quot; &quot;$(MSBuildThisFileDirectory)..\PluginFolder\$(ProjectName)/&quot;" Condition="'$(OS)' != 'Windows_NT'" />
+    <Exec Command="xcopy /y /d &quot;$(TargetPath)&quot; &quot;$(MSBuildThisFileDirectory)..\PluginFolder$([System.IO.Path]::DirectorySeparatorChar)$(ProjectName)$([System.IO.Path]::DirectorySeparatorChar)&quot;" Condition="'$(OS)' == 'Windows_NT'" />
   </Target>
 
   <ItemGroup>

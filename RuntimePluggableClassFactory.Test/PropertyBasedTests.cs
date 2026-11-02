@@ -5,6 +5,7 @@ using DevelApp.Utility.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace DevelApp.RuntimePluggableClassFactory.Test
@@ -32,7 +33,7 @@ namespace DevelApp.RuntimePluggableClassFactory.Test
         {
             // Arrange
             var range = VersionRange.Parse(rangeString);
-            var version = SemanticVersionNumber.Parse(versionString);
+            var version = ParseVersion(versionString);
 
             // Act
             var result = range.Contains(version);
@@ -123,9 +124,9 @@ namespace DevelApp.RuntimePluggableClassFactory.Test
         // ============================================================================
 
         [Theory]
-        [InlineData(1, true)]
-        [InlineData(5, true)]
-        [InlineData(10, true)]
+        [InlineData(1)]
+        [InlineData(5)]
+        [InlineData(10)]
         public void CircuitBreaker_InitialState_IsClosed(int failureThreshold)
         {
             // Arrange
@@ -243,12 +244,8 @@ namespace DevelApp.RuntimePluggableClassFactory.Test
         // Bulk Operations Property Tests
         // ============================================================================
 
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1)]
-        [InlineData(5)]
-        [InlineData(10)]
-        public void BulkLoadResult_EmptyList_HasZeroAttempts(int expectedCount)
+        [Fact]
+        public void BulkLoadResult_EmptyList_HasZeroAttempts()
         {
             // Arrange
             var result = new PluginBulkOperations.BulkLoadResult<TestPlugin>();
@@ -298,10 +295,8 @@ namespace DevelApp.RuntimePluggableClassFactory.Test
         // Async Plugin Loader Property Tests
         // ============================================================================
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task AsyncPluginLoader_InitialLoadTask_Completes(bool useAsync)
+        [Fact]
+        public async Task AsyncPluginLoader_InitialLoadTask_Completes()
         {
             // Arrange
             var tempPath = System.IO.Path.Combine(
@@ -337,13 +332,22 @@ namespace DevelApp.RuntimePluggableClassFactory.Test
         // ============================================================================
 
         /// <summary>
+        /// Local parse helper (SemanticVersionNumber from DevelApp.Utility exposes no Parse method).
+        /// </summary>
+        private static SemanticVersionNumber ParseVersion(string version)
+        {
+            var parts = version.Split('.');
+            return new SemanticVersionNumber(int.Parse(parts[0]), int.Parse(parts[1]), int.Parse(parts[2]));
+        }
+
+        /// <summary>
         /// Test plugin implementation for property tests
         /// </summary>
         private class TestPlugin : Interface.IPluginClass
         {
             public NamespaceString Module => new NamespaceString("Test");
             public IdentifierString Name => new IdentifierString("TestPlugin");
-            public SemanticVersionNumber Version => SemanticVersionNumber.Parse("1.0.0");
+            public SemanticVersionNumber Version => new SemanticVersionNumber(1, 0, 0);
             public string? Description => "Test plugin for property-based tests";
         }
     }
