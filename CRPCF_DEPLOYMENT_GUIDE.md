@@ -1373,5 +1373,22 @@ Consequently, a desktop-backend consumer **builds and tags its own runtime image
 - Consumers should **pin the exact published version** (e.g. `Version="2.1.2"`) and treat the documented dispatch surface (§8.3) as the stable contract. Breaking API changes ride a minor/major bump per the repo's versioning policy; the 2.1.x line is additive-only.
 - The minimum version a consumer should pin is the release that first ships the Containerized packages on the org feed (see the linked release on this issue's tracker); anything earlier did not compile the Containerized projects.
 
+### 8.7 SBoB verification and enforcement (deploy-time)
+
+CRPCF can verify the **Software Bill of Behavior** profile embedded in a plugin nupkg by [SBOB-Forge](https://github.com/DevelApp-ai/SBOB-Forge) (convention: `sbob/<package>.<target-os>.sbob.yaml`, default target-os `linux` — org decision [DevelApp-ai/DevelApp-Repo-Global#39](https://github.com/DevelApp-ai/DevelApp-Repo-Global/issues/39)):
+
+- **`SBoBPackageVerifier`** (`DevelApp.RuntimePluggableClassFactory.Containerized.SBoB`): extracts and strictly validates the embedded profile against the SBOB-Forge canonical form (fail-closed: both dialect headers accepted, everything else — wrong field order, non-canonical scalars, `...` instead of `⋯`, CRLF, tabs — rejected), and verifies the `spec.imageID` purl binding (`pkg:nuget/<id>@<version>`) against the actual package identity.
+- **`SBoBPolicyEvaluator` + `SBoBPolicy`**: v1 rules — forbidden exec paths (shells), forbidden open path prefixes/flags, external egress/ingress allow-deny with DNS allowlist and ingress port limits. Violations carry Error or Warning severity; `Allowed == false` means "deny in Enforce mode".
+- **`SBoBEnforcingOrchestrator`**: decorator over any `IContainerizedPluginOrchestrator`. Roll out per package as `Monitor → Audit → Enforce`:
+  - `Off` skips verification; `Monitor` verifies without altering results; `Audit` appends violations as `PluginDeploymentResult.Warnings`; `Enforce` denies disallowed deployments **without invoking the inner orchestrator** and tightens `NetworkPolicy` from the verified profile (declared egress → `Restricted`, no egress → `Isolated` — it only ever tightens, never loosens).
+
+```csharp
+var verifier = new SBoBPackageVerifier();
+var orchestrator = new SBoBEnforcingOrchestrator(innerOrchestrator, verifier,
+    new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Audit });
+```
+
+Notes: the `develapp.io/behavior-hash` annotation is an opaque audit value (it hashes the SBOB-Forge normalized IR, not the YAML text); cosign bundle verification lands with SBOB-Forge M6. This adds **no new NuGet dependency** to the CRPCF package graph.
+
 
 This comprehensive deployment guide provides everything needed to successfully deploy and operate the Containerized RuntimePluggableClassFactory in production environments.
