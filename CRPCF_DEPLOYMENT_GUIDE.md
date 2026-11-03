@@ -1375,6 +1375,8 @@ Consequently, a desktop-backend consumer **builds and tags its own runtime image
 
 ### 8.7 SBoB verification and enforcement (deploy-time)
 
+**Opt-in, off by default.** SBoB profiles are optional for consumers of the public nuget.org packages (they never ship one) — `SBoBEnforcingOrchestratorOptions.Mode` defaults to `Off`, which skips verification entirely and never denies a deployment. A consumer who wants enforcement opts in explicitly and rolls out per package `Monitor → Audit → Enforce` (org decision [DevelApp-ai/DevelApp-Repo-Global#39](https://github.com/DevelApp-ai/DevelApp-Repo-Global/issues/39)).
+
 CRPCF can verify the **Software Bill of Behavior** profile embedded in a plugin nupkg by [SBOB-Forge](https://github.com/DevelApp-ai/SBOB-Forge) (convention: `sbob/<package>.<target-os>.sbob.yaml`, default target-os `linux` — org decision [DevelApp-ai/DevelApp-Repo-Global#39](https://github.com/DevelApp-ai/DevelApp-Repo-Global/issues/39)):
 
 - **`SBoBPackageVerifier`** (`DevelApp.RuntimePluggableClassFactory.Containerized.SBoB`): extracts and strictly validates the embedded profile against the SBOB-Forge canonical form (fail-closed: both dialect headers accepted, everything else — wrong field order, non-canonical scalars, `...` instead of `⋯`, CRLF, tabs — rejected), and verifies the `spec.imageID` purl binding (`pkg:nuget/<id>@<version>`) against the actual package identity.

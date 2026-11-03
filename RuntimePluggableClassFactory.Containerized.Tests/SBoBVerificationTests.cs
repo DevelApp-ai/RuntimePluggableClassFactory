@@ -625,7 +625,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var package = CreatePackage(("sbob/example-core.linux.sbob.yaml", CanonicalProfile));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions { ExpectedPurl = "pkg:nuget/example.core@1.0.0" });
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce, ExpectedPurl = "pkg:nuget/example.core@1.0.0" });
             var request = CreateRequest(package, networkPolicy: NetworkPolicy.Unrestricted);
 
             var result = await orchestrator.DeployPluginAsync(request);
@@ -643,7 +643,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var package = CreatePackage(("sbob/example-core.linux.sbob.yaml", NoEgressProfile + "\n"));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions { ExpectedPurl = "pkg:nuget/example.core@1.0.0" });
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce, ExpectedPurl = "pkg:nuget/example.core@1.0.0" });
             var request = CreateRequest(package, networkPolicy: NetworkPolicy.Restricted);
 
             var result = await orchestrator.DeployPluginAsync(request);
@@ -658,7 +658,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var package = CreatePackage(("sbob/example-core.linux.sbob.yaml", ShellExecProfile + "\n"));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions());
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce });
             var request = CreateRequest(package);
 
             var result = await orchestrator.DeployPluginAsync(request);
@@ -675,7 +675,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var package = CreatePackage(("tools/plugin.dll", "binary"));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions());
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce });
             var request = CreateRequest(package);
 
             var result = await orchestrator.DeployPluginAsync(request);
@@ -691,7 +691,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var garbage = new MemoryStream(Encoding.ASCII.GetBytes("not a package"));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions());
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce });
             var request = CreateRequest(garbage);
 
             var result = await orchestrator.DeployPluginAsync(request);
@@ -707,7 +707,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var package = CreatePackage(("sbob/example-core.linux.sbob.yaml", CanonicalProfile));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions());
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce });
             var request = CreateRequest(package, metadata: new Dictionary<string, object>
             {
                 ["PackageId"] = "Other.Package",
@@ -727,7 +727,7 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             var inner = new RecordingOrchestrator();
             using var package = CreatePackage(("sbob/example-core.linux.sbob.yaml", CanonicalProfile));
             var orchestrator = new SBoBEnforcingOrchestrator(inner, new SBoBPackageVerifier(),
-                new SBoBEnforcingOrchestratorOptions());
+                new SBoBEnforcingOrchestratorOptions { Mode = SBoBEnforcementMode.Enforce });
             var request = CreateRequest(package, metadata: new Dictionary<string, object>
             {
                 ["PackageId"] = "Example.Core",
@@ -788,6 +788,27 @@ namespace RuntimePluggableClassFactory.Containerized.Tests
             Assert.IsTrue(result.Success);
             Assert.AreEqual(1, inner.DeployCount);
             Assert.AreEqual(0, verifier.CallCount, "Off mode must not invoke the verifier");
+        }
+
+        [TestMethod]
+        public async Task DefaultOptions_AreOff_SoPublicConsumersAreUnaffected()
+        {
+            // Decision #39 acceptance: SBoB profiles are optional for consumers of the public
+            // nuget.org packages — default options must skip verification entirely.
+            var inner = new RecordingOrchestrator();
+            var verifier = new CountingVerifier();
+            using var package = CreatePackage(("tools/plugin.dll", "no SBoB profile at all"));
+            var defaultOptions = new SBoBEnforcingOrchestratorOptions();
+            var orchestrator = new SBoBEnforcingOrchestrator(inner, verifier, defaultOptions);
+            var request = CreateRequest(package);
+
+            var result = await orchestrator.DeployPluginAsync(request);
+
+            Assert.AreEqual(SBoBEnforcementMode.Off, defaultOptions.Mode,
+                "the default enforcement mode must be Off (opt-in)");
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(1, inner.DeployCount);
+            Assert.AreEqual(0, verifier.CallCount, "default options must not invoke the verifier");
         }
 
         [TestMethod]
