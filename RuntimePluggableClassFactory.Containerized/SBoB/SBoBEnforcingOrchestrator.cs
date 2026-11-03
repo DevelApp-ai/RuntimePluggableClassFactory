@@ -11,8 +11,13 @@ namespace DevelApp.RuntimePluggableClassFactory.Containerized.SBoB
     /// <summary>Options for the SBoB enforcing orchestrator (org decision #39).</summary>
     public sealed class SBoBEnforcingOrchestratorOptions
     {
-        /// <summary>Enforcement mode. Default: Enforce (wrap a production orchestrator explicitly in Monitor/Audit first).</summary>
-        public SBoBEnforcementMode Mode { get; init; } = SBoBEnforcementMode.Enforce;
+        /// <summary>
+        /// Enforcement mode. Default: Off — SBoB verification is opt-in (decision #39 acceptance:
+        /// SBoB profiles are optional for consumers of the public nuget.org packages, which never
+        /// ship one). DevelApp-internal orchestrators opt in explicitly and still roll out per
+        /// package Monitor → Audit → Enforce; nothing goes straight to Enforce.
+        /// </summary>
+        public SBoBEnforcementMode Mode { get; init; } = SBoBEnforcementMode.Off;
 
         /// <summary>The policy evaluated against every embedded profile.</summary>
         public SBoBPolicy Policy { get; init; } = new();
