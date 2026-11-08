@@ -9,9 +9,9 @@
     <Product>RuntimePluggableClassFactory.Interface</Product>
     <Description>Base interfaces for RuntimePluggableClassFactory including IPluginClass and ITypedPluginClass&lt;TInput, TOutput&gt; for type-safe plugin development. Provides strongly-typed plugin interfaces, execution context, and result types for building dynamic plugin systems.</Description>
     <PackageTags>plugin;interface;dynamic-loading;type-safety;factory;dependency-injection;modular;extensibility</PackageTags>
-    <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+    <RepositoryUrl>https://github.com/DevelApp-ai/RuntimePluggableClassFactory</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/DevelApp-ai/RuntimePluggableClassFactory</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>
       TDS Implementation Complete:
@@ -21,7 +21,7 @@
       - Backward compatible with existing IPluginClass implementations
       - Enhanced plugin metadata and versioning support
     </PackageReleaseNotes>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Copyright \u00a9 DevelApp 2020-2025</Copyright>
     <Version>2.0.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
@@ -45,10 +45,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+
     <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
