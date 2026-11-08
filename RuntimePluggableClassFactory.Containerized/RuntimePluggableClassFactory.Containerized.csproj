@@ -5,15 +5,15 @@
     <AssemblyName>DevelApp.RuntimePluggableClassFactory.Containerized</AssemblyName>
     <RootNamespace>DevelApp.RuntimePluggableClassFactory.Containerized</RootNamespace>
     <Authors>Lars Shakya Buch-Jepsen</Authors>
-    <Copyright>Copyright © DevelApp 2020-2025</Copyright>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>Copyright © DevelApp.ai ApS 2020-2026</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Company>DevelApp Denmark (CVR 33211740)</Company>
     <Product>RuntimePluggableClassFactory Containerized</Product>
     <Description>Containerized RuntimePluggableClassFactory (CRPCF) for secure execution of NuGet packages within isolated containers. Supports digital signature validation, whitelisted signers, and multiple container orchestration platforms.</Description>
     <PackageTags>plugin;container;kubernetes;docker;security;signed-packages;orchestration</PackageTags>
-    <RepositoryUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</RepositoryUrl>
+    <RepositoryUrl>https://github.com/DevelApp-ai/RuntimePluggableClassFactory</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/DevelApp-dk/RuntimePluggableClassFactory</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/DevelApp-ai/RuntimePluggableClassFactory</PackageProjectUrl>
     <Version>2.1.0</Version>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
     <FileVersion>2.1.0.0</FileVersion>
@@ -22,10 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+
   </ItemGroup>
 
   <ItemGroup>
