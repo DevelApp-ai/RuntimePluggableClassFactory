@@ -3,6 +3,19 @@ permissions:
   packages: write
 name: .NET CI/CD
 
+# Stable NuGet releases are signed with Certum cloud code signing before
+# publishing (org decision DevelApp-ai/DevelApp-Repo-Global#38, 2026-11-11):
+# the sign job (windows-latest) signs + verifies every .nupkg via
+# `dotnet nuget sign --certificate-sha1 <thumbprint> --timestamper
+# http://time.certum.pl` and `dotnet nuget verify`, then the publish job
+# pushes only verified packages and attaches them to the GitHub Release.
+# Prerelease pushes skip signing entirely (current unsigned behavior) so
+# no TOTP window is burned on every merge to main. Thumbprint comes from
+# the CODE_SIGNING_CERT_THUMBPRINT org secret; the SimplySign login uses
+# the CERTUM_SIMPLYSIGN_* org secrets and never sees
+# CERTUM_SIMPLYSIGN_PASSWORD. Stack proven green by the LocalTaskhandler
+# signing test (run 43089090840, 2026-11-11).
+#
 # Triggers the workflow on pushes and pull requests to the main branch
 on:
   push:
@@ -13,6 +26,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.version.outputs.semver }}
+      nugetversion: ${{ steps.version.outputs.nugetversion }}
+      isprerelease: ${{ steps.version.outputs.isprerelease }}
 
     steps:
     - name: Checkout code
@@ -104,6 +121,135 @@ jobs:
         name: nuget-packages-containerized
         path: ./artifacts-containerized/*.nupkg
 
+  sign:
+    # Stable releases only (decision #38): prerelease pushes skip signing
+    # entirely so no TOTP window is burned on every merge to main.
+    needs: build
+    if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
+    runs-on: windows-latest
+    steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v6
+      with:
+        name: nuget-packages
+        path: ./artifacts
+
+    - name: Download containerized artifacts
+      uses: actions/download-artifact@v6
+      with:
+        name: nuget-packages-containerized
+        path: ./artifacts-containerized
+
+    - name: Validate signing inputs
+      # Fail fast BEFORE the SimplySign login consumes a TOTP window
+      # (values are never echoed).
+      shell: pwsh
+      env:
+        CERTUM_SIMPLYSIGN_USERID: ${{ secrets.CERTUM_SIMPLYSIGN_USERID }}
+        CERTUM_SIMPLYSIGN_OTP_URI: ${{ secrets.CERTUM_SIMPLYSIGN_OTP_URI }}
+        CERTUM_THUMBPRINT: ${{ secrets.CODE_SIGNING_CERT_THUMBPRINT }}
+      run: |
+        foreach ($name in @('CERTUM_SIMPLYSIGN_USERID','CERTUM_SIMPLYSIGN_OTP_URI','CERTUM_THUMBPRINT')) {
+          if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+            throw "Missing signing input: $name (org secrets setup, decision #38)"
+          }
+        }
+        $tp = $env:CERTUM_THUMBPRINT -replace '\s',''
+        if ($tp -notmatch '^[0-9A-Fa-f]{40}$') { throw 'Certificate thumbprint must be exactly 40 hex characters (CODE_SIGNING_CERT_THUMBPRINT org secret).' }
+        $uri = $null
+        if (-not [Uri]::TryCreate($env:CERTUM_SIMPLYSIGN_OTP_URI, [UriKind]::Absolute, [ref]$uri) -or
+            $uri.Scheme -ne 'otpauth' -or $uri.Host -ne 'totp' -or
+            $uri.Query -notmatch '[?&]secret=[A-Za-z2-7]+=*(&|$)') {
+          throw 'CERTUM_SIMPLYSIGN_OTP_URI must be the full otpauth://totp provisioning URI (org secrets setup, decision #38).'
+        }
+
+    - name: Connect to Certum SimplySign
+      # Pinned by full commit SHA; proven by the LocalTaskhandler signing
+      # test (run 43089090840, 2026-11-11) and shaztechio/bunyi-app #171.
+      # Never sees CERTUM_SIMPLYSIGN_PASSWORD — that secret stays dormant.
+      uses: dismine/windows-app-signing-setup-action@89ae3b032d4bc7a5b98d1a42a34e61ecb6faad64
+      with:
+        certum-username: ${{ secrets.CERTUM_SIMPLYSIGN_USERID }}
+        certum-otp-uri: ${{ secrets.CERTUM_SIMPLYSIGN_OTP_URI }}
+        certum-key-id: ${{ secrets.CODE_SIGNING_CERT_THUMBPRINT }}
+        capture-diagnostics: 'false'
+
+    - name: Sign NuGet packages
+      shell: pwsh
+      env:
+        CERTUM_THUMBPRINT: ${{ secrets.CODE_SIGNING_CERT_THUMBPRINT }}
+      run: |
+        $tp = $env:CERTUM_THUMBPRINT -replace '\s',''
+        $packages = @(Get-ChildItem ./artifacts/*.nupkg, ./artifacts-containerized/*.nupkg)
+        if (-not $packages.Count) { throw 'No packages found to sign.' }
+        foreach ($p in $packages) {
+          dotnet nuget sign $p.FullName --certificate-sha1 $tp --timestamper http://time.certum.pl
+          if ($LASTEXITCODE -ne 0) { throw "Signing failed (exit $LASTEXITCODE): $($p.Name)" }
+        }
+
+    - name: Verify signatures (gate)
+      # Any invalid signature fails the job and blocks publishing.
+      shell: pwsh
+      run: |
+        $packages = @(Get-ChildItem ./artifacts/*.nupkg, ./artifacts-containerized/*.nupkg)
+        foreach ($p in $packages) {
+          dotnet nuget verify $p.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Signature verification failed (exit $LASTEXITCODE): $($p.Name)" }
+        }
+
+    - name: Upload signed artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: nuget-packages-signed
+        path: ./artifacts/*.nupkg
+
+    - name: Upload containerized signed artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: nuget-packages-containerized-signed
+        path: ./artifacts-containerized/*.nupkg
+
+  publish:
+    # Publishing and the GitHub Release now depend on sign: stable pushes
+    # publish the SIGNED packages; prerelease pushes (sign skipped) keep
+    # the current unsigned behavior. A sign FAILURE blocks publishing.
+    needs: [build, sign]
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'push' && (needs.sign.result == 'success' || needs.sign.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download signed artifacts
+      if: needs.sign.result == 'success'
+      uses: actions/download-artifact@v6
+      with:
+        name: nuget-packages-signed
+        path: ./artifacts
+
+    - name: Download signed containerized artifacts
+      if: needs.sign.result == 'success'
+      uses: actions/download-artifact@v6
+      with:
+        name: nuget-packages-containerized-signed
+        path: ./artifacts-containerized
+
+    - name: Download artifacts (prerelease, unsigned)
+      if: needs.sign.result != 'success'
+      uses: actions/download-artifact@v6
+      with:
+        name: nuget-packages
+        path: ./artifacts
+
+    - name: Download containerized artifacts (prerelease, unsigned)
+      if: needs.sign.result != 'success'
+      uses: actions/download-artifact@v6
+      with:
+        name: nuget-packages-containerized
+        path: ./artifacts-containerized
+
     - name: Publish to GitHub Packages
       # Publishes ALL versions (beta/prerelease and stable) to GitHub Packages.
       # Runs first and is not affected by any NuGet.org problems.
@@ -117,7 +263,7 @@ jobs:
     - name: Publish to NuGet.org
       # Only stable (non-prerelease) versions are published to NuGet.org.
       # A failure here must never block GitHub Packages publishing or the tagged release.
-      if: github.event_name == 'push' && steps.version.outputs.isprerelease == 'false'
+      if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
       continue-on-error: true
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
@@ -126,20 +272,20 @@ jobs:
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v3
       with:
-        tag_name: v${{ steps.version.outputs.semver }}
-        name: Release v${{ steps.version.outputs.semver }}
+        tag_name: v${{ needs.build.outputs.semver }}
+        name: Release v${{ needs.build.outputs.semver }}
         body: |
           ## 📦 NuGet Packages
 
           Published to GitHub Packages:
-          - DevelApp.RuntimePluggableClassFactory v${{ steps.version.outputs.semver }}
-          - DevelApp.RuntimePluggableClassFactory.Interface v${{ steps.version.outputs.semver }}
-          - DevelApp.RuntimePluggableClassFactory.Containerized v${{ steps.version.outputs.semver }} (GitHub Packages only, not on NuGet.org)
-          - DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes v${{ steps.version.outputs.semver }} (GitHub Packages only, not on NuGet.org)
+          - DevelApp.RuntimePluggableClassFactory v${{ needs.build.outputs.semver }}
+          - DevelApp.RuntimePluggableClassFactory.Interface v${{ needs.build.outputs.semver }}
+          - DevelApp.RuntimePluggableClassFactory.Containerized v${{ needs.build.outputs.semver }} (GitHub Packages only, not on NuGet.org)
+          - DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes v${{ needs.build.outputs.semver }} (GitHub Packages only, not on NuGet.org)
 
           Stable releases are also published to NuGet.org:
-          - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ steps.version.outputs.semver }}
-          - [DevelApp.RuntimePluggableClassFactory.Interface](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Interface) v${{ steps.version.outputs.semver }}
+          - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ needs.build.outputs.semver }}
+          - [DevelApp.RuntimePluggableClassFactory.Interface](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Interface) v${{ needs.build.outputs.semver }}
 
           ## 🚀 Features
           - Dynamic plugin loading and unloading with AssemblyLoadContext
@@ -156,5 +302,5 @@ jobs:
           - Security validation: < 500ms average
           - Memory growth: < 50MB under load
         draft: false
-        prerelease: ${{ steps.version.outputs.isprerelease == 'true' }}
+        prerelease: ${{ needs.build.outputs.isprerelease == 'true' }}
         files: ./artifacts/*.nupkg
