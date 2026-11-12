@@ -6,21 +6,20 @@ name: .NET CI/CD
 # Stable NuGet releases are signed with Certum cloud code signing before
 # publishing (org decision DevelApp-ai/DevelApp-Repo-Global#38, 2026-11-11):
 # the sign job (windows-latest) signs + verifies every .nupkg via
-# 'dotnet nuget sign --certificate-fingerprint <thumbprint> --timestamper
+# 'dotnet nuget sign --certificate-fingerprint <SHA-256 fingerprint> --timestamper
 # http://time.certum.pl' and 'dotnet nuget verify', then the publish job
 # pushes only verified packages and attaches them to the GitHub Release.
 #
-# Signing contract (learned from the failed first attempt on 93c882c,
-# 2026-11-12 — "error: No certificate was provided."):
+# Signing contract (updated by the #73 amendment, 2026-11-12; the first
+# attempt on 93c882c failed with "error: No certificate was provided."):
 # - '--certificate-sha1' is NOT a valid 'dotnet nuget sign' option on any
 #   SDK; the certificate-store lookup option is '--certificate-fingerprint'
 #   (https://learn.microsoft.com/dotnet/core/tools/dotnet-nuget-sign).
-# - 'dotnet' on the runner resolves the NEWEST installed SDK, not the one
-#   setup-dotnet installs. .NET 10 promotes NU3043 to a hard error, so SHA-1
-#   store fingerprints are rejected there; the sign job therefore pins SDK 9
-#   via global.json, which accepts the SHA-1 thumbprint org secret (NU3043
-#   warning only):
-#   https://learn.microsoft.com/dotnet/core/compatibility/sdk/10.0/dotnet-nuget-sign-sha1-deprecated
+# - The sign job uses the certificate's SHA-256 fingerprint from the
+#   CODE_SIGNING_CERT_FINGERPRINT_SHA256 org secret: the SHA-2 interface is
+#   accepted identically by .NET 9 and .NET 10 SDKs (no NU3043 warning), so
+#   no SDK pin is needed and every repo signs with the SDK it builds with
+#   (Lars: "I would like that .NET 10 are compiled with .NET 10").
 # - The LocalTaskhandler signing test (run 43089090840, 2026-11-11) proved
 #   the SimplySign login + signtool Authenticode path, NOT
 #   'dotnet nuget sign' — that path had never been exercised before.
@@ -28,9 +27,10 @@ name: .NET CI/CD
 # All four packages are PUBLIC (Decision #73, amended 2026-11-12):
 # base, Interface, Containerized and Containerized.Kubernetes all publish
 # to GitHub Packages, the GitHub Release and (stable releases only)
-# NuGet.org. Prerelease pushes skip signing entirely (current unsigned
-# behavior) so no TOTP window is burned on every merge to main; they publish
-# to GitHub Packages and the GitHub Release only, never NuGet.org.
+# NuGet.org. Prerelease pushes are SIGNED too (org decisions #38 + #73:
+# branch pushes sign; only PR-triggered builds skip signing so no TOTP
+# window is spent on PR builds); they publish to GitHub Packages and the
+# GitHub Release only, never NuGet.org.
 # Thumbprint comes from the CODE_SIGNING_CERT_THUMBPRINT org secret; the
 # SimplySign login uses the CERTUM_SIMPLYSIGN_* org secrets and never sees
 # CERTUM_SIMPLYSIGN_PASSWORD.
@@ -145,26 +145,16 @@ jobs:
         path: ./artifacts-containerized/*.nupkg
 
   sign:
-    # Stable releases only (decision #38): prerelease pushes skip signing
-    # entirely so no TOTP window is burned on every merge to main.
+    # Branch pushes only (org decisions #38 + #73): every push to main is
+    # signed (stable and prerelease); PR-triggered builds skip signing so
+    # no TOTP window is spent on PR builds.
     needs: build
-    if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
+    if: github.event_name == 'push'
     runs-on: windows-latest
     steps:
-    - name: Setup .NET 9 (signing)
-      # SDK 9 is the newest SDK that still accepts the SHA-1 thumbprint org
-      # secret for --certificate-fingerprint (.NET 10 promotes NU3043 to a
-      # hard error). The global.json pin below is what actually makes
-      # 'dotnet' use it — the runner would otherwise resolve its newest
-      # preinstalled SDK regardless of what setup-dotnet installs.
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: '9.0.x'
-
-    - name: Pin dotnet to SDK 9 for the signing commands
-      shell: pwsh
-      run: Set-Content -Path global.json -Value '{"sdk":{"version":"9.0.100","rollForward":"latestFeature"}}'
-
+    # No SDK pin (decision #73 amendment, 2026-11-12): the SHA-256
+    # fingerprint interface works identically on the runner's newest SDK
+    # (.NET 9 and .NET 10 both accept SHA-2 family fingerprints).
     - name: Download artifacts
       uses: actions/download-artifact@v6
       with:
@@ -185,14 +175,17 @@ jobs:
         CERTUM_SIMPLYSIGN_USERID: ${{ secrets.CERTUM_SIMPLYSIGN_USERID }}
         CERTUM_SIMPLYSIGN_OTP_URI: ${{ secrets.CERTUM_SIMPLYSIGN_OTP_URI }}
         CERTUM_THUMBPRINT: ${{ secrets.CODE_SIGNING_CERT_THUMBPRINT }}
+        CERTUM_FINGERPRINT_SHA256: ${{ secrets.CODE_SIGNING_CERT_FINGERPRINT_SHA256 }}
       run: |
-        foreach ($name in @('CERTUM_SIMPLYSIGN_USERID','CERTUM_SIMPLYSIGN_OTP_URI','CERTUM_THUMBPRINT')) {
+        foreach ($name in @('CERTUM_SIMPLYSIGN_USERID','CERTUM_SIMPLYSIGN_OTP_URI','CERTUM_THUMBPRINT','CERTUM_FINGERPRINT_SHA256')) {
           if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
             throw "Missing signing input: $name (org secrets setup, decision #38)"
           }
         }
         $tp = $env:CERTUM_THUMBPRINT -replace '\s',''
         if ($tp -notmatch '^[0-9A-Fa-f]{40}$') { throw 'Certificate thumbprint must be exactly 40 hex characters (CODE_SIGNING_CERT_THUMBPRINT org secret).' }
+        $fp = $env:CERTUM_FINGERPRINT_SHA256 -replace '\s',''
+        if ($fp -notmatch '^[0-9A-Fa-f]{64}$') { throw 'Certificate fingerprint must be exactly 64 hex characters (CODE_SIGNING_CERT_FINGERPRINT_SHA256 org secret, decision #73 amendment).' }
         $uri = $null
         if (-not [Uri]::TryCreate($env:CERTUM_SIMPLYSIGN_OTP_URI, [UriKind]::Absolute, [ref]$uri) -or
             $uri.Scheme -ne 'otpauth' -or $uri.Host -ne 'totp' -or
@@ -215,17 +208,19 @@ jobs:
       # '--certificate-fingerprint' is the ONLY valid certificate-store
       # lookup option here — '--certificate-sha1' is not a dotnet nuget
       # sign option on any SDK and produced "No certificate was provided."
-      # (93c882c, 2026-11-12). Looks up CurrentUser\\My, where the
-      # SimplySign action installs the cloud certificate.
+      # (93c882c, 2026-11-12). The #73 amendment (2026-11-12) passes the
+      # SHA-256 fingerprint so any current SDK works with no pin. Looks up
+      # CurrentUser\\My, where the SimplySign action installs the cloud
+      # certificate.
       shell: pwsh
       env:
-        CERTUM_THUMBPRINT: ${{ secrets.CODE_SIGNING_CERT_THUMBPRINT }}
+        CERTUM_FINGERPRINT_SHA256: ${{ secrets.CODE_SIGNING_CERT_FINGERPRINT_SHA256 }}
       run: |
-        $tp = ($env:CERTUM_THUMBPRINT -replace '\s','').ToUpperInvariant()
+        $fp = ($env:CERTUM_FINGERPRINT_SHA256 -replace '\s','').ToUpperInvariant()
         $packages = @(Get-ChildItem ./artifacts/*.nupkg, ./artifacts-containerized/*.nupkg)
         if (-not $packages.Count) { throw 'No packages found to sign.' }
         foreach ($p in $packages) {
-          dotnet nuget sign $p.FullName --certificate-fingerprint $tp --timestamper http://time.certum.pl
+          dotnet nuget sign $p.FullName --certificate-fingerprint $fp --timestamper http://time.certum.pl
           if ($LASTEXITCODE -ne 0) { throw "Signing failed (exit $LASTEXITCODE): $($p.Name)" }
         }
 
@@ -252,9 +247,11 @@ jobs:
         path: ./artifacts-containerized/*.nupkg
 
   publish:
-    # Publishing and the GitHub Release now depend on sign: stable pushes
-    # publish the SIGNED packages; prerelease pushes (sign skipped) keep
-    # the current unsigned behavior. A sign FAILURE blocks publishing.
+    # Publishing and the GitHub Release now depend on sign: every push to
+    # main publishes the SIGNED packages (stable and prerelease; org
+    # decisions #38 + #73 — branch pushes sign). The unsigned download
+    # paths remain only as a fallback for runs where signing was skipped.
+    # A sign FAILURE blocks publishing.
     needs: [build, sign]
     if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'push' && (needs.sign.result == 'success' || needs.sign.result == 'skipped') }}
     runs-on: ubuntu-latest
