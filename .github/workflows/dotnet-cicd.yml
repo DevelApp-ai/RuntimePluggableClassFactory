@@ -6,15 +6,30 @@ name: .NET CI/CD
 # Stable NuGet releases are signed with Certum cloud code signing before
 # publishing (org decision DevelApp-ai/DevelApp-Repo-Global#38, 2026-11-11):
 # the sign job (windows-latest) signs + verifies every .nupkg via
-# `dotnet nuget sign --certificate-sha1 <thumbprint> --timestamper
-# http://time.certum.pl` and `dotnet nuget verify`, then the publish job
+# 'dotnet nuget sign --certificate-fingerprint <thumbprint> --timestamper
+# http://time.certum.pl' and 'dotnet nuget verify', then the publish job
 # pushes only verified packages and attaches them to the GitHub Release.
+#
+# Signing contract (learned from the failed first attempt on 93c882c,
+# 2026-11-12 — "error: No certificate was provided."):
+# - '--certificate-sha1' is NOT a valid 'dotnet nuget sign' option on any
+#   SDK; the certificate-store lookup option is '--certificate-fingerprint'
+#   (https://learn.microsoft.com/dotnet/core/tools/dotnet-nuget-sign).
+# - 'dotnet' on the runner resolves the NEWEST installed SDK, not the one
+#   setup-dotnet installs. .NET 10 promotes NU3043 to a hard error, so SHA-1
+#   store fingerprints are rejected there; the sign job therefore pins SDK 9
+#   via global.json, which accepts the SHA-1 thumbprint org secret (NU3043
+#   warning only):
+#   https://learn.microsoft.com/dotnet/core/compatibility/sdk/10.0/dotnet-nuget-sign-sha1-deprecated
+# - The LocalTaskhandler signing test (run 43089090840, 2026-11-11) proved
+#   the SimplySign login + signtool Authenticode path, NOT
+#   'dotnet nuget sign' — that path had never been exercised before.
+#
 # Prerelease pushes skip signing entirely (current unsigned behavior) so
 # no TOTP window is burned on every merge to main. Thumbprint comes from
 # the CODE_SIGNING_CERT_THUMBPRINT org secret; the SimplySign login uses
 # the CERTUM_SIMPLYSIGN_* org secrets and never sees
-# CERTUM_SIMPLYSIGN_PASSWORD. Stack proven green by the LocalTaskhandler
-# signing test (run 43089090840, 2026-11-11).
+# CERTUM_SIMPLYSIGN_PASSWORD.
 #
 # Triggers the workflow on pushes and pull requests to the main branch
 on:
@@ -128,10 +143,19 @@ jobs:
     if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
     runs-on: windows-latest
     steps:
-    - name: Setup .NET
+    - name: Setup .NET 9 (signing)
+      # SDK 9 is the newest SDK that still accepts the SHA-1 thumbprint org
+      # secret for --certificate-fingerprint (.NET 10 promotes NU3043 to a
+      # hard error). The global.json pin below is what actually makes
+      # 'dotnet' use it — the runner would otherwise resolve its newest
+      # preinstalled SDK regardless of what setup-dotnet installs.
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
+
+    - name: Pin dotnet to SDK 9 for the signing commands
+      shell: pwsh
+      run: Set-Content -Path global.json -Value '{"sdk":{"version":"9.0.100","rollForward":"latestFeature"}}'
 
     - name: Download artifacts
       uses: actions/download-artifact@v6
@@ -180,15 +204,20 @@ jobs:
         capture-diagnostics: 'false'
 
     - name: Sign NuGet packages
+      # '--certificate-fingerprint' is the ONLY valid certificate-store
+      # lookup option here — '--certificate-sha1' is not a dotnet nuget
+      # sign option on any SDK and produced "No certificate was provided."
+      # (93c882c, 2026-11-12). Looks up CurrentUser\My, where the
+      # SimplySign action installs the cloud certificate.
       shell: pwsh
       env:
         CERTUM_THUMBPRINT: ${{ secrets.CODE_SIGNING_CERT_THUMBPRINT }}
       run: |
-        $tp = $env:CERTUM_THUMBPRINT -replace '\s',''
+        $tp = ($env:CERTUM_THUMBPRINT -replace '\s','').ToUpperInvariant()
         $packages = @(Get-ChildItem ./artifacts/*.nupkg, ./artifacts-containerized/*.nupkg)
         if (-not $packages.Count) { throw 'No packages found to sign.' }
         foreach ($p in $packages) {
-          dotnet nuget sign $p.FullName --certificate-sha1 $tp --timestamper http://time.certum.pl
+          dotnet nuget sign $p.FullName --certificate-fingerprint $tp --timestamper http://time.certum.pl
           if ($LASTEXITCODE -ne 0) { throw "Signing failed (exit $LASTEXITCODE): $($p.Name)" }
         }
 
@@ -252,7 +281,7 @@ jobs:
 
     - name: Publish to GitHub Packages
       # Publishes ALL versions (beta/prerelease and stable) to GitHub Packages.
-      # Runs first and is not affected by any NuGet.org problems.
+      # Runs FIRST and is not affected by any NuGet.org problems.
       # The Containerized packages are private org packages: GitHub Packages only,
       # never NuGet.org.
       if: github.event_name == 'push'
@@ -260,14 +289,12 @@ jobs:
         dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
         dotnet nuget push ./artifacts-containerized/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
 
-    - name: Publish to NuGet.org
-      # Only stable (non-prerelease) versions are published to NuGet.org.
-      # A failure here must never block GitHub Packages publishing or the tagged release.
-      if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
-      continue-on-error: true
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-
     - name: Create GitHub Release
+      # Runs BEFORE the NuGet.org push (org feed first, release second,
+      # NuGet.org last) so a NuGet.org failure can never block the org
+      # feed or the tagged release — while the NuGet.org step below now
+      # fails the job LOUDLY instead of silently swallowing errors (the
+      # old continue-on-error hid why v2.1.1-v2.1.8 never landed on NuGet.org).
       # Tags every push to main (stable and prerelease) as a GitHub Release
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v3
@@ -304,3 +331,11 @@ jobs:
         draft: false
         prerelease: ${{ needs.build.outputs.isprerelease == 'true' }}
         files: ./artifacts/*.nupkg
+
+    - name: Publish to NuGet.org
+      # Only stable (non-prerelease) versions are published to NuGet.org.
+      # Last step on purpose: a failure here must never block GitHub
+      # Packages publishing or the tagged release (both already done),
+      # but it now FAILS THE JOB visibly — no more continue-on-error.
+      if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
+      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
