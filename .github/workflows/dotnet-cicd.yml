@@ -255,6 +255,10 @@ jobs:
     needs: [build, sign]
     if: ${{ !cancelled() && needs.build.result == 'success' && github.event_name == 'push' && (needs.sign.result == 'success' || needs.sign.result == 'skipped') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # release creation
+      packages: write # GitHub Packages
+      id-token: write # OIDC token issuance for NuGet trusted publishing
     steps:
     - name: Download signed artifacts
       if: needs.sign.result == 'success'
@@ -340,6 +344,23 @@ jobs:
           ./artifacts/*.nupkg
           ./artifacts-containerized/*.nupkg
 
+    - name: NuGet.org login (OIDC -> temp API key)
+      # Trusted publishing (org standard; the long-lived NUGET_API_KEY secret is
+      # gone): this job's GitHub OIDC token is exchanged for a ~1-hour nuget.org
+      # API key, validated against the trusted publishing policy registered on
+      # nuget.org for this repository + workflow:
+      #   Repository Owner: DevelApp-ai
+      #   Repository:      RuntimePluggableClassFactory
+      #   Workflow File:   dotnet-cicd.yml
+      #   Environment:     (none - this job uses no environment)
+      # NUGET_USER = the nuget.org profile name of the owning account (NOT an
+      # email address). The login runs close to the push (the temp key is
+      # short-lived). Fails loudly if the policy is not (yet) registered.
+      id: nuget-login
+      if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
+      uses: NuGet/login@v1
+      with:
+        user: ${{ secrets.NUGET_USER }}
     - name: Publish to NuGet.org
       # Only stable (non-prerelease) versions are published to NuGet.org —
       # ALL FOUR packages (Decision #73 amendment, 2026-11-12). The two
@@ -350,5 +371,6 @@ jobs:
       # but it now FAILS THE JOB visibly — no more continue-on-error.
       if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
       run: |
-        dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-        dotnet nuget push ./artifacts-containerized/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        # Keyless trusted-publishing key from the login step above.
+        dotnet nuget push ./artifacts/*.nupkg --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        dotnet nuget push ./artifacts-containerized/*.nupkg --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
