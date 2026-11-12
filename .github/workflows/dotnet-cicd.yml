@@ -25,10 +25,14 @@ name: .NET CI/CD
 #   the SimplySign login + signtool Authenticode path, NOT
 #   'dotnet nuget sign' — that path had never been exercised before.
 #
-# Prerelease pushes skip signing entirely (current unsigned behavior) so
-# no TOTP window is burned on every merge to main. Thumbprint comes from
-# the CODE_SIGNING_CERT_THUMBPRINT org secret; the SimplySign login uses
-# the CERTUM_SIMPLYSIGN_* org secrets and never sees
+# All four packages are PUBLIC (Decision #73, amended 2026-11-12):
+# base, Interface, Containerized and Containerized.Kubernetes all publish
+# to GitHub Packages, the GitHub Release and (stable releases only)
+# NuGet.org. Prerelease pushes skip signing entirely (current unsigned
+# behavior) so no TOTP window is burned on every merge to main; they publish
+# to GitHub Packages and the GitHub Release only, never NuGet.org.
+# Thumbprint comes from the CODE_SIGNING_CERT_THUMBPRINT org secret; the
+# SimplySign login uses the CERTUM_SIMPLYSIGN_* org secrets and never sees
 # CERTUM_SIMPLYSIGN_PASSWORD.
 #
 # Triggers the workflow on pushes and pull requests to the main branch
@@ -119,8 +123,12 @@ jobs:
       run: |
         dotnet pack RuntimePluggableClassFactory/RuntimePluggableClassFactory.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
         dotnet pack RuntimePluggableClassFactory.Interface/RuntimePluggableClassFactory.Interface.csproj --no-build --configuration Release -o ./artifacts /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
-        # CRPCF packages are packed into a separate folder: they are published to
-        # GitHub Packages only and must never leak to NuGet.org or release assets.
+        # CRPCF packages are packed into a separate folder so the sign and
+        # publish jobs can glob both folders explicitly. All four packages
+        # are PUBLIC (Decision #73, amended 2026-11-12): stable releases
+        # publish all of them to GitHub Packages, the GitHub Release and
+        # NuGet.org; prereleases publish them to GitHub Packages and the
+        # GitHub Release only.
         dotnet pack RuntimePluggableClassFactory.Containerized/RuntimePluggableClassFactory.Containerized.csproj --no-build --configuration Release -o ./artifacts-containerized /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
         dotnet pack RuntimePluggableClassFactory.Containerized.Kubernetes/RuntimePluggableClassFactory.Containerized.Kubernetes.csproj --no-build --configuration Release -o ./artifacts-containerized /p:PackageVersion=${{ steps.version.outputs.nugetversion }}
 
@@ -207,7 +215,7 @@ jobs:
       # '--certificate-fingerprint' is the ONLY valid certificate-store
       # lookup option here — '--certificate-sha1' is not a dotnet nuget
       # sign option on any SDK and produced "No certificate was provided."
-      # (93c882c, 2026-11-12). Looks up CurrentUser\My, where the
+      # (93c882c, 2026-11-12). Looks up CurrentUser\\My, where the
       # SimplySign action installs the cloud certificate.
       shell: pwsh
       env:
@@ -280,10 +288,9 @@ jobs:
         path: ./artifacts-containerized
 
     - name: Publish to GitHub Packages
-      # Publishes ALL versions (beta/prerelease and stable) to GitHub Packages.
-      # Runs FIRST and is not affected by any NuGet.org problems.
-      # The Containerized packages are private org packages: GitHub Packages only,
-      # never NuGet.org.
+      # Publishes ALL versions (beta/prerelease and stable) to GitHub
+      # Packages. Runs FIRST and is not affected by any NuGet.org problems
+      # (Decision #73). All four packages are public.
       if: github.event_name == 'push'
       run: |
         dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/DevelApp-ai/index.json --skip-duplicate
@@ -295,7 +302,7 @@ jobs:
       # feed or the tagged release — while the NuGet.org step below now
       # fails the job LOUDLY instead of silently swallowing errors (the
       # old continue-on-error hid why v2.1.1-v2.1.8 never landed on NuGet.org).
-      # Tags every push to main (stable and prerelease) as a GitHub Release
+      # Attaches ALL FOUR packages (Decision #73 amendment, 2026-11-12).
       if: github.event_name == 'push'
       uses: softprops/action-gh-release@v3
       with:
@@ -307,12 +314,14 @@ jobs:
           Published to GitHub Packages:
           - DevelApp.RuntimePluggableClassFactory v${{ needs.build.outputs.semver }}
           - DevelApp.RuntimePluggableClassFactory.Interface v${{ needs.build.outputs.semver }}
-          - DevelApp.RuntimePluggableClassFactory.Containerized v${{ needs.build.outputs.semver }} (GitHub Packages only, not on NuGet.org)
-          - DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes v${{ needs.build.outputs.semver }} (GitHub Packages only, not on NuGet.org)
+          - DevelApp.RuntimePluggableClassFactory.Containerized v${{ needs.build.outputs.semver }}
+          - DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes v${{ needs.build.outputs.semver }}
 
           Stable releases are also published to NuGet.org:
           - [DevelApp.RuntimePluggableClassFactory](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory) v${{ needs.build.outputs.semver }}
           - [DevelApp.RuntimePluggableClassFactory.Interface](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Interface) v${{ needs.build.outputs.semver }}
+          - [DevelApp.RuntimePluggableClassFactory.Containerized](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Containerized) v${{ needs.build.outputs.semver }}
+          - [DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes](https://www.nuget.org/packages/DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes) v${{ needs.build.outputs.semver }}
 
           ## 🚀 Features
           - Dynamic plugin loading and unloading with AssemblyLoadContext
@@ -330,12 +339,19 @@ jobs:
           - Memory growth: < 50MB under load
         draft: false
         prerelease: ${{ needs.build.outputs.isprerelease == 'true' }}
-        files: ./artifacts/*.nupkg
+        files: |
+          ./artifacts/*.nupkg
+          ./artifacts-containerized/*.nupkg
 
     - name: Publish to NuGet.org
-      # Only stable (non-prerelease) versions are published to NuGet.org.
+      # Only stable (non-prerelease) versions are published to NuGet.org —
+      # ALL FOUR packages (Decision #73 amendment, 2026-11-12). The two
+      # Containerized packages were first uploaded to NuGet.org manually
+      # by Lars; from the next release on, the pipeline owns them.
       # Last step on purpose: a failure here must never block GitHub
       # Packages publishing or the tagged release (both already done),
       # but it now FAILS THE JOB visibly — no more continue-on-error.
       if: github.event_name == 'push' && needs.build.outputs.isprerelease == 'false'
-      run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: |
+        dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        dotnet nuget push ./artifacts-containerized/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
