@@ -1,3 +1,7 @@
+# NOTE (2026-11-13): Certum SimplySign login sessions must not overlap
+# across repos - concurrent sign jobs collide on the OTP session and fail
+# after ~4 min of retries (the 2026-11-12 batch-push incident). Trigger
+# signing repos one at a time and let each finish before the next.
 permissions:
   contents: write
   packages: write
