@@ -166,7 +166,8 @@ publish/
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
-# Note: Comment the next line if you want to checkin your web deploy settings,
+# Note: Comment the next line if y
+ou want to checkin your web deploy settings,
 # but sensitive information strings contained within will be unencrypted
 *.pubxml
 *.publishproj
@@ -254,7 +255,8 @@ CordovaApp.projitems*
 *.bim.layout
 *.bim_*.settings
 *.rptproj.rsuser
-*- [Bb]ackup.rdl
+*- [Bb]acku
+p.rdl
 *- [Bb]ackup ([0-9]).rdl
 *- [Bb]ackup ([0-9][0-9]).rdl
 
@@ -361,7 +363,8 @@ FodyWeavers.xsd
 
 # VS Code files for those working with multiple tools
 .vscode/*
-!.vscode/settings.json
+!.vscode
+/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -387,3 +390,4 @@ Gemfile.lock
 vendor/
 
 # retrigger: nuget.org trusted publishing retry after policy fix (2026-11-13)
+# Retrigger release pipeline after nuget.org trust policy fix (2026-11-14)
