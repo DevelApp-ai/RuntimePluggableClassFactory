@@ -1,0 +1,15 @@
+{
+  "capturedAtUtc": "2026-11-16T19:31:09Z",
+  "osDescription": "Debian GNU/Linux 13 (trixie)",
+  "osArchitecture": "X64",
+  "processArchitecture": "X64",
+  "dotnetVersion": "8.0.34",
+  "frameworkDescription": ".NET 8.0.34",
+  "processorCount": 1,
+  "configuration": "Release",
+  "seed": 20261116,
+  "invariantGlobalization": true,
+  "machineName": "29e4b691-4c68-4a64-a846-605422ef9f19",
+  "cpuModel": "Intel(R) Xeon(R) 6985P-C CPU @ 2.30GHz",
+  "totalMemoryMb": 3121
+}
