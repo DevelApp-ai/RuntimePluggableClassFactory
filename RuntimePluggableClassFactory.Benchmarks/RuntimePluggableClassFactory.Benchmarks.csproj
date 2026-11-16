@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>RuntimePluggableClassFactory.Benchmarks</RootNamespace>
+    <AssemblyName>RuntimePluggableClassFactory.Benchmarks</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization Condition="'$(DOTNET_SYSTEM_GLOBALIZATION_INVARIANT)' == '1'">true</InvariantGlobalization>
+    <!-- Measurement outputs (raw JSON data + M4 corpus sources) live under data\ and must never be compiled -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);data\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
+    <ProjectReference Include="..\RuntimePluggableClassFactory\RuntimePluggableClassFactory.csproj" />
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Containerized\RuntimePluggableClassFactory.Containerized.csproj" />
+    <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
+  </ItemGroup>
+
+</Project>

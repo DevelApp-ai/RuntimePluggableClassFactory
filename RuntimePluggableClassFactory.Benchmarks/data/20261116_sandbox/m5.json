@@ -1,0 +1,2073 @@
+{
+  "measurement": "m5-unload-verification",
+  "description": "Repeated load/execute/unload cycles under concurrent traditional \u002B containerized-seam (hybrid) execution; per-cycle leak detection via WeakReference survival, resident plugin assemblies (with their AssemblyLoadContext), managed memory and GC collection counts. Two phases: shipped configuration (documents expected leak) and collectible-path (stub validator, isolates the collectible ALC machinery).",
+  "collectiblePath": {
+    "validator": "NonLoadingSecurityValidator (harness stub; performs NO security checks - measurement-only)",
+    "baseline": {
+      "residentPluginAssemblies": 0,
+      "totalAssemblies": 28,
+      "managedMemoryBytes": 193248
+    },
+    "cycles": [
+      {
+        "cycle": 0,
+        "loadMs": 39.4256,
+        "executeMs": 12.4204,
+        "unloadMs": 2.5296,
+        "cycleTotalMs": 54.375600000000006,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 205144,
+        "managedMemoryDeltaBytesVsBaseline": 11896,
+        "gen0CollectionsDelta": 4,
+        "gen1CollectionsDelta": 4,
+        "gen2CollectionsDelta": 4,
+        "leakDetected": false
+      },
+      {
+        "cycle": 1,
+        "loadMs": 15.7814,
+        "executeMs": 1.8507,
+        "unloadMs": 1.1196,
+        "cycleTotalMs": 18.7517,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 215528,
+        "managedMemoryDeltaBytesVsBaseline": 22280,
+        "gen0CollectionsDelta": 8,
+        "gen1CollectionsDelta": 8,
+        "gen2CollectionsDelta": 8,
+        "leakDetected": false
+      },
+      {
+        "cycle": 2,
+        "loadMs": 15.4218,
+        "executeMs": 1.8997,
+        "unloadMs": 1.1246,
+        "cycleTotalMs": 18.4461,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 225408,
+        "managedMemoryDeltaBytesVsBaseline": 32160,
+        "gen0CollectionsDelta": 12,
+        "gen1CollectionsDelta": 12,
+        "gen2CollectionsDelta": 12,
+        "leakDetected": false
+      },
+      {
+        "cycle": 3,
+        "loadMs": 14.9956,
+        "executeMs": 1.8058,
+        "unloadMs": 1.0525,
+        "cycleTotalMs": 17.8539,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 227064,
+        "managedMemoryDeltaBytesVsBaseline": 33816,
+        "gen0CollectionsDelta": 16,
+        "gen1CollectionsDelta": 16,
+        "gen2CollectionsDelta": 16,
+        "leakDetected": false
+      },
+      {
+        "cycle": 4,
+        "loadMs": 15.3029,
+        "executeMs": 1.7518,
+        "unloadMs": 1.0878,
+        "cycleTotalMs": 18.142500000000002,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 228720,
+        "managedMemoryDeltaBytesVsBaseline": 35472,
+        "gen0CollectionsDelta": 20,
+        "gen1CollectionsDelta": 20,
+        "gen2CollectionsDelta": 20,
+        "leakDetected": false
+      },
+      {
+        "cycle": 5,
+        "loadMs": 15.4377,
+        "executeMs": 1.7542,
+        "unloadMs": 1.0402,
+        "cycleTotalMs": 18.2321,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 230408,
+        "managedMemoryDeltaBytesVsBaseline": 37160,
+        "gen0CollectionsDelta": 24,
+        "gen1CollectionsDelta": 24,
+        "gen2CollectionsDelta": 24,
+        "leakDetected": false
+      },
+      {
+        "cycle": 6,
+        "loadMs": 16.4646,
+        "executeMs": 1.7565,
+        "unloadMs": 1.0447,
+        "cycleTotalMs": 19.2658,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 223840,
+        "managedMemoryDeltaBytesVsBaseline": 30592,
+        "gen0CollectionsDelta": 28,
+        "gen1CollectionsDelta": 28,
+        "gen2CollectionsDelta": 28,
+        "leakDetected": false
+      },
+      {
+        "cycle": 7,
+        "loadMs": 16.4453,
+        "executeMs": 1.609,
+        "unloadMs": 0.7563,
+        "cycleTotalMs": 18.810599999999997,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 233720,
+        "managedMemoryDeltaBytesVsBaseline": 40472,
+        "gen0CollectionsDelta": 32,
+        "gen1CollectionsDelta": 32,
+        "gen2CollectionsDelta": 32,
+        "leakDetected": false
+      },
+      {
+        "cycle": 8,
+        "loadMs": 16.4671,
+        "executeMs": 1.7209,
+        "unloadMs": 0.7869,
+        "cycleTotalMs": 18.974899999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 227152,
+        "managedMemoryDeltaBytesVsBaseline": 33904,
+        "gen0CollectionsDelta": 36,
+        "gen1CollectionsDelta": 36,
+        "gen2CollectionsDelta": 36,
+        "leakDetected": false
+      },
+      {
+        "cycle": 9,
+        "loadMs": 15.7115,
+        "executeMs": 1.7928,
+        "unloadMs": 1.1217,
+        "cycleTotalMs": 18.626,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 239008,
+        "managedMemoryDeltaBytesVsBaseline": 45760,
+        "gen0CollectionsDelta": 40,
+        "gen1CollectionsDelta": 40,
+        "gen2CollectionsDelta": 40,
+        "leakDetected": false
+      },
+      {
+        "cycle": 10,
+        "loadMs": 16.1769,
+        "executeMs": 1.743,
+        "unloadMs": 1.1092,
+        "cycleTotalMs": 19.0291,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 240664,
+        "managedMemoryDeltaBytesVsBaseline": 47416,
+        "gen0CollectionsDelta": 44,
+        "gen1CollectionsDelta": 44,
+        "gen2CollectionsDelta": 44,
+        "leakDetected": false
+      },
+      {
+        "cycle": 11,
+        "loadMs": 16.2291,
+        "executeMs": 1.6492,
+        "unloadMs": 1.052,
+        "cycleTotalMs": 18.9303,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 242320,
+        "managedMemoryDeltaBytesVsBaseline": 49072,
+        "gen0CollectionsDelta": 48,
+        "gen1CollectionsDelta": 48,
+        "gen2CollectionsDelta": 48,
+        "leakDetected": false
+      },
+      {
+        "cycle": 12,
+        "loadMs": 16.4003,
+        "executeMs": 1.5731,
+        "unloadMs": 1.1123,
+        "cycleTotalMs": 19.085700000000003,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 243976,
+        "managedMemoryDeltaBytesVsBaseline": 50728,
+        "gen0CollectionsDelta": 52,
+        "gen1CollectionsDelta": 52,
+        "gen2CollectionsDelta": 52,
+        "leakDetected": false
+      },
+      {
+        "cycle": 13,
+        "loadMs": 15.2211,
+        "executeMs": 1.6171,
+        "unloadMs": 1.025,
+        "cycleTotalMs": 17.8632,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 237408,
+        "managedMemoryDeltaBytesVsBaseline": 44160,
+        "gen0CollectionsDelta": 56,
+        "gen1CollectionsDelta": 56,
+        "gen2CollectionsDelta": 56,
+        "leakDetected": false
+      },
+      {
+        "cycle": 14,
+        "loadMs": 14.5374,
+        "executeMs": 1.6663,
+        "unloadMs": 1.0535,
+        "cycleTotalMs": 17.2572,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 247288,
+        "managedMemoryDeltaBytesVsBaseline": 54040,
+        "gen0CollectionsDelta": 60,
+        "gen1CollectionsDelta": 60,
+        "gen2CollectionsDelta": 60,
+        "leakDetected": false
+      },
+      {
+        "cycle": 15,
+        "loadMs": 14.6357,
+        "executeMs": 1.5934,
+        "unloadMs": 1.0935,
+        "cycleTotalMs": 17.322599999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 248944,
+        "managedMemoryDeltaBytesVsBaseline": 55696,
+        "gen0CollectionsDelta": 64,
+        "gen1CollectionsDelta": 64,
+        "gen2CollectionsDelta": 64,
+        "leakDetected": false
+      },
+      {
+        "cycle": 16,
+        "loadMs": 15.3655,
+        "executeMs": 1.6154,
+        "unloadMs": 1.1171,
+        "cycleTotalMs": 18.098000000000003,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 250600,
+        "managedMemoryDeltaBytesVsBaseline": 57352,
+        "gen0CollectionsDelta": 68,
+        "gen1CollectionsDelta": 68,
+        "gen2CollectionsDelta": 68,
+        "leakDetected": false
+      },
+      {
+        "cycle": 17,
+        "loadMs": 15.4866,
+        "executeMs": 1.7999,
+        "unloadMs": 0.8415,
+        "cycleTotalMs": 18.128,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 244688,
+        "managedMemoryDeltaBytesVsBaseline": 51440,
+        "gen0CollectionsDelta": 72,
+        "gen1CollectionsDelta": 72,
+        "gen2CollectionsDelta": 72,
+        "leakDetected": false
+      },
+      {
+        "cycle": 18,
+        "loadMs": 18.569,
+        "executeMs": 1.7239,
+        "unloadMs": 0.8758,
+        "cycleTotalMs": 21.1687,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 255016,
+        "managedMemoryDeltaBytesVsBaseline": 61768,
+        "gen0CollectionsDelta": 76,
+        "gen1CollectionsDelta": 76,
+        "gen2CollectionsDelta": 76,
+        "leakDetected": false
+      },
+      {
+        "cycle": 19,
+        "loadMs": 18.2837,
+        "executeMs": 1.789,
+        "unloadMs": 0.7727,
+        "cycleTotalMs": 20.8454,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 256672,
+        "managedMemoryDeltaBytesVsBaseline": 63424,
+        "gen0CollectionsDelta": 80,
+        "gen1CollectionsDelta": 80,
+        "gen2CollectionsDelta": 80,
+        "leakDetected": false
+      },
+      {
+        "cycle": 20,
+        "loadMs": 18.5032,
+        "executeMs": 2.0203,
+        "unloadMs": 0.8215,
+        "cycleTotalMs": 21.345,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 258328,
+        "managedMemoryDeltaBytesVsBaseline": 65080,
+        "gen0CollectionsDelta": 84,
+        "gen1CollectionsDelta": 84,
+        "gen2CollectionsDelta": 84,
+        "leakDetected": false
+      },
+      {
+        "cycle": 21,
+        "loadMs": 19.7674,
+        "executeMs": 1.7344,
+        "unloadMs": 0.8486,
+        "cycleTotalMs": 22.3504,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 259984,
+        "managedMemoryDeltaBytesVsBaseline": 66736,
+        "gen0CollectionsDelta": 88,
+        "gen1CollectionsDelta": 88,
+        "gen2CollectionsDelta": 88,
+        "leakDetected": false
+      },
+      {
+        "cycle": 22,
+        "loadMs": 31.6451,
+        "executeMs": 1.7353,
+        "unloadMs": 0.8422,
+        "cycleTotalMs": 34.2226,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 261640,
+        "managedMemoryDeltaBytesVsBaseline": 68392,
+        "gen0CollectionsDelta": 92,
+        "gen1CollectionsDelta": 92,
+        "gen2CollectionsDelta": 92,
+        "leakDetected": false
+      },
+      {
+        "cycle": 23,
+        "loadMs": 20.3433,
+        "executeMs": 1.7638,
+        "unloadMs": 0.9139,
+        "cycleTotalMs": 23.021,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 263296,
+        "managedMemoryDeltaBytesVsBaseline": 70048,
+        "gen0CollectionsDelta": 96,
+        "gen1CollectionsDelta": 96,
+        "gen2CollectionsDelta": 96,
+        "leakDetected": false
+      },
+      {
+        "cycle": 24,
+        "loadMs": 19.6558,
+        "executeMs": 1.7382,
+        "unloadMs": 1.2379,
+        "cycleTotalMs": 22.631899999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 264952,
+        "managedMemoryDeltaBytesVsBaseline": 71704,
+        "gen0CollectionsDelta": 100,
+        "gen1CollectionsDelta": 100,
+        "gen2CollectionsDelta": 100,
+        "leakDetected": false
+      },
+      {
+        "cycle": 25,
+        "loadMs": 54.4642,
+        "executeMs": 2.8517,
+        "unloadMs": 12.6806,
+        "cycleTotalMs": 69.9965,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 266608,
+        "managedMemoryDeltaBytesVsBaseline": 73360,
+        "gen0CollectionsDelta": 104,
+        "gen1CollectionsDelta": 104,
+        "gen2CollectionsDelta": 104,
+        "leakDetected": false
+      },
+      {
+        "cycle": 26,
+        "loadMs": 20.5284,
+        "executeMs": 1.9357,
+        "unloadMs": 0.9812,
+        "cycleTotalMs": 23.445300000000003,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 268264,
+        "managedMemoryDeltaBytesVsBaseline": 75016,
+        "gen0CollectionsDelta": 108,
+        "gen1CollectionsDelta": 108,
+        "gen2CollectionsDelta": 108,
+        "leakDetected": false
+      },
+      {
+        "cycle": 27,
+        "loadMs": 19.8282,
+        "executeMs": 1.7527,
+        "unloadMs": 0.7952,
+        "cycleTotalMs": 22.3761,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 270000,
+        "managedMemoryDeltaBytesVsBaseline": 76752,
+        "gen0CollectionsDelta": 112,
+        "gen1CollectionsDelta": 112,
+        "gen2CollectionsDelta": 112,
+        "leakDetected": false
+      },
+      {
+        "cycle": 28,
+        "loadMs": 20.0996,
+        "executeMs": 1.7208,
+        "unloadMs": 0.8384,
+        "cycleTotalMs": 22.6588,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 271656,
+        "managedMemoryDeltaBytesVsBaseline": 78408,
+        "gen0CollectionsDelta": 116,
+        "gen1CollectionsDelta": 116,
+        "gen2CollectionsDelta": 116,
+        "leakDetected": false
+      },
+      {
+        "cycle": 29,
+        "loadMs": 19.5201,
+        "executeMs": 1.5977,
+        "unloadMs": 0.8311,
+        "cycleTotalMs": 21.9489,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 1,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": false,
+        "residentPluginAssemblies": 0,
+        "residentPluginAssembliesAboveBaseline": 0,
+        "residentPluginAssemblyDetail": [],
+        "totalAssemblies": 30,
+        "managedMemoryBytes": 273312,
+        "managedMemoryDeltaBytesVsBaseline": 80064,
+        "gen0CollectionsDelta": 120,
+        "gen1CollectionsDelta": 120,
+        "gen2CollectionsDelta": 120,
+        "leakDetected": false
+      }
+    ],
+    "summary": {
+      "cyclesCompleted": 30,
+      "cyclesWithLeakIndicators": [],
+      "maxResidentPluginAssembliesAboveBaseline": 0,
+      "allPluginWeakRefsCollected": true,
+      "managedMemoryDeltaFirstToLastCycleBytes": 68168,
+      "verdict": "no leak indicators: every cycle\u0027s plugin instances, types and assemblies were collected after unload"
+    }
+  },
+  "shippedConfiguration": {
+    "validator": "DefaultPluginSecurityValidator (loader default wiring)",
+    "baseline": {
+      "residentPluginAssemblies": 0,
+      "totalAssemblies": 30,
+      "managedMemoryBytes": 278832
+    },
+    "cycles": [
+      {
+        "cycle": 0,
+        "loadMs": 35.3443,
+        "executeMs": 2.611,
+        "unloadMs": 4.8066,
+        "cycleTotalMs": 42.7619,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 285584,
+        "managedMemoryDeltaBytesVsBaseline": 6752,
+        "gen0CollectionsDelta": 22,
+        "gen1CollectionsDelta": 22,
+        "gen2CollectionsDelta": 22,
+        "leakDetected": true
+      },
+      {
+        "cycle": 1,
+        "loadMs": 16.1113,
+        "executeMs": 1.6855,
+        "unloadMs": 4.6786,
+        "cycleTotalMs": 22.4754,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 289240,
+        "managedMemoryDeltaBytesVsBaseline": 10408,
+        "gen0CollectionsDelta": 44,
+        "gen1CollectionsDelta": 44,
+        "gen2CollectionsDelta": 44,
+        "leakDetected": true
+      },
+      {
+        "cycle": 2,
+        "loadMs": 15.7152,
+        "executeMs": 1.5583,
+        "unloadMs": 4.7213,
+        "cycleTotalMs": 21.994799999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 292840,
+        "managedMemoryDeltaBytesVsBaseline": 14008,
+        "gen0CollectionsDelta": 66,
+        "gen1CollectionsDelta": 66,
+        "gen2CollectionsDelta": 66,
+        "leakDetected": true
+      },
+      {
+        "cycle": 3,
+        "loadMs": 15.6868,
+        "executeMs": 1.5189,
+        "unloadMs": 4.6436,
+        "cycleTotalMs": 21.8493,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 296440,
+        "managedMemoryDeltaBytesVsBaseline": 17608,
+        "gen0CollectionsDelta": 88,
+        "gen1CollectionsDelta": 88,
+        "gen2CollectionsDelta": 88,
+        "leakDetected": true
+      },
+      {
+        "cycle": 4,
+        "loadMs": 18.1246,
+        "executeMs": 1.5343,
+        "unloadMs": 4.9096,
+        "cycleTotalMs": 24.568500000000004,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 300040,
+        "managedMemoryDeltaBytesVsBaseline": 21208,
+        "gen0CollectionsDelta": 110,
+        "gen1CollectionsDelta": 110,
+        "gen2CollectionsDelta": 110,
+        "leakDetected": true
+      },
+      {
+        "cycle": 5,
+        "loadMs": 15.5814,
+        "executeMs": 1.5511,
+        "unloadMs": 4.5644,
+        "cycleTotalMs": 21.6969,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 303592,
+        "managedMemoryDeltaBytesVsBaseline": 24760,
+        "gen0CollectionsDelta": 132,
+        "gen1CollectionsDelta": 132,
+        "gen2CollectionsDelta": 132,
+        "leakDetected": true
+      },
+      {
+        "cycle": 6,
+        "loadMs": 15.8205,
+        "executeMs": 1.491,
+        "unloadMs": 4.5279,
+        "cycleTotalMs": 21.839399999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 307192,
+        "managedMemoryDeltaBytesVsBaseline": 28360,
+        "gen0CollectionsDelta": 154,
+        "gen1CollectionsDelta": 154,
+        "gen2CollectionsDelta": 154,
+        "leakDetected": true
+      },
+      {
+        "cycle": 7,
+        "loadMs": 15.8952,
+        "executeMs": 1.5189,
+        "unloadMs": 4.6944,
+        "cycleTotalMs": 22.1085,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 310792,
+        "managedMemoryDeltaBytesVsBaseline": 31960,
+        "gen0CollectionsDelta": 176,
+        "gen1CollectionsDelta": 176,
+        "gen2CollectionsDelta": 176,
+        "leakDetected": true
+      },
+      {
+        "cycle": 8,
+        "loadMs": 15.6169,
+        "executeMs": 1.6334,
+        "unloadMs": 4.5906,
+        "cycleTotalMs": 21.840899999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 314392,
+        "managedMemoryDeltaBytesVsBaseline": 35560,
+        "gen0CollectionsDelta": 198,
+        "gen1CollectionsDelta": 198,
+        "gen2CollectionsDelta": 198,
+        "leakDetected": true
+      },
+      {
+        "cycle": 9,
+        "loadMs": 16.8644,
+        "executeMs": 1.4941,
+        "unloadMs": 4.6829,
+        "cycleTotalMs": 23.0414,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 318056,
+        "managedMemoryDeltaBytesVsBaseline": 39224,
+        "gen0CollectionsDelta": 220,
+        "gen1CollectionsDelta": 220,
+        "gen2CollectionsDelta": 220,
+        "leakDetected": true
+      },
+      {
+        "cycle": 10,
+        "loadMs": 15.5332,
+        "executeMs": 1.5239,
+        "unloadMs": 4.5516,
+        "cycleTotalMs": 21.608700000000002,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 321656,
+        "managedMemoryDeltaBytesVsBaseline": 42824,
+        "gen0CollectionsDelta": 242,
+        "gen1CollectionsDelta": 242,
+        "gen2CollectionsDelta": 242,
+        "leakDetected": true
+      },
+      {
+        "cycle": 11,
+        "loadMs": 15.6915,
+        "executeMs": 1.4819,
+        "unloadMs": 4.7442,
+        "cycleTotalMs": 21.9176,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 325336,
+        "managedMemoryDeltaBytesVsBaseline": 46504,
+        "gen0CollectionsDelta": 264,
+        "gen1CollectionsDelta": 264,
+        "gen2CollectionsDelta": 264,
+        "leakDetected": true
+      },
+      {
+        "cycle": 12,
+        "loadMs": 17.893,
+        "executeMs": 1.552,
+        "unloadMs": 4.7175,
+        "cycleTotalMs": 24.1625,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 328936,
+        "managedMemoryDeltaBytesVsBaseline": 50104,
+        "gen0CollectionsDelta": 286,
+        "gen1CollectionsDelta": 286,
+        "gen2CollectionsDelta": 286,
+        "leakDetected": true
+      },
+      {
+        "cycle": 13,
+        "loadMs": 15.705,
+        "executeMs": 1.4786,
+        "unloadMs": 4.7271,
+        "cycleTotalMs": 21.9107,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 332536,
+        "managedMemoryDeltaBytesVsBaseline": 53704,
+        "gen0CollectionsDelta": 308,
+        "gen1CollectionsDelta": 308,
+        "gen2CollectionsDelta": 308,
+        "leakDetected": true
+      },
+      {
+        "cycle": 14,
+        "loadMs": 15.7328,
+        "executeMs": 1.5747,
+        "unloadMs": 4.7191,
+        "cycleTotalMs": 22.0266,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 336136,
+        "managedMemoryDeltaBytesVsBaseline": 57304,
+        "gen0CollectionsDelta": 330,
+        "gen1CollectionsDelta": 330,
+        "gen2CollectionsDelta": 330,
+        "leakDetected": true
+      },
+      {
+        "cycle": 15,
+        "loadMs": 15.9983,
+        "executeMs": 1.4814,
+        "unloadMs": 4.7508,
+        "cycleTotalMs": 22.2305,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 339736,
+        "managedMemoryDeltaBytesVsBaseline": 60904,
+        "gen0CollectionsDelta": 352,
+        "gen1CollectionsDelta": 352,
+        "gen2CollectionsDelta": 352,
+        "leakDetected": true
+      },
+      {
+        "cycle": 16,
+        "loadMs": 15.6851,
+        "executeMs": 1.5503,
+        "unloadMs": 4.9817,
+        "cycleTotalMs": 22.2171,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 343336,
+        "managedMemoryDeltaBytesVsBaseline": 64504,
+        "gen0CollectionsDelta": 374,
+        "gen1CollectionsDelta": 374,
+        "gen2CollectionsDelta": 374,
+        "leakDetected": true
+      },
+      {
+        "cycle": 17,
+        "loadMs": 16.4912,
+        "executeMs": 1.5508,
+        "unloadMs": 4.8151,
+        "cycleTotalMs": 22.8571,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 347064,
+        "managedMemoryDeltaBytesVsBaseline": 68232,
+        "gen0CollectionsDelta": 396,
+        "gen1CollectionsDelta": 396,
+        "gen2CollectionsDelta": 396,
+        "leakDetected": true
+      },
+      {
+        "cycle": 18,
+        "loadMs": 16.2568,
+        "executeMs": 1.5659,
+        "unloadMs": 4.8168,
+        "cycleTotalMs": 22.639499999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 350664,
+        "managedMemoryDeltaBytesVsBaseline": 71832,
+        "gen0CollectionsDelta": 418,
+        "gen1CollectionsDelta": 418,
+        "gen2CollectionsDelta": 418,
+        "leakDetected": true
+      },
+      {
+        "cycle": 19,
+        "loadMs": 15.6653,
+        "executeMs": 1.5829,
+        "unloadMs": 4.7693,
+        "cycleTotalMs": 22.017500000000002,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 354184,
+        "managedMemoryDeltaBytesVsBaseline": 75352,
+        "gen0CollectionsDelta": 440,
+        "gen1CollectionsDelta": 440,
+        "gen2CollectionsDelta": 440,
+        "leakDetected": true
+      },
+      {
+        "cycle": 20,
+        "loadMs": 15.8089,
+        "executeMs": 1.4148,
+        "unloadMs": 4.6042,
+        "cycleTotalMs": 21.8279,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 357784,
+        "managedMemoryDeltaBytesVsBaseline": 78952,
+        "gen0CollectionsDelta": 462,
+        "gen1CollectionsDelta": 462,
+        "gen2CollectionsDelta": 462,
+        "leakDetected": true
+      },
+      {
+        "cycle": 21,
+        "loadMs": 15.7142,
+        "executeMs": 1.4704,
+        "unloadMs": 4.8192,
+        "cycleTotalMs": 22.0038,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 361384,
+        "managedMemoryDeltaBytesVsBaseline": 82552,
+        "gen0CollectionsDelta": 484,
+        "gen1CollectionsDelta": 484,
+        "gen2CollectionsDelta": 484,
+        "leakDetected": true
+      },
+      {
+        "cycle": 22,
+        "loadMs": 15.5759,
+        "executeMs": 1.4611,
+        "unloadMs": 4.7322,
+        "cycleTotalMs": 21.769199999999998,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 364984,
+        "managedMemoryDeltaBytesVsBaseline": 86152,
+        "gen0CollectionsDelta": 506,
+        "gen1CollectionsDelta": 506,
+        "gen2CollectionsDelta": 506,
+        "leakDetected": true
+      },
+      {
+        "cycle": 23,
+        "loadMs": 17.4627,
+        "executeMs": 1.4783,
+        "unloadMs": 4.8118,
+        "cycleTotalMs": 23.7528,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 368584,
+        "managedMemoryDeltaBytesVsBaseline": 89752,
+        "gen0CollectionsDelta": 528,
+        "gen1CollectionsDelta": 528,
+        "gen2CollectionsDelta": 528,
+        "leakDetected": true
+      },
+      {
+        "cycle": 24,
+        "loadMs": 15.6317,
+        "executeMs": 1.5307,
+        "unloadMs": 4.767,
+        "cycleTotalMs": 21.9294,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 372264,
+        "managedMemoryDeltaBytesVsBaseline": 93432,
+        "gen0CollectionsDelta": 550,
+        "gen1CollectionsDelta": 550,
+        "gen2CollectionsDelta": 550,
+        "leakDetected": true
+      },
+      {
+        "cycle": 25,
+        "loadMs": 15.7124,
+        "executeMs": 1.514,
+        "unloadMs": 4.6799,
+        "cycleTotalMs": 21.9063,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 375864,
+        "managedMemoryDeltaBytesVsBaseline": 97032,
+        "gen0CollectionsDelta": 572,
+        "gen1CollectionsDelta": 572,
+        "gen2CollectionsDelta": 572,
+        "leakDetected": true
+      },
+      {
+        "cycle": 26,
+        "loadMs": 15.8015,
+        "executeMs": 1.4591,
+        "unloadMs": 4.7648,
+        "cycleTotalMs": 22.0254,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 379464,
+        "managedMemoryDeltaBytesVsBaseline": 100632,
+        "gen0CollectionsDelta": 594,
+        "gen1CollectionsDelta": 594,
+        "gen2CollectionsDelta": 594,
+        "leakDetected": true
+      },
+      {
+        "cycle": 27,
+        "loadMs": 15.7369,
+        "executeMs": 1.5015,
+        "unloadMs": 4.9183,
+        "cycleTotalMs": 22.1567,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 383064,
+        "managedMemoryDeltaBytesVsBaseline": 104232,
+        "gen0CollectionsDelta": 616,
+        "gen1CollectionsDelta": 616,
+        "gen2CollectionsDelta": 616,
+        "leakDetected": true
+      },
+      {
+        "cycle": 28,
+        "loadMs": 15.5767,
+        "executeMs": 1.4649,
+        "unloadMs": 4.881,
+        "cycleTotalMs": 21.922600000000003,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 386664,
+        "managedMemoryDeltaBytesVsBaseline": 107832,
+        "gen0CollectionsDelta": 638,
+        "gen1CollectionsDelta": 638,
+        "gen2CollectionsDelta": 638,
+        "leakDetected": true
+      },
+      {
+        "cycle": 29,
+        "loadMs": 15.9121,
+        "executeMs": 1.5854,
+        "unloadMs": 4.753,
+        "cycleTotalMs": 22.250500000000002,
+        "traditionalExecutions": 40,
+        "containerizedSeamExecutions": 40,
+        "gcAttemptsUntilCollected": 10,
+        "pluginInstanceWeakRefAlive": false,
+        "pluginTypeWeakRefAlive": true,
+        "residentPluginAssemblies": 4,
+        "residentPluginAssembliesAboveBaseline": 4,
+        "residentPluginAssemblyDetail": [
+          {
+            "assembly": "PluginImplementations_1_2_2.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_2_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_3_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          },
+          {
+            "assembly": "PluginImplementations_1_4_1.dll",
+            "loadContext": "\u0022Default\u0022 System.Runtime.Loader.DefaultAssemblyLoadContext #1",
+            "isCollectibleContext": false
+          }
+        ],
+        "totalAssemblies": 37,
+        "managedMemoryBytes": 390264,
+        "managedMemoryDeltaBytesVsBaseline": 111432,
+        "gen0CollectionsDelta": 660,
+        "gen1CollectionsDelta": 660,
+        "gen2CollectionsDelta": 660,
+        "leakDetected": true
+      }
+    ],
+    "summary": {
+      "cyclesCompleted": 30,
+      "cyclesWithLeakIndicators": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "maxResidentPluginAssembliesAboveBaseline": 4,
+      "allPluginWeakRefsCollected": false,
+      "managedMemoryDeltaFirstToLastCycleBytes": 104680,
+      "verdict": "leak indicators in all 30 cycles - plugin assemblies remain resident in the DEFAULT (non-collectible) AssemblyLoadContext; see architecturalFinding"
+    }
+  },
+  "summary": {
+    "shippedConfigurationVerdict": {
+      "cyclesCompleted": 30,
+      "cyclesWithLeakIndicators": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "maxResidentPluginAssembliesAboveBaseline": 4,
+      "allPluginWeakRefsCollected": false,
+      "managedMemoryDeltaFirstToLastCycleBytes": 104680,
+      "verdict": "leak indicators in all 30 cycles - plugin assemblies remain resident in the DEFAULT (non-collectible) AssemblyLoadContext; see architecturalFinding"
+    },
+    "collectiblePathVerdict": {
+      "cyclesCompleted": 30,
+      "cyclesWithLeakIndicators": [],
+      "maxResidentPluginAssembliesAboveBaseline": 0,
+      "allPluginWeakRefsCollected": true,
+      "managedMemoryDeltaFirstToLastCycleBytes": 68168,
+      "verdict": "no leak indicators: every cycle\u0027s plugin instances, types and assemblies were collected after unload"
+    },
+    "architecturalFinding": "In the shipped configuration every plugin assembly passes through DefaultPluginSecurityValidator.ValidateAssemblyAsync, which uses Assembly.LoadFrom(path) and therefore pins the assembly in the DEFAULT (non-collectible) AssemblyLoadContext; FilePluginLoader then reuses that pinned copy instead of its collectible PluginLoadContext copy. UnloadAllPlugins is consequently a no-op for the plugin assemblies actually in use, and the collectible ALC path is never exercised unless validation avoids loading the file. This is a measurable, reproducible property of the shipped code (see shippedConfiguration cycles), not a harness artifact.",
+    "verdictScope": "plugin implementation assemblies (the collectible ALC path); the shared plugin interface assembly (PluginImplementations.dll) intentionally resides in the default context in all phases",
+    "hybridExecutionNote": "Containerized-seam executions use an in-memory orchestrator (CRPCF dispatch path only, no container); a real container backend adds its own lifecycle that this measurement does not cover"
+  }
+}
