@@ -1,0 +1,21 @@
+Agent/human lane: pushing any change to this file on main requests a full
+profile regeneration run (.github/workflows/sbob-regenerate.yml). The run
+re-derives the sbobforge/ configs from the package csprojs, regenerates every
+committed profile (grammar lock frozen), and opens a PR with the result.
+Do not hand-edit profiles or configs — re-run the lane instead (org
+decision #26).
+
+Lane revision: 1 (2026-11-22, lane born tolerance-free — the PACKAGES_READ_TOKEN
+org secret is live since 2026-11-22, so the org-feed-only transitive
+DevelApp.StepParser/StepLexer versions resolve through NUGET_AUTH_TOKEN; if the
+org secret's visibility policy ever excludes this public repo, restore fails
+loudly (TreatWarningsAsErrors) — the fix is secret access, never an NU1603
+tolerance; SBOB-Forge pinned at 64ee36ad; fleet =
+RuntimePluggableClassFactory.Containerized (corpus:
+RuntimePluggableClassFactory.Containerized.Tests) +
+RuntimePluggableClassFactory.Containerized.Kubernetes (no test corpus yet —
+warning-skip until a test project references it); base RPCF and Interface are
+NOT fleet members (public compile-time packages, decision #39 consumer-side
+opt-in); profiles are never embedded in the public nupkgs — the internal
+registry lane (DevelApp-Repo-Global sbobs/nuget, decision #40) carries them
+to the Taskhandler M10 consumer; org decisions #26/#39/#40).

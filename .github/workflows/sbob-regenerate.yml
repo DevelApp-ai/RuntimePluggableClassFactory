@@ -1,0 +1,453 @@
+name: sbob-regenerate
+
+# SBoB fleet lane for RuntimePluggableClassFactory — the CRPCF Containerized
+# packages (org decisions #26/#39/#40, SBOB-Forge TDS; consumer: the Taskhandler
+# M10 plugin execution substrate, LocalTaskhandler #22). Same delivery pattern
+# as the Golem/SmartVault/PluginJobRunner sbob-regenerate lanes:
+#
+# Regenerates the committed sbobforge behavior profiles for every complete
+# Containerized package and opens a PR with the result:
+#
+#   1. builds sbobforge from SBOB-Forge at a pinned full SHA (tooling is pinned
+#      per the org convention; a bump is its own PR),
+#   2. re-derives the per-package configs from the plugin csprojs — the csproj is
+#      the single source of truth for package id + version, so configs are
+#      NEVER hand-edited (#26),
+#   3. the first run creates the grammar lock (sbobforge lock), every later run
+#      regenerates with --frozen (lock pinned; exit 5 on drift),
+#   4. generate + validate every profile, then PR sbob/** + sbobforge/** + lock.
+#
+# Entry paths (same job):
+#   - workflow_dispatch: human lane (inputs.forge-ref overrides the pinned ref),
+#   - push to main of trigger/sbob-regenerate (agent lane: push any change to
+#     that file to request a run) or of the lane's own inputs (sbobforge/**,
+#     sbob/**, tools/sbob/**) — merging the wiring PR self-bootstraps the fleet.
+#
+# Profiles bind the csproj <Version> (2.1.0). Note: dotnet-cicd publishes
+# GitVersion-derived versions on EVERY push to main, so the published package
+# version and the profile purl can legitimately differ; the purl-rebind
+# question is explicit for the registry phase (Golem/PJR precedent, #39/#40).
+# Org decision #39: these are PUBLIC packages — profiles are NEVER embedded in
+# the nupkgs (consumer opt-in, Mode defaults Off). The committed profiles feed
+# the internal registry lane (DevelApp-ai/DevelApp-Repo-Global sbobs/nuget,
+# decision #40), which is what Taskhandler M10 consumes.
+#
+# Code PRs do not run this lane (build cost); a profile that went stale on a
+# code PR fails closed later at the drift gate — Monitor first, enforcement is
+# a later ladder step.
+#
+# Hand-edit guard: pull requests touching sbob/**, sbobforge/** or
+# tools/sbob/** run the drift-check job — committed artifacts must byte-match
+# the generator.
+
+on:
+  workflow_dispatch:
+    inputs:
+      forge-ref:
+        description: 'SBOB-Forge ref to build sbobforge from (full SHA preferred)'
+        required: false
+        default: '64ee36adad015b3ee623ffe255a2bc02ae44ddd8'
+  push:
+    branches: [ main ]
+    paths: [ 'trigger/sbob-regenerate', 'sbobforge/**', 'sbob/**', 'tools/sbob/**' ]
+  pull_request:
+    paths: [ 'sbobforge/**', 'sbob/**', 'tools/sbob/**' ]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+  # The lane restores sbobforge's dependencies (DevelApp.Minotaur) from the
+  # org GitHub Packages feed. This is a PUBLIC repo: the PACKAGES_READ_TOKEN
+  # org secret must include public-repo access in its visibility policy — if
+  # it does not, NUGET_AUTH_TOKEN falls back to github.token, which cannot
+  # read the private feed, and the restore fails loudly by design (the fix is
+  # the org secret's repository access, never a NoWarn tolerance).
+  packages: read
+
+env:
+  FORGE_REF: 64ee36adad015b3ee623ffe255a2bc02ae44ddd8
+  GITHUB_PACKAGES_SOURCE: https://nuget.pkg.github.com/DevelApp-ai/index.json
+
+jobs:
+  regenerate:
+    name: 'Regenerate plugin profiles'
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 'Resolve the generator ref'
+        id: ref
+        run: |
+          r="${{ inputs.forge-ref || env.FORGE_REF }}"
+          echo "forge_ref=$r" >> "$GITHUB_OUTPUT"
+
+      - name: 'Checkout SBOB-Forge (generator source)'
+        uses: actions/checkout@v5
+        with:
+          repository: DevelApp-ai/SBOB-Forge
+          ref: ${{ steps.ref.outputs.forge_ref }}
+          path: sbobforge-repo
+
+      - name: 'Setup .NET (sbobforge runs on .NET 8, matching the repo CI)'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 'Build sbobforge (warnings are errors, matching the repo CI)'
+        # Minotaur-lane pattern: SBOB-Forge's committed NuGet.config declares the
+        # DevelApp GitHub Packages feed with the credential read from
+        # NUGET_AUTH_TOKEN (org decision #8: org secret, GITHUB_TOKEN fallback).
+        # Restore/build output is teed into logs the failure comment embeds:
+        # gh run view --log-failed is unreliable while a run's logs settle.
+        working-directory: sbobforge-repo
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN || github.token }}
+        run: |
+          set -o pipefail
+          # Born tolerance-free (the Golem #223 lesson was already paid):
+          # restore reads the org GitHub Packages feed through the
+          # PACKAGES_READ_TOKEN org secret (live since 2026-11-22, Lars).
+          # No NoWarn=NU1603 was ever needed here — if the secret is not
+          # visible to this public repo, the restore fails loudly with the
+          # NU1603-class visibility error in the restore.log tails below
+          # instead of silently floating the transitive parser/lexer to the
+          # public nuget.org best match.
+          dotnet restore 2>&1 | tee restore.log
+          dotnet build --no-restore -warnaserror 2>&1 | tee build.log
+
+      - name: 'Derive the per-package configs from the csprojs (deterministic, #26)'
+        run: bash tools/sbob/generate-plugin-configs.sh
+
+      - name: 'Grammar lock (create on the first run, frozen afterwards)'
+        # sbobforge lock takes the repo root as its positional argument and always
+        # writes <repoRoot>/sbobforge.lock.json — the same path generate --frozen
+        # verifies against (CLI contract, SBOB-Forge Program.cs CmdLock/CmdGenerate).
+        # lock.log collects the full lock-step output (also in the diagnostics
+        # artifact): run 44014622948 failed at this step with nothing on record
+        # (issue #223) — pipefail also guarantees a failure here is this
+        # step's own, not a tee-masked leftover from the build step.
+        run: |
+          set -o pipefail
+          : > lock.log
+          if [ ! -f sbobforge.lock.json ]; then
+            echo "No committed lock — creating it (reviewed in the PR like a dependency bump)." | tee lock.log
+            dotnet run --no-build --project sbobforge-repo/src/SBOBForge.Cli -- lock . --update 2>&1 | tee -a lock.log
+            ls -l sbobforge.lock.json | tee -a lock.log
+          fi
+
+      - name: 'Generate + validate every profile (lock frozen — exit 2 parse/validation, exit 4 quarantine, exit 5 drift)'
+        # All generator output is teed into gen.log: the failure issue embeds its
+        # tail, so the failing package + sbobforge error are always on record even
+        # though the report step runs before the run's logs are queryable.
+        # The loop does NOT stop at the first failing package: every failed package
+        # lands in failures.txt, so one run reports the whole fleet's blockers
+        # (a bootstrap needs one lane run, not one per package). A failed generate
+        # skips only that package's validate; any failure fails the step at the end.
+        # Profile path is derived from the config's packageName (forge contract:
+        # metadata name = packageName lowercased, dots to dashes, + target OS).
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+          n=0
+          : > gen.log
+          : > failures.txt
+          for cfg in sbobforge/*.json; do
+            n=$((n + 1))
+            pkg_id="$(jq -r .packageName "$cfg")"
+            meta="$(printf '%s' "$pkg_id" | tr '[:upper:]' '[:lower:]' | tr '.' '-')"
+            profile="sbob/$meta.linux.sbob.yaml"
+            echo "=== generate $cfg ($pkg_id) ===" | tee -a gen.log
+            if dotnet run --no-build --project sbobforge-repo/src/SBOBForge.Cli -- generate . --frozen --config "$cfg" 2>&1 | tee -a gen.log; then
+              if ! dotnet run --no-build --project sbobforge-repo/src/SBOBForge.Cli -- validate "$profile" 2>&1 | tee -a gen.log; then
+                echo "$cfg (validate)" >> failures.txt
+              fi
+            else
+              echo "$cfg (generate)" >> failures.txt
+            fi
+          done
+          if [ "$n" -eq 0 ]; then
+            echo '::error::no package configs — every plugin package lacks sources or a test corpus (see the generator warnings). Nothing to regenerate.'
+            exit 1
+          fi
+          if [ -s failures.txt ]; then
+            echo '::error::profile generation/validate failed for the following package(s) — quarantine and coverage details in the issue and the run diagnostics artifact:'
+            cat failures.txt
+            exit 1
+          fi
+          echo "regenerated $n profile(s)"
+
+      - name: 'Upload run diagnostics (gen.log + failures + coverage/provenance reports)'
+        # Quarantine (TDS 8.4) analysis needs the per-package coverage reports the
+        # emitter writes for inspection; private-repo artifacts are auth-gated, so
+        # the failure issue also embeds a jq quarantine summary per failed package.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbob-regenerate-diagnostics
+          path: |
+            gen.log
+            lock.log
+            failures.txt
+            sbob/*.coverage.json
+            sbob/*.provenance.jsonl
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: 'Open the regeneration PR'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="sbob/regenerate-fleet"
+          git config user.name 'RPCF CI'
+          git config user.email 'actions@users.noreply.github.com'
+          git add sbob sbobforge
+          git add sbobforge.lock.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo 'Profiles already current — no PR needed.'
+            exit 0
+          fi
+          cat > /tmp/pr-body.md <<'EOF'
+          ## What
+          Deterministic regeneration of the plugin behavior profiles (sbobforge at the lane's pinned ref, grammar lock frozen).
+          Generated by the sbob-regenerate workflow — do not hand-edit (org decision #26); fix drift by re-running the lane.
+          Configs derive from the plugin csprojs, the single source of truth for package id and version.
+
+          ## Layout
+          - sbobforge/<PkgDir>.json — per-package generator config
+          - sbob/<package-name>.linux.sbob.yaml — profile (committed for the internal registry lane; NEVER embedded in the public nupkgs, decision #39 — consumers opt in, Mode defaults Off)
+          - grammar lock — created on this first run, frozen in every later run
+
+          ## Downstream
+          Registry publishing (SBoB pipeline: drift gate -> SBoB v1 convert -> cosign keyless sign -> sbobctl validate/diff -> registry PR to the private registry, DevelApp-ai/DevelApp-Repo-Global sbobs/nuget) lands with the Taskhandler M10 enforcement phase (LocalTaskhandler #22) — the purl rebind against GitVersion-published versions is explicit there (org decisions #39/#40).
+          EOF
+          git commit -m 'sbob: regenerate plugin behavior profiles (sbobforge pinned ref)'
+          git push --force origin "HEAD:refs/heads/$branch"
+          gh pr create --base main --head "$branch" \
+            --title 'sbob: regenerate plugin behavior profiles' \
+            --body-file /tmp/pr-body.md \
+            || echo 'PR already open — the branch push is the lane artifact; review the existing PR.'
+
+      - name: 'Report failure as an issue (main runs are silent)'
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --state open --search "in:title sbob-regenerate failed" --json number --limit 1 --jq '.[0].number' 2>/dev/null || true)
+          {
+            echo "The **sbob-regenerate** workflow failed on run ${{ github.run_id }}."
+            echo ""
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Diagnostics artifact (gen.log + lock.log + coverage reports): sbob-regenerate-diagnostics on the run page"
+            echo ""
+            echo "Failed step(s):"
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
+              --jq '.jobs[].steps[] | select(.conclusion == "failure") | "- " + .name' || true
+            echo ""
+            if [ -s failures.txt ]; then
+              echo "Failed package(s) — the loop continued past each failure, this is the complete list:"
+              echo ""
+              sed 's/^/- /' failures.txt
+              echo ""
+              echo '<details><summary>Quarantine summary per failed package (TDS 8.4 coverage reports)</summary>'
+              echo ""
+              while IFS= read -r line; do
+                cfg="${line%% (*}"
+                pkg_id="$(jq -r .packageName "$cfg" 2>/dev/null || true)"
+                meta="$(printf '%s' "$pkg_id" | tr '[:upper:]' '[:lower:]' | tr '.' '-')"
+                cov="sbob/$meta.linux.coverage.json"
+                echo "#### $cfg"
+                echo ""
+                if [ -f "$cov" ]; then
+                  echo '```'
+                  jq -r '(.Quarantined // .quarantined // [])[] | "\((.Primitive // .primitive)) | \((.Reason // .reason)) | \((.File // .file)):\((.Line // .line)) | test \((.TestId // .testId))"' "$cov" \
+                    | sort -u | head -n 40 \
+                    || echo '(coverage report not parseable — inspect the diagnostics artifact)'
+                  echo '```'
+                else
+                  echo '(no coverage report written — the failure was not a generate-stage quarantine; see the gen.log tail)'
+                fi
+                echo ""
+              done < failures.txt
+              echo '</details>'
+              echo ""
+            fi
+            echo '<details><summary>Generator log tail (gen.log)</summary>'
+            echo ""
+            echo '```'
+            tail -n 100 gen.log 2>/dev/null || true
+            echo '```'
+            echo ""
+            echo '</details>'
+            echo ""
+            echo '<details><summary>Grammar-lock step (lock.log) + sbobforge restore/build logs</summary>'
+            echo ""
+            echo '```'
+            echo '--- lock.log:'
+            tail -n 60 lock.log 2>/dev/null || echo '(lock already committed or step not reached)'
+            echo '--- sbobforge-repo/restore.log:'
+            tail -n 30 sbobforge-repo/restore.log 2>/dev/null || echo '(no restore log)'
+            echo '--- sbobforge-repo/build.log:'
+            tail -n 40 sbobforge-repo/build.log 2>/dev/null || echo '(no build log)'
+            echo '```'
+            echo ""
+            echo '</details>'
+            echo ""
+            echo '<details><summary>Failed-step log tail</summary>'
+            echo ""
+            echo '```'
+            OUT=""
+            for i in 1 2 3 4 5; do
+              OUT="$(gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed 2>/dev/null | tail -n 120 || true)"
+              [ -n "$OUT" ] && break
+              sleep 5
+            done
+            echo "$OUT"
+            echo '```'
+            echo ""
+            echo '</details>'
+          } > issue-body.md
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body-file issue-body.md
+          else
+            gh issue create --title "sbob-regenerate failed" --body-file issue-body.md
+          fi
+
+  drift-check:
+    name: 'Profile drift check (hand-edit guard, #26)'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v5
+
+      - name: 'Checkout SBOB-Forge (generator source)'
+        uses: actions/checkout@v5
+        with:
+          repository: DevelApp-ai/SBOB-Forge
+          ref: 64ee36adad015b3ee623ffe255a2bc02ae44ddd8
+          path: sbobforge-repo
+
+      - name: 'Setup .NET'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 'Build sbobforge'
+        # Minotaur-lane pattern: the feed credential comes from NUGET_AUTH_TOKEN
+        # via SBOB-Forge's committed NuGet.config (org decision #8). Public
+        # repo: see the regenerate job's note on PACKAGES_READ_TOKEN visibility.
+        # Restore/build output is teed into logs the failure comment embeds:
+        # gh run view --log-failed is unreliable while a run's logs settle.
+        working-directory: sbobforge-repo
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN || github.token }}
+        run: |
+          set -o pipefail
+          # Born tolerance-free (the Golem #223 lesson was already paid):
+          # restore reads the org GitHub Packages feed through the
+          # PACKAGES_READ_TOKEN org secret (live since 2026-11-22, Lars).
+          # No NoWarn=NU1603 was ever needed here — if the secret is not
+          # visible to this public repo, the restore fails loudly with the
+          # NU1603-class visibility error in the restore.log tails below
+          # instead of silently floating the transitive parser/lexer to the
+          # public nuget.org best match.
+          dotnet restore 2>&1 | tee restore.log
+          dotnet build --no-restore -warnaserror 2>&1 | tee build.log
+
+      - name: 'Re-derive the configs and fail on tracked drift (untracked bootstrap files are fine)'
+        run: |
+          bash tools/sbob/generate-plugin-configs.sh
+          if git status --porcelain -- sbobforge | grep -Ev '^\?\?'; then
+            echo '::error::sbobforge/ configs drifted from the plugin csprojs — run the generator, never hand-edit (org decision #26).'
+            exit 1
+          fi
+
+      - name: 'Bootstrap-aware profile check'
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          configs=( sbobforge/*.json )
+          if [ "${#configs[@]}" -eq 0 ]; then
+            echo 'Bootstrap phase: no configs/profiles committed yet — merging the wiring PR triggers the regenerate lane on main, which opens the profiles PR.'
+            exit 0
+          fi
+          if [ ! -f sbobforge.lock.json ]; then
+            echo 'Bootstrap phase: configs present but no committed lock yet — the regenerate lane on main creates it. Skipping the --frozen profile check for this PR.'
+            exit 0
+          fi
+          for cfg in "${configs[@]}"; do
+            pkg_id="$(jq -r .packageName "$cfg")"
+            meta="$(printf '%s' "$pkg_id" | tr '[:upper:]' '[:lower:]' | tr '.' '-')"
+            if [ ! -f "sbob/$meta.linux.sbob.yaml" ]; then
+              echo "config $cfg has no committed profile yet — the regenerate lane on main opens the profiles PR that commits it (an unblocking PR adds configs before their profiles land)."
+              continue
+            fi
+            dotnet run --no-build --project sbobforge-repo/src/SBOBForge.Cli -- generate . --check --frozen --config "$cfg"
+          done
+
+      - name: 'Post failure diagnostics to the PR'
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          {
+            echo '### sbob-regenerate: profile drift check failed'
+            echo ''
+            echo 'Failed step(s):'
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" > jobs.json 2> jobs.err || true
+            jq -r '.jobs[] | .name + " → " + (.conclusion // "?") , (.steps[]? | select(.conclusion != null and .conclusion != "success" and .conclusion != "skipped") | "  - " + .name + " (" + .conclusion + ")")' jobs.json 2>/dev/null || { echo '(jobs api failed — stderr:)'; cat jobs.err 2>/dev/null; }
+            echo ''
+            echo '**workspace listing:**'
+            echo ''
+            echo '```'
+            ls -la . 2>&1 | head -30
+            echo '--- sbobforge-repo:'
+            ls -la sbobforge-repo 2>&1 | head -20
+            echo '```'
+            echo ''
+            echo '**sbobforge restore.log (tail):**'
+            echo ''
+            echo '```'
+            tail -n 40 sbobforge-repo/restore.log 2>/dev/null || echo '(no restore log)'
+            echo '```'
+            echo ''
+            echo '**sbobforge build.log (tail):**'
+            echo ''
+            echo '```'
+            tail -n 60 sbobforge-repo/build.log 2>/dev/null || echo '(no build log)'
+            echo '```'
+            echo ''
+            echo '<details><summary>Failed-step log tail</summary>'
+            echo ''
+            echo '```'
+            # The jobs API lags a few seconds behind the run; wait for the
+            # drift-check job to settle, then fetch its full runner log.
+            JOB_ID=""
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" > jobs.json 2>/dev/null || true
+              JOB_ID="$(jq -r '.jobs[] | select(.name | contains("drift")) | .id // empty' jobs.json 2>/dev/null | head -1)"
+              CONCL="$(jq -r '.jobs[] | select(.name | contains("drift")) | .conclusion // empty' jobs.json 2>/dev/null | head -1)"
+              [ -n "$CONCL" ] && [ -n "$JOB_ID" ] && break
+              sleep 5
+            done
+            if [ -n "$JOB_ID" ]; then
+              gh api "repos/$GITHUB_REPOSITORY/actions/jobs/$JOB_ID/logs" > job.log 2>&1 || true
+              tail -n 150 job.log 2>/dev/null || echo '(job log fetch failed)'
+            else
+              gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --log-failed 2>/dev/null | tail -n 120 || true
+            fi
+            echo '```'
+            echo ''
+            echo '</details>'
+            echo ''
+            echo "Full log: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > comment.md
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md

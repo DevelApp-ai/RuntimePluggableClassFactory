@@ -1,0 +1,28 @@
+# Declared dynamic-destination placeholder policies per package (SBOB-Forge
+# #49, org decision #39 — profiles are honest, never repaired).
+#
+# Tab-separated, one policy per line:
+#   <PkgDir>	<kind>	<id>	<match>	<emit>
+#
+#   kind  = net  -> a Connect candidate whose URL argument is the identifier
+#                   <match> lifts to a tier-P egress entry emitting <emit>
+#                   (SBOB-Forge netPolicies; variable-identity matching —
+#                   declaration alone lifts nothing, an undeclared dynamic
+#                   destination still fail-closes).
+#   kind  = path -> an Open candidate whose path argument is the identifier
+#                   <match> lifts to a tier-P open entry emitting <emit>
+#                   (sbobforge pathPolicies with an id).
+#
+# The table is committed and reviewed like code (same contract as
+# deferred-plugins.txt): it is the single source of truth for fleet policies
+# — configs are derived from it and the csprojs, never hand-edited (#26).
+# The coverage report keeps one row per lifted candidate, tier P with the
+# policy id as its rule, so every wildcard in a profile answers WHY it is
+# there.
+#
+# Currently EMPTY — the first lane run decides: a container-dispatch SUT that
+# extracts packages to runtime-resolved directories may surface quarantined
+# dynamic opens, and the honest response is declaring the intended
+# destination patterns here (SmartVault #31 pattern), never repairs.
+# Evidence: org decisions #39/#40; feature: SBOB-Forge #49 (landed as PR #50,
+# pinned in the lane's forge ref).

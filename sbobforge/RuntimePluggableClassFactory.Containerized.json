@@ -1,0 +1,13 @@
+{
+  "packageType": "nuget",
+  "packageName": "DevelApp.RuntimePluggableClassFactory.Containerized",
+  "packageVersion": "2.1.0",
+  "namespace": "develapp",
+  "targetOs": "linux",
+  "architectures": [ "amd64" ],
+  "sutGlobs": [ "RuntimePluggableClassFactory.Containerized/**/*.cs" ],
+  "testGlobs": [ "RuntimePluggableClassFactory.Containerized.Tests/**/*.cs" ],
+  "pathPolicies": [],
+  "execPathPolicy": {},
+  "allowParseError": []
+}
