@@ -1,0 +1,21 @@
+# Deferred package profiles — sbobforge cannot represent their behavior yet.
+#
+# These packages' SUT code only ever builds dynamic request URLs / dynamic
+# file paths; sbobforge quarantines every candidate (section-shadowed,
+# TDS 8.4) and refuses to emit an empty profile silently (fail-closed, org
+# decision #39). No test-corpus extension can change what the SUT code does,
+# so these are a generator-capability gap, not thin corpora.
+#
+# One package directory name per line (e.g.
+# RuntimePluggableClassFactory.Containerized). Removing a line unblocks the
+# package: its config regenerates on the next lane run and the lane opens the
+# profiles PR. Adding a line defers the package: remove its committed config +
+# profile in the same PR (the generator prunes any lingering derived copy).
+#
+# The list is currently EMPTY: no CRPCF package is deferred.
+# RuntimePluggableClassFactory.Containerized.Kubernetes is NOT on this list —
+# it is skipped by the generator's no-test-corpus gate, not by deferral: no
+# test project references it, and a behavior profile needs a test corpus.
+# Its profile ships in the PR that adds its tests.
+# Evidence per package: org decisions #39/#40; consumer: Taskhandler M10
+# (LocalTaskhandler #22).
