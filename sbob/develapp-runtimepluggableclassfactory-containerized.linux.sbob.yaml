@@ -1,0 +1,14 @@
+apiVersion: spdx.softwarecomposition.kubescape.io/v1beta1
+kind: ContainerProfile
+metadata:
+  name: develapp-runtimepluggableclassfactory-containerized.linux
+  namespace: develapp
+  annotations:
+    kubescape.io/managed-by: User
+    develapp.io/binding: package-purl
+    develapp.io/generator: sbobforge@1.0.0
+    develapp.io/grammar-lock-sha256: 8e5651bf16ecf80ab37c143263072547922c294ad593ca17fe68cdef116ffe57
+    develapp.io/behavior-hash: 047fe3ef8d836765c9631c44cbadbfabab58cfc55f22d054d9af2972f9cc34b0
+spec:
+  architectures: [amd64]
+  imageID: pkg:nuget/develapp.runtimepluggableclassfactory.containerized@2.1.0
