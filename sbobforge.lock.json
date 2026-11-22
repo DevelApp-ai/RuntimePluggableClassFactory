@@ -1,0 +1,88 @@
+{
+  "sbobIrVersion": 1,
+  "Grammars": {
+    "bash": {
+      "Version": "2.0.0",
+      "Sha256": "ed41e916a2a9082786f3f400be60db412af2b8129bdbc4d543c19e61cbcd1e99"
+    },
+    "bash-catalog": {
+      "Version": "1",
+      "Sha256": "744373e45e074e620e074127973d8aa0cce97ab638ebd5b54a9fd76ae20a7667"
+    },
+    "c-catalog": {
+      "Version": "1",
+      "Sha256": "679c3698c03b6cd4d3b572a679f2c4fd66718938b104dbe9a2b97f9839a6a233"
+    },
+    "c17": {
+      "Version": "1.0.0",
+      "Sha256": ""
+    },
+    "cpp-catalog": {
+      "Version": "1",
+      "Sha256": "2d5bd5aa9c4a34ab92ae9b7813316b6c02f7947985762d756a7997ff891354db"
+    },
+    "cpp20": {
+      "Version": "1.0.0",
+      "Sha256": ""
+    },
+    "csharp": {
+      "Version": "4.11.0",
+      "Sha256": ""
+    },
+    "dotnet-catalog": {
+      "Version": "1",
+      "Sha256": "9e252dccf873aa0a38a50d8d980b98ebdf7ddad43f5ed3176c8a4d97ba3bc2e2"
+    },
+    "go-catalog": {
+      "Version": "1",
+      "Sha256": "a5cde95a72da4b55860d441a8639b233f301fd4a2345c862e7f1d0c3d84223b5"
+    },
+    "go119": {
+      "Version": "1.0.0",
+      "Sha256": ""
+    },
+    "java-catalog": {
+      "Version": "1",
+      "Sha256": "62df234830546dd2d37983a86a52f38e480f3b862875caade7cc3e3503d47a84"
+    },
+    "java17": {
+      "Version": "1.0.1",
+      "Sha256": ""
+    },
+    "js-catalog": {
+      "Version": "1",
+      "Sha256": "57cdb1dc16fa124af167f3c522eb98d06ad736a25b55fda3f6cce15517360876"
+    },
+    "php": {
+      "Version": "1.0.0",
+      "Sha256": ""
+    },
+    "php-catalog": {
+      "Version": "1",
+      "Sha256": "c0ef0ac800afad5065b4a7505c728f90a2b588ae4316c0ec08b03c8bcc83aa31"
+    },
+    "powershell": {
+      "Version": "2.0.0",
+      "Sha256": "9ca50d596dd5a574e383d6b5e9a7775049392a54f7c92853b900b9b9b818fe43"
+    },
+    "powershell-catalog": {
+      "Version": "1",
+      "Sha256": "0771ab1b38328ecc63b17077074cc4b85421598265788da0998cdc7d83f8d953"
+    },
+    "python-catalog": {
+      "Version": "1",
+      "Sha256": "0990de3b4ab706b7acc8d38046e76b658127124a42f54da76512e4f1bbcd78ab"
+    },
+    "python311": {
+      "Version": "1.0.3",
+      "Sha256": ""
+    },
+    "typescript": {
+      "Version": "1.0.0",
+      "Sha256": ""
+    }
+  },
+  "Minotaur": {
+    "Version": "1.5.25"
+  }
+}
