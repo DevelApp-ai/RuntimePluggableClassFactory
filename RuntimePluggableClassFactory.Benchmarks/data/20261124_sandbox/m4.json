@@ -1,0 +1,313 @@
+{
+  "measurement": "m4-security-escape-rate",
+  "description": "Adversarial plugin corpus (compiled at run time from committed C# source) evaluated against Default/Strict/Permissive security policies; per-level escape rates with issue-code detail and payload verification",
+  "corpusLicense": "MIT (harness source, this repository)",
+  "corpusCompiler": "Roslyn 4.9.0.0 (C#, run-time compilation of committed corpus source)",
+  "items": [
+    {
+      "id": "benign-wordguesser",
+      "intent": "none (control)",
+      "malicious": false,
+      "description": "Plain plugin type with no prohibited shapes. Sanity control: must be valid at every level; if this is blocked, the corpus or validator is misconfigured.",
+      "assembly": "benign-wordguesser.dll",
+      "buildSucceeded": true,
+      "sourceFile": "benign-wordguesser.cs",
+      "Default_isValid": true,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": false,
+      "Strict_isValid": true,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": false,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": false
+    },
+    {
+      "id": "prohibited-namespace-type",
+      "intent": "declares a type in a prohibited namespace (System.Diagnostics)",
+      "malicious": true,
+      "description": "The validator\u0027s namespace check inspects the DECLARED type\u0027s namespace. A type declared inside System.Diagnostics is caught by SEC202 (High) and must be blocked at Default and Strict; Permissive removes prohibited namespaces and lets it through by design.",
+      "assembly": "prohibited-namespace-type.dll",
+      "buildSucceeded": true,
+      "sourceFile": "prohibited-namespace-type.cs",
+      "Default_isValid": false,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [
+        "SEC202"
+      ],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": false,
+      "Strict_isValid": false,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [
+        "SEC202"
+      ],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": false,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true
+    },
+    {
+      "id": "process-inheritor",
+      "intent": "inherits from the prohibited base type System.Diagnostics.Process",
+      "malicious": true,
+      "description": "Exercises SEC201 (prohibited base types). Expected: blocked at Default (and Strict); Permissive clears ProhibitedBaseTypes by design.",
+      "assembly": "process-inheritor.dll",
+      "buildSucceeded": true,
+      "sourceFile": "process-inheritor.cs",
+      "Default_isValid": false,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [
+        "SEC201"
+      ],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": false,
+      "Strict_isValid": false,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [
+        "SEC201"
+      ],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": false,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true
+    },
+    {
+      "id": "process-spawner",
+      "intent": "spawns a process from a method body via Process.Start",
+      "malicious": true,
+      "description": "The validator inspects metadata (names, namespaces, base types, field types), not IL bodies. A benignly-named method whose body calls Process.Start has no prohibited metadata shape and is expected to escape every level. Payload: spawns \u0027/bin/touch MARKER\u0027 (Linux) so an escape is verifiable as a real capability.",
+      "assembly": "process-spawner.dll",
+      "buildSucceeded": true,
+      "sourceFile": "process-spawner.cs",
+      "Default_isValid": true,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": true,
+      "Strict_isValid": true,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": true,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true,
+      "payloadVerification": {
+        "payload": "process-spawner",
+        "executed": true,
+        "forbiddenEffectObserved": true,
+        "note": "Escaped plugin was loaded and executed; the forbidden effect (marker file) occurred."
+      }
+    },
+    {
+      "id": "filestream-field",
+      "intent": "holds a prohibited FileStream field and writes a file from a method body",
+      "malicious": true,
+      "description": "Exercises SEC501: a FileStream field is a prohibited FIELD type, but SEC501 severity is Medium, which does NOT block loading (only High-severity issues invalidate). Expected: escapes every level with a recorded issue. Payload: File.Create(MARKER).Dispose() executed after escaping Default.",
+      "assembly": "filestream-field.dll",
+      "buildSucceeded": true,
+      "sourceFile": "filestream-field.cs",
+      "Default_isValid": true,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [
+        "SEC501"
+      ],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": true,
+      "Strict_isValid": true,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [
+        "SEC501"
+      ],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": true,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true,
+      "payloadVerification": {
+        "payload": "filestream-field",
+        "executed": true,
+        "forbiddenEffectObserved": true,
+        "note": "Escaped plugin was loaded and executed; the forbidden effect (marker file) occurred."
+      }
+    },
+    {
+      "id": "socket-backdoor",
+      "intent": "holds a System.Net.Sockets.Socket field (prohibited capability, non-prohibited field type)",
+      "malicious": true,
+      "description": "The prohibited field-type list covers Process/FileStream/NetworkStream but NOT Socket. A Socket-typed field with a benign namespace and no prohibited base type has no blocking metadata shape: expected to escape every level, including Strict (Strict adds prohibited namespaces for DECLARED types only). Documents a real gap per policy level. No payload executed (sockets would require network access; the documented intent is the capability itself).",
+      "assembly": "socket-backdoor.dll",
+      "buildSucceeded": true,
+      "sourceFile": "socket-backdoor.cs",
+      "Default_isValid": true,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": true,
+      "Strict_isValid": true,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": true,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true
+    },
+    {
+      "id": "assembly-reloader",
+      "intent": "loads an arbitrary assembly path from a method body via Assembly.LoadFrom",
+      "malicious": true,
+      "description": "Method-name heuristics only produce WARNINGS (and only when the method\u0027s own name matches the pattern); a method named \u0027Run\u0027 calling Assembly.LoadFrom is invisible to metadata validation. Expected: escapes every level. Documents that dynamic assembly loading is not blocked at any policy level.",
+      "assembly": "assembly-reloader.dll",
+      "buildSucceeded": true,
+      "sourceFile": "assembly-reloader.cs",
+      "Default_isValid": true,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": true,
+      "Strict_isValid": true,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": true,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true
+    },
+    {
+      "id": "suspicious-attributes",
+      "intent": "carries a security-named assembly attribute (SecurityPermissionAttribute mimic)",
+      "malicious": true,
+      "description": "The attribute check (SEC301) fires a WARNING for security-named attributes but never blocks. Expected: escapes every level with SEC301 warnings recorded. Documents the warning-only semantics of attribute inspection.",
+      "assembly": "suspicious-attributes.dll",
+      "buildSucceeded": true,
+      "sourceFile": "suspicious-attributes.cs",
+      "Default_isValid": true,
+      "Default_riskLevel": "Medium",
+      "Default_issueCodes": [],
+      "Default_warningCodes": [
+        "SEC101"
+      ],
+      "Default_escaped": true,
+      "Strict_isValid": true,
+      "Strict_riskLevel": "Medium",
+      "Strict_issueCodes": [],
+      "Strict_warningCodes": [
+        "SEC101"
+      ],
+      "Strict_escaped": true,
+      "Permissive_isValid": true,
+      "Permissive_riskLevel": "Medium",
+      "Permissive_issueCodes": [],
+      "Permissive_warningCodes": [
+        "SEC101"
+      ],
+      "Permissive_escaped": true
+    }
+  ],
+  "escapeRates": {
+    "Default": {
+      "maliciousItems": 7,
+      "escaped": 5,
+      "escapeRatePercent": 71.4,
+      "escapedIds": [
+        "process-spawner",
+        "filestream-field",
+        "socket-backdoor",
+        "assembly-reloader",
+        "suspicious-attributes"
+      ]
+    },
+    "Strict": {
+      "maliciousItems": 7,
+      "escaped": 5,
+      "escapeRatePercent": 71.4,
+      "escapedIds": [
+        "process-spawner",
+        "filestream-field",
+        "socket-backdoor",
+        "assembly-reloader",
+        "suspicious-attributes"
+      ]
+    },
+    "Permissive": {
+      "maliciousItems": 7,
+      "escaped": 7,
+      "escapeRatePercent": 100,
+      "escapedIds": [
+        "prohibited-namespace-type",
+        "process-inheritor",
+        "process-spawner",
+        "filestream-field",
+        "socket-backdoor",
+        "assembly-reloader",
+        "suspicious-attributes"
+      ]
+    }
+  },
+  "benignControlValidDefault": true
+}
