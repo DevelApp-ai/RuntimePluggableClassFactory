@@ -51,7 +51,7 @@ namespace RuntimePluggableClassFactory.Benchmarks
                     case "--help":
                     case "-h":
                         Console.WriteLine(
-                            "Usage: dotnet run -c Release -- --measurement m1|m2|m4|m5|all [--iterations N] [--seed S] [--out DIR]");
+                            "Usage: dotnet run -c Release -- --measurement m1|m2|m2c|m3|m4|m5|all [--iterations N] [--seed S] [--out DIR]");
                         return 0;
                     default:
                         Console.Error.WriteLine($"Unknown argument '{args[i]}'.");
@@ -75,7 +75,7 @@ namespace RuntimePluggableClassFactory.Benchmarks
         private static async Task<int> RunAsync(string measurement, int iterations, int seed, string outDir)
         {
             measurement = measurement.ToLowerInvariant();
-            var valid = new[] { "m1", "m2", "m4", "m5", "all" };
+            var valid = new[] { "m1", "m2", "m2c", "m3", "m4", "m5", "all" };
             if (!valid.Contains(measurement))
             {
                 Console.Error.WriteLine($"Unknown measurement '{measurement}'. Valid: {string.Join(", ", valid)}");
@@ -105,7 +105,9 @@ namespace RuntimePluggableClassFactory.Benchmarks
             Console.WriteLine($"[harness] pluginFolder={pluginPath}");
             Console.WriteLine($"[harness] out={Path.GetFullPath(outDir)}");
 
-            var selected = measurement == "all" ? new[] { "m1", "m2", "m4", "m5" } : new[] { measurement };
+            var selected = measurement == "all"
+                ? new[] { "m1", "m2", "m2c", "m3", "m4", "m5" }
+                : new[] { measurement };
             foreach (var m in selected)
             {
                 Console.WriteLine($"[harness] running {m} ...");
@@ -113,6 +115,8 @@ namespace RuntimePluggableClassFactory.Benchmarks
                 {
                     "m1" => await M1RawThresholdData.RunAsync(pluginPath, iterations),
                     "m2" => await M2ModeComparison.RunAsync(pluginPath, iterations),
+                    "m2c" => await M2ContainerLeg.RunAsync(pluginPath, iterations),
+                    "m3" => await M3MigrationStudy.RunAsync(pluginPath, iterations),
                     "m4" => await M4SecurityEscapeRate.RunAsync(outDir),
                     "m5" => await M5UnloadVerification.RunAsync(pluginPath, iterations),
                     _ => throw new InvalidOperationException($"unreachable: {m}")

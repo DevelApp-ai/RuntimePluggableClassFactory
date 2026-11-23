@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>RuntimePluggableClassFactory.PluginHost</RootNamespace>
+    <AssemblyName>RuntimePluggableClassFactory.PluginHost</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization Condition="'$(DOTNET_SYSTEM_GLOBALIZATION_INVARIANT)' == '1'">true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!--
+    The container host binary. In a real CRPCF deployment this executable is the
+    ENTRYPOINT of the plugin container image; the image additionally carries the
+    plugin payload (in this harness: passed via a plugin argument, mirroring a
+    mounted or baked-in plugin package). It is intentionally minimal: load the
+    plugin assembly, instantiate every ISpecificInterface plugin it contains,
+    serve execution requests over stdin/stdout JSON lines.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimePluggableClassFactory.Interface\RuntimePluggableClassFactory.Interface.csproj" />
+    <ProjectReference Include="..\PluginImplementations\PluginImplementations.csproj" />
+  </ItemGroup>
+
+</Project>
