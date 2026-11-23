@@ -1,20 +1,223 @@
-.gitignore
-CHANGELOG.md
-GitVersion.yml
-LICENSE
-PluginFolder/
-PluginImplementations/
-PluginImplementations_1_2_1/
-PluginImplementations_1_2_2/
-PluginImplementations_1_3_1/
-PluginImplementations_1_4_1/
-README.md
-RuntimePluggableClassFactory.Benchmarks/
-RuntimePluggableClassFactory.Containerized.Kubernetes/
-RuntimePluggableClassFactory.Containerized.Tests/
-RuntimePluggableClassFactory.Containerized/
-RuntimePluggableClassFactory.Interface/
-RuntimePluggableClassFactory.PluginHost/
-RuntimePluggableClassFactory.Test/
-RuntimePluggableClassFactory.sln
-RuntimePluggableClassFactory/
+# Changelog
+
+All notable changes to the RuntimePluggableClassFactory project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0.html),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- **Issue #51 fix-verification run: `data/20261124_sandbox/`** (seed 20261124, 30 iterations, all six modules re-run on the same discipline as the 20261116/20261123 tranches): the M5 shipped configuration is now **leak-free — 30/30 cycles clean** (weak references die after one GC, 0 resident plugin assemblies above baseline) with the real `DefaultPluginSecurityValidator` in the loader's default wiring; M4 documents semantic parity of the metadata-only validator with the pre-fix validator (identical escape sets and rates: 71.4 % Default, 71.4 % Strict, 100 % Permissive); the M1 security-validation micro-benchmark moved from 0.29 ms to 0.51 ms (metadata is re-read per validation instead of reusing a pinned assembly — still two orders of magnitude below the 10 ms threshold); M2/M2c/M3 reproduce within run-to-run noise
+
+- **Issue #28 measurements, second tranche: M2 container leg (process-hosted) and M3 migration study** — new committed raw-data run (`data/20261123_sandbox/`, seed 20261123, 30 iterations, environment captured) that re-runs the four first-tranche modules on the same seed discipline and adds two new ones, closing 6 of the article's measurement scenarios (M3 and the real-Docker/K8s leg of M2 remain the last open items, the latter requiring Lance's Z13 hardware)
+  - **M2 container leg (`m2c`)**: plugin execution dispatched through a REAL out-of-process plugin host — new `RuntimePluggableClassFactory.PluginHost` console project (114 LOC, JSON-over-pipe IPC on stdin/stdout, loopback only) spawned per deployment by the harness `ProcessIsolatedOrchestrator` — measured honestly as the process-hosting half of containerized execution, NOT as a container-runtime number (no image pull, cgroup, network hop, or K8s scheduling measured; scope labels embedded in every emitted report): cold deploy ~94 ms mean (spawn-to-ready), teardown ~50 ms, dispatch overhead +0.11 ms@8 B / +0.19 ms@10 KB / +0.65 ms@100 KB per call over in-process, IPC protocol floor ~0.04 ms, sequential throughput ~8.5k vs ~50M exec/s in-process, 8-worker concurrent ~10.7k (single-replica queueing) vs ~3.1M exec/s
+  - **M3 migration study (`m3`)**: live promotion of `Test.SpecificClassImpl` v1.2.1 from in-process to host execution in one running hybrid system — ~103 ms deploy (incl. host spawn) + 0.31 ms switchover with **0 call-site lines changed**, contract parity green for all 8 cases in all 3 phases (baseline / promoted / rolled-back, `behaviorPreserved = true` throughout), rollback ~52.6 ms + 0.02 ms auto-fallback without a factory restart; pins the plugin by assembly `Location` because the factory version store retains only the `retainOldVersions: 1` latest version per plugin name
+
+- **Measurement harness for the hybrid-plugin-execution-modular-monolith article (Issue #28)**: new `RuntimePluggableClassFactory.Benchmarks` console project (in the solution, `IsPackable=false`, built by CI but not run there) with four committed, reproducible measurement modules and a committed raw-data run (`data/20261116_sandbox/`, seed 20261116, 30 iterations, environment captured)
+  - **M1** raw distributions behind the test-enforced performance thresholds (the eight PerformanceTests.cs scenarios with min/mean/median/P90/P95/P99/max/stdev instead of pass/fail)
+  - **M2** mode comparison: in-process vs containerized-seam dispatch across 8 B/10 KB/100 KB payloads, sequential + 8-worker throughput, and HybridPluginFactory auto-resolution overhead — seam numbers explicitly use an in-memory orchestrator (CRPCF dispatch path only, no container); the real containerized leg remains open
+  - **M4** security validator escape rate: 8-item adversarial plugin corpus compiled at run time from committed C# source with Roslyn, validated against Default/Strict/Permissive — committed run: 71.4 % escape at Default and Strict, 100 % at Permissive, with verified payload execution (process spawn, file write) for the escaped executable items
+  - **M5** unload verification under sustained hybrid operation: the collectible `PluginLoadContext` path is leak-free (30/30 cycles, weak references die after one GC, zero resident plugin assemblies), while the shipped configuration pins every validated plugin assembly in the DEFAULT, non-collectible AssemblyLoadContext via `DefaultPluginSecurityValidator.ValidateAssemblyAsync`'s `Assembly.LoadFrom` (leak indicators in all 30 cycles) — documented as a measurable architectural finding with the per-cycle raw data and the loader's Default-ALC reuse identified as the mechanism
+
+- **SBoB (Software Bill of Behavior) verification and enforcement at plugin deploy time** (org decision [DevelApp-ai/DevelApp-Repo-Global#39](https://github.com/DevelApp-ai/DevelApp-Repo-Global/issues/39)): the Containerized package can now verify the SBoB profile embedded in a plugin nupkg by SBOB-Forge and enforce it before deployment
+  - `SBoBPackageVerifier` extracts `sbob/<package>.<os>.sbob.yaml` from the package stream (target-os aware, default `linux`), validates it against the SBOB-Forge canonical form (strict fail-closed parser: both accepted dialect headers — kubescape `ContainerProfile` and registry `SoftwareBillOfBehavior` —, fixed annotation/section/field order, LF/2-space/block style, byte-equality re-render of every scalar, `⋯` never `...`), and checks the `spec.imageID` purl binding against the actual package identity
+  - `SBoBPolicyEvaluator` + `SBoBPolicy`: v1 rule set (profile required, purl binding, forbidden exec paths, forbidden open path prefixes/flags, external egress/ingress allow-deny with DNS allowlist and ingress port limits) with a Monitor → Audit → Enforce rollout (`SBoBEnforcementMode`); `DeriveNetworkPolicy` tightens the container `NetworkPolicy` from the verified profile (no egress → `Isolated`, declared egress → `Restricted`)
+  - `SBoBEnforcingOrchestrator`: decorator over any `IContainerizedPluginOrchestrator` — Enforce mode denies non-allowed deployments without invoking the inner orchestrator and only ever tightens the requested network policy; Audit mode surfaces violations as result warnings; Monitor records without altering results; Off skips verification
+  - No new NuGet dependency (hand-rolled canonical-form parser, `System.IO.Compression` for nupkg extraction); the `develapp.io/behavior-hash` annotation is treated as an opaque audit value and cosign bundle verification is deferred until SBOB-Forge M6
+  - 53 hermetic MSTest tests (parser accept/reject matrix, verifier selection/binding/policy paths, orchestrator mode gating) — Containerized suite now 94/94
+- **Real test coverage for the shipped Containerized package** (Issue #36 follow-up): `RuntimePluggableClassFactory.Containerized.Tests` now references `RuntimePluggableClassFactory.Containerized` and covers `ContainerizedPluginLoader<T>`, `ContainerizedPluginProxy<T>`, `HybridPluginFactory<T>` and `NuGetSignatureValidator` with hermetic in-memory fakes (23 tests: no network, no containers, no real NuGet packages)
+- **CI now executes the full test suite** — the Test step no longer skips with an echo; both test projects (110 xUnit + 41 MSTest) run on every build, including the plugin-runtime tests against `PluginFolder/`
+- **PR validation is live again**: `pr-validation.yml` triggered on `master`/`develop`, branches that do not exist in this repo (default is `main`), so it never ran; it now triggers on PRs to `main` and runs the full suite (no more Integration/Performance exclusion filter)
+- **CRPCF publication to the DevelApp-ai GitHub Packages org feed**: `DevelApp.RuntimePluggableClassFactory.Containerized` and `DevelApp.RuntimePluggableClassFactory.Containerized.Kubernetes` are now built, packed and published on every push to `main`; they are intentionally **not** published to nuget.org (org-private packages), and the base + Interface packages keep their existing dual-feed publication
+- **CRPCF consumption guide** (CRPCF_DEPLOYMENT_GUIDE.md §8): restore facts for the private feed (package IDs, TFM, exact dependency graph, NU1903-clean transitive audit), workstation/CI credential recipes (classic PAT with `read:packages`; `GITHUB_TOKEN` with `packages:read` plus the one-time package-sharing org step), the shipped dispatch API surface (orchestration seam, platform seam, hybrid facade, timeout/cancellation, result shape), the v1 signing/trusted-signers policy, the base image story and the version pin policy
+- Shipped-surface note at the top of CRPCF_IMPLEMENTATION_GUIDE.md pointing readers to the authoritative consumer contract
+
+### Changed
+- **SBoB enforcement is opt-in (default `Off`)** — decision DevelApp-ai/DevelApp-Repo-Global#39, accepted: SBoB profiles are optional for consumers of the public nuget.org packages, which never ship one, so `SBoBEnforcingOrchestratorOptions.Mode` now defaults to `Off` (previously `Enforce`); verification only runs when a consumer explicitly opts in (DevelApp-internal orchestrators opt in and still roll out per package Monitor → Audit → Enforce). Default-options test added; Containerized suite now 95/95
+
+### Fixed
+- **Issue #51: `DefaultPluginSecurityValidator.ValidateAssemblyAsync` no longer loads the plugin file into any AssemblyLoadContext** — the prior `Assembly.LoadFrom(path)` pinned every validated plugin assembly in the DEFAULT, non-collectible AssemblyLoadContext, and `FilePluginLoader` then reused that pinned copy instead of its collectible `PluginLoadContext` copy, so `UnloadAllPlugins` was a no-op for the plugin assemblies actually in use (documented by the committed M5 runs `data/20261116_sandbox`/`data/20261123_sandbox`). Path-based validation is now metadata-only (`PEReader` + `MetadataReader`): the same checks (trusted path SEC101, prohibited base types SEC201, prohibited namespaces SEC202, dangerous method-name heuristics SEC401, prohibited field types SEC501, security-related assembly attributes SEC301) are applied over the file's metadata without loading it — type-identity checks become full-name comparisons over metadata, with identical accept/reject decisions on the M4 adversarial corpus (committed `data/20261124_sandbox` run: leak-free shipped configuration 30/30 cycles, identical M4 escape sets). The M5 harness's measurement-only non-loading stub validator was removed with the fix (no longer needed — the shipped wiring now exercises the collectible path itself) and M5 now measures a single shipped-configuration phase
+- **The `RuntimePluggableClassFactory.Test` suite compiles and runs again**: fixed API drift against the shipped 2.1 surface (`SemanticVersionNumber` has no `Parse`, event args no longer expose `FileName`/`PluginPath` on `PluginLoadingErrorEventArgs`), xUnit analyzer errors (xUnit1011/1026), tests that ignored the factory's default-deny allow list and the `retainOldVersions: 1` default, and the strict-security test that counted warning-only `SecurityValidationFailed` events as failures — 110/110 tests now pass
+- **`VersionRange` value equality**: `SemanticVersionNumber` (DevelApp.Utility) implements `IEquatable<T>` but overrides neither `==` nor `Equals(object)`, so `VersionRange.Equals`/`IsSpecificVersion`/`GetHashCode` compared by reference — two ranges parsed from the same string were never equal; equality and hashing are now value-based
+- **`PluginImplementations_*` post-build copies no longer depend on `$(SolutionDir)`**: building a project file directly (as CI does) left `SolutionDir` undefined and copied the plugin DLLs to a `*Undefined*PluginFolder` folder, so `PluginFolder/` stayed empty and the runtime tests found no plugins; the copy target now resolves the path relative to the project file
+- **Added the Containerized and Containerized.Kubernetes projects to the solution** — `dotnet restore` on the `.sln` never restored them (no `project.assets.json`), which made the new CI build lines fail; CI now restores and builds both projects
+- **`ContainerizedPluginLoader<T>` brought up to the 2.1 `IPluginLoader<T>` contract** — the Containerized projects had not compiled since the base 2.1.0 interface changes; added `ListPluginsByVersionRangeAsync`/`ListPluginsByModuleAsync`, `PluginLoadingFailed`/`SecurityValidationFailed` events, `Dispose`, and fixed `UnloadPlugin` nullability
+- `KubernetesOrchestrator.ListContainersAsync`: `V1ObjectMeta.CreationTimestamp` is a `DateTime?` in KubernetesClient 17 — removed the invalid `.DateTime` member access
+- Nullable-annotation fixes in `HybridPluginFactory` and `ContainerizedPluginProxy` (CS8601/CS8619/CS0067 clean)
+
+## [2.1.1] - 2026-11-01
+
+### Added
+- **GitHub Packages publishing**: all versions (beta/prerelease and stable) are now published as NuGet packages to GitHub Packages
+- NuGet.org publishing is now limited to stable (non-prerelease) releases only
+
+### Changed
+- GitHub Packages publishing runs before NuGet.org publishing and is no longer affected by NuGet.org failures or missing NuGet access
+- Every release (beta and stable) is tagged and published as a GitHub Release; prerelease versions are marked as pre-releases
+- CI/CD workflow now triggers on the `main` branch (was incorrectly configured for `master`)
+
+### Removed
+- Removed unused repository files: packages-microsoft-prod.deb, ci_fix_analysis.md, RELEASE_FIX_NOTES.md, PRODUCTION_ANALYSIS_REPORT.md, IDISPOSABLE_FIXES_SUMMARY.md, QUICK_WINS_PLAN.md, CRPCF_EXECUTIVE_SUMMARY.md, CONTAINERIZED_RPCF_TDS.md
+
+2.1.0] - 2025-11-03
+
+### Added - Async Module-Based Plugin Loading Support
+
+#### Expanded Async Loading Capabilities
+- **HybridPluginFactory<T>**: Officially exposed factory for working with both traditional and containerized plugins
+- **PluginInfo**: Public type for plugin metadata including execution mode and container information
+- **PluginExecutionMode**: Enum for specifying plugin execution mode (Auto, Traditional, Containerized)
+- **HybridPluginFactoryOptions**: Configuration options for hybrid plugin loading
+- Moved hybrid plugin types from Examples namespace to main public API namespace
+
+#### Module Identification Types (Already Public, Now Documented)
+- **PluginIdentifier**: Identifies plugins by namespace, name, and version
+- **ContainerizedPluginInfo**: Information about deployed containerized plugins
+- **ContainerizedPluginLoader<T>**: Async loader for containerized plugins
+- **ContainerizedPluginProxy<T>**: Proxy for bridging traditional and containerized plugin execution
+- **ContainerizedPluginLoaderOptions**: Configuration for containerized plugin loading
+
+### Changed
+- Moved `HybridPluginFactory` and related types from `.Examples` namespace to `.Containerized` namespace
+- Elevated hybrid plugin loading from example code to officially supported public API
+
+### Use Cases Enabled
+- **Dynamic Module Loading from Kubernetes/Remote Sources**: Full support for async loading of plugins from containerized environments
+- **Hybrid Plugin Architectures**: Seamlessly mix traditional in-process plugins with containerized plugins
+- **Custom Async Plugin Loaders**: All types needed for implementing custom module-based async plugin loading are now publicly exposed
+
+## [2.0.0] - 2025-07-24
+
+### Added - TDS Implementation Complete
+
+#### Dynamic Plugin Loading/Unloading
+- **PluginLoadContext**: Collectible AssemblyLoadContext for proper memory cleanup
+- **FilePluginLoader**: Enhanced with `UnloadPlugin()` and `UnloadAllPlugins()` methods
+- **PluginWatcher**: Runtime plugin detection and hot-swapping capabilities
+- Proper resource disposal and memory management
+
+#### Enhanced Stability & Error Handling
+- **PluginExecutionSandbox**: Isolated execution environment for plugins
+- **Enhanced PluginClassFactory**: Comprehensive error handling with events
+- **Error Events**: PluginInstantiationError, PluginLoadingFailed, SecurityValidationFailed
+- Graceful degradation on plugin failures
+- Detailed error reporting and logging
+
+#### Type Safety
+- **ITypedPluginClass<TInput, TOutput>**: Generic interface for type-safe plugin execution
+- **PluginExecutionContext**: Functional context with logging, cancellation, and properties
+- **TypedPluginClassFactory**: Type-safe plugin factory implementation
+- **PluginExecutionResult<T>**: Strongly-typed execution results
+- Async execution with timeout support
+
+#### Security Hardening
+- **IPluginSecurityValidator**: Security validation interface
+- **DefaultPluginSecurityValidator**: Comprehensive security validation implementation
+- **PluginSecuritySettings**: Configurable security policies (Default, Strict, Permissive)
+- Multi-level security validation (assembly, type, method)
+- Digital signature verification and trusted path validation
+- Prohibited namespace and type detection
+
+#### Comprehensive Testing
+- **48 tests** across 7 categories:
+  - Unit Tests (8) - Core functionality
+  - Stability Tests (3) - Error handling and resilience
+  - Unloading Tests (2) - Dynamic plugin unloading
+  - Typed Plugin Tests (6) - Type-safe plugin system
+  - Security Tests (13) - Security hardening validation
+  - Integration Tests (8) - End-to-end workflows
+  - Performance Tests (8) - Performance and scalability
+- **Performance benchmarks** with automated validation
+- **TestingStrategy.md**: Comprehensive testing documentation
+
+#### Documentation
+- **TDS_IMPLEMENTATION.md**: Complete implementation documentation
+- **TestingStrategy.md**: Comprehensive testing approach
+- **README.md**: Updated with new features and usage examples
+- Migration guide for existing implementations
+- Architecture overview and performance characteristics
+
+### Changed
+
+#### Breaking Changes
+1. **Assembly Loading**: Direct `Assembly.LoadFrom()` replaced with `AssemblyLoadContext`
+2. **Plugin Discovery**: Plugin enumeration now async (`ListAllPossiblePluginsAsync()`)
+3. **Error Handling**: Exceptions now wrapped in events for better error management
+4. **Security**: Plugin loading now includes security validation by default
+5. **Target Framework**: Upgraded from .NET Standard 2.0 to .NET 8.0
+
+#### Performance Improvements
+- Plugin discovery: < 5 seconds
+- Plugin instantiation: < 100ms average, < 500ms max
+- Plugin execution: < 10ms average for simple operations
+- Concurrent throughput: > 100 executions/second
+- Security validation: < 500ms average
+- Memory growth: < 50MB under load
+- Load/unload cycles: < 2 seconds average
+
+### Migration Guide
+
+#### From v1.x to v2.0
+
+1. **Plugin Interfaces**: Existing `IPluginClass` implementations remain compatible
+2. **Plugin Loading**: Replace direct assembly loading with `FilePluginLoader<T>`
+3. **Error Handling**: Subscribe to error events for comprehensive error management
+4. **Security**: Add security validation to plugin loading process
+5. **Type Safety**: Optionally migrate to `ITypedPluginClass<TInput, TOutput>` for type safety
+
+#### Example Migration
+
+**Before (v1.x):**
+```csharp
+var pluginLoader = new FilePluginLoader<IMyPlugin>(pluginDirectory);
+var factory = new PluginClassFactory<IMyPlugin>(pluginLoader);
+```
+
+**After (v2.0):**
+```csharp
+var securityValidator = new DefaultPluginSecurityValidator(PluginSecuritySettings.CreateDefault());
+var pluginLoader = new FilePluginLoader<IMyPlugin>(pluginDirectory, securityValidator);
+var factory = new PluginClassFactory<IMyPlugin>(pluginLoader);
+
+// Subscribe to error events
+factory.PluginInstantiationError += (sender, e) => Console.WriteLine($"Plugin error: {e.Exception.Message}");
+
+// Use type-safe factory (optional)
+var typedFactory = new TypedPluginClassFactory<IMyTypedPlugin, MyInput, MyOutput>(pluginLoader);
+```
+
+## [1.0.7] - 2020-11-07
+
+### Added
+- Initial release of RuntimePluggableClassFactory
+- Basic plugin loading from file directories
+- Version-aware plugin management
+- Interface-based plugin architecture
+- Thread-safe plugin execution
+- Basic error handling
+
+### Features
+- Dynamic plugin loading from file directories
+- Version management and plugin discovery
+- `IPluginClass` interface for plugin development
+- `PluginClassFactory<T>` for plugin instantiation
+- `FilePluginLoader<T>` for file-based plugin loading
+- Basic assembly loading and type resolution
+
+---
+
+## Version Numbering
+
+- **Major version** (X.0.0): Breaking changes, significant architectural changes
+- **Minor version** (X.Y.0): New features, backward compatible
+- **Patch version** (X.Y.Z): Bug fixes, minor improvements
+
+## Support
+
+For questions, issues, or support:
+- Review the comprehensive test suite (48 tests)
+- Check the [TDS Implementation Guide](TDS_IMPLEMENTATION.md)
+- Examine the [Testing Strategy](TestingStrategy.md)
+- Create an issue on [GitHub](https://github.com/DevelApp-ai/RuntimePluggableClassFactory/issues)
+
