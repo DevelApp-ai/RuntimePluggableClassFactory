@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 namespace DevelApp.RuntimePluggableClassFactory.Caching
 {
@@ -102,21 +105,47 @@ namespace DevelApp.RuntimePluggableClassFactory.Caching
             }
 
             var fileInfo = new FileInfo(assemblyPath);
-            
+
             try
             {
-                // Load assembly to get metadata (note: this loads the assembly into memory)
-                var assembly = Assembly.LoadFrom(assemblyPath);
-                
+                // Metadata-only inspection (AssemblyName.GetAssemblyName +
+                // PEReader/MetadataReader): reading metadata must never load the
+                // assembly into an AssemblyLoadContext. The former
+                // Assembly.LoadFrom here pinned every inspected assembly in the
+                // DEFAULT, non-collectible ALC, the same pattern the #51
+                // remediation removed from the security validator.
+                AssemblyName assemblyName = AssemblyName.GetAssemblyName(assemblyPath);
+                var typeNames = new List<string>();
+
+                using (var fileStream = File.OpenRead(assemblyPath))
+                using (var peReader = new PEReader(fileStream))
+                {
+                    if (peReader.HasMetadata)
+                    {
+                        var metadataReader = peReader.GetMetadataReader();
+                        foreach (var typeDefinitionHandle in metadataReader.TypeDefinitions)
+                        {
+                            var typeDefinition = metadataReader.GetTypeDefinition(typeDefinitionHandle);
+                            var namespaceName = typeDefinition.Namespace.IsNil
+                                ? string.Empty
+                                : metadataReader.GetString(typeDefinition.Namespace);
+                            var typeName = metadataReader.GetString(typeDefinition.Name);
+                            typeNames.Add(string.IsNullOrEmpty(namespaceName)
+                                ? typeName
+                                : $"{namespaceName}.{typeName}");
+                        }
+                    }
+                }
+
                 return new AssemblyMetadata
                 {
                     Path = assemblyPath,
                     Exists = true,
                     LastWriteTime = fileInfo.LastWriteTimeUtc,
                     FileSize = fileInfo.Length,
-                    AssemblyName = assembly.GetName().Name,
-                    AssemblyVersion = assembly.GetName().Version?.ToString(),
-                    Types = assembly.GetTypes().Select(t => t.FullName ?? t.Name).ToArray(),
+                    AssemblyName = assemblyName.Name,
+                    AssemblyVersion = assemblyName.Version?.ToString(),
+                    Types = typeNames.ToArray(),
                     CreationTime = DateTime.UtcNow,
                     ExpirationTime = DateTime.UtcNow.AddHours(1)
                 };
