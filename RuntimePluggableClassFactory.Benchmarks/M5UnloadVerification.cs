@@ -32,7 +32,7 @@ namespace RuntimePluggableClassFactory.Benchmarks
     ///   CONCURRENTLY each cycle (sustained hybrid operation)
     /// - unload: loader.UnloadAllPlugins() + Dispose + forced GC
     ///
-    /// Leak indicators tracked per cycle:
+    ///  Leak indicators tracked per cycle:
     /// - WeakReference to a plugin instance and to its plugin Type must die
     ///   after unload + GC
     /// - assemblies whose file location is under PluginFolder must return to
@@ -42,30 +42,25 @@ namespace RuntimePluggableClassFactory.Benchmarks
     /// - the AssemblyLoadContext of every resident plugin assembly is
     ///   recorded (Default vs. collectible plugin contexts)
     ///
-    /// TWO PHASES are measured, because the shipped wiring and the collectible
-    /// machinery behave differently (see the findings recorded below):
+    /// ONE PHASE is measured: the shipped configuration (FilePluginLoader with
+    /// its default wiring - the loader ctor falls back to the real
+    /// DefaultPluginSecurityValidator). Since issue #51 the validator's
+    /// ValidateAssemblyAsync is METADATA-ONLY (PEReader + MetadataReader, no
+    /// ALC load): plugin assemblies load ONLY into the collectible
+    /// PluginLoadContext and UnloadAllPlugins actually unloads them.
     ///
-    /// A) "shippedConfiguration": FilePluginLoader with its default wiring.
-    ///    The loader always attaches a DefaultPluginSecurityValidator (ctor
-    ///    falls back to one when none is passed), whose path-based
-    ///    ValidateAssemblyAsync calls Assembly.LoadFrom(path). LoadFrom
-    ///    loads the plugin assembly into the DEFAULT, non-collectible
-    ///    AssemblyLoadContext, where assemblies can never be unloaded; the
-    ///    loader then prefers that Default-ALC copy over its own collectible
-    ///    PluginLoadContext copy (FilePluginLoader.cs, "Get assembly from
-    ///    already loaded Default AssemblyLoadContext if possible"). In this
-    ///    phase the collectible path is therefore not exercised and leak
-    ///    indicators are EXPECTED: the measurement documents this honestly
-    ///    rather than hiding it.
-    ///
-    /// B) "collectiblePath": FilePluginLoader with a non-loading stub
-    ///    validator (NonLoadingSecurityValidator below) so plugin assemblies
-    ///    load ONLY into the collectible PluginLoadContext (isCollectible:
-    ///    true). This isolates the collectible ALC machinery the issue asks
-    ///    about and verifies it does not leak. The stub validator performs
-    ///    NO security checks - it exists purely to keep validation from
-    ///    pinning assemblies into the Default ALC during this measurement
-    ///    and is NOT a security configuration.
+    /// History (both committed pre-fix runs document it): through the
+    /// 2026-11-23 runs the shipped validator called Assembly.LoadFrom(path),
+    /// pinning every validated plugin assembly in the DEFAULT,
+    /// non-collectible AssemblyLoadContext; FilePluginLoader then reused that
+    /// pinned copy instead of its collectible PluginLoadContext copy, so
+    /// UnloadAllPlugins was a no-op for the plugin assemblies actually in use,
+    /// and every measured cycle leaked (see data/20261116_sandbox/m5.json and
+    /// data/20261123_sandbox/m5.json). A second "collectiblePath" phase using
+    /// a non-loading stub validator isolated the collectible ALC machinery
+    /// back then and proved it leak-free; the stub was REMOVED with the fix,
+    /// because the shipped configuration now exercises the collectible path
+    /// itself.
     /// </summary>
     public static class M5UnloadVerification
     {
@@ -74,23 +69,16 @@ namespace RuntimePluggableClassFactory.Benchmarks
             var report = new Dictionary<string, object>
             {
                 ["measurement"] = "m5-unload-verification",
-                ["description"] = "Repeated load/execute/unload cycles under concurrent traditional + containerized-seam (hybrid) execution; per-cycle leak detection via WeakReference survival, resident plugin assemblies (with their AssemblyLoadContext), managed memory and GC collection counts. Two phases: shipped configuration (documents expected leak) and collectible-path (stub validator, isolates the collectible ALC machinery)."
+                ["description"] = "Repeated load/execute/unload cycles under concurrent traditional + containerized-seam (hybrid) execution; per-cycle leak detection via WeakReference survival, resident plugin assemblies (with their AssemblyLoadContext), managed memory and GC collection counts. Single phase: the shipped configuration (default loader wiring, metadata-only security validation since issue #51 - plugin assemblies load only into the collectible PluginLoadContext)."
             };
 
-            // Order matters: the collectible phase must run FIRST, because the
-            // shipped configuration permanently pins plugin assemblies in the
-            // default ALC and the loader then reuses those pinned copies in
-            // any later cycle (they are not unloadable), which would defeat
-            // the collectible-phase measurement.
-            report["collectiblePath"] = await RunPhaseAsync(pluginPath, cycles, useDefaultValidator: false);
-            report["shippedConfiguration"] = await RunPhaseAsync(pluginPath, cycles, useDefaultValidator: true);
+            report["shippedConfiguration"] = await RunPhaseAsync(pluginPath, cycles);
 
             report["summary"] = new Dictionary<string, object>
             {
                 ["shippedConfigurationVerdict"] = ((Dictionary<string, object>)report["shippedConfiguration"])["summary"],
-                ["collectiblePathVerdict"] = ((Dictionary<string, object>)report["collectiblePath"])["summary"],
                 ["architecturalFinding"] =
-                    "In the shipped configuration every plugin assembly passes through DefaultPluginSecurityValidator.ValidateAssemblyAsync, which uses Assembly.LoadFrom(path) and therefore pins the assembly in the DEFAULT (non-collectible) AssemblyLoadContext; FilePluginLoader then reuses that pinned copy instead of its collectible PluginLoadContext copy. UnloadAllPlugins is consequently a no-op for the plugin assemblies actually in use, and the collectible ALC path is never exercised unless validation avoids loading the file. This is a measurable, reproducible property of the shipped code (see shippedConfiguration cycles), not a harness artifact.",
+                    "Verified fixed (issue #51): DefaultPluginSecurityValidator.ValidateAssemblyAsync is metadata-only (PEReader + MetadataReader) and no longer loads the plugin file into any AssemblyLoadContext during validation, so plugin assemblies load only into the collectible PluginLoadContext and UnloadAllPlugins actually unloads them. Pre-fix behavior (Assembly.LoadFrom pinning in the DEFAULT ALC, loader reuse of the pinned copy, UnloadAllPlugins a no-op for in-use assemblies) is documented by the committed data/20261116_sandbox and data/20261123_sandbox runs.",
                 ["verdictScope"] = "plugin implementation assemblies (the collectible ALC path); the shared plugin interface assembly (PluginImplementations.dll) intentionally resides in the default context in all phases",
                 ["hybridExecutionNote"] = "Containerized-seam executions use an in-memory orchestrator (CRPCF dispatch path only, no container); a real container backend adds its own lifecycle that this measurement does not cover"
             };
@@ -98,16 +86,14 @@ namespace RuntimePluggableClassFactory.Benchmarks
             return report;
         }
 
-        private static async Task<Dictionary<string, object>> RunPhaseAsync(string pluginPath, int cycles, bool useDefaultValidator)
+        private static async Task<Dictionary<string, object>> RunPhaseAsync(string pluginPath, int cycles)
         {
             var pluginFolder = Path.GetFullPath(pluginPath);
             cycles = Math.Max(5, cycles);
 
             var phase = new Dictionary<string, object>
             {
-                ["validator"] = useDefaultValidator
-                    ? "DefaultPluginSecurityValidator (loader default wiring)"
-                    : "NonLoadingSecurityValidator (harness stub; performs NO security checks - measurement-only)"
+                ["validator"] = "DefaultPluginSecurityValidator (loader default wiring, metadata-only since issue #51)"
             };
 
             // ------------------------------------------------------------------
@@ -138,9 +124,7 @@ namespace RuntimePluggableClassFactory.Benchmarks
                 // ------------------------------------------------------------------
                 var sw = Stopwatch.StartNew();
 
-                var loader = useDefaultValidator
-                    ? M1RawThresholdData.CreateLoader(pluginPath)
-                    : new FilePluginLoader<ISpecificInterface>(new Uri(Path.GetFullPath(pluginPath)), new NonLoadingSecurityValidator());
+                var loader = M1RawThresholdData.CreateLoader(pluginPath);
                 var traditional = new PluginClassFactory<ISpecificInterface>(loader);
                 await M1RawThresholdData.AllowAllAsync(traditional);
 
@@ -269,7 +253,7 @@ namespace RuntimePluggableClassFactory.Benchmarks
 
                 perCycle.Add(cycleReport);
                 Console.WriteLine(
-                    $"[m5{(useDefaultValidator ? "-shipped" : "-collectible")}] cycle {cycle + 1}/{cycles}: weakRefsAlive={instanceWeakRef.IsAlive || typeWeakRef.IsAlive} resident={residentAssemblies} gcAttempts={gcAttempts} leak={cycleReport["leakDetected"]}");
+                    $"[m5] cycle {cycle + 1}/{cycles}: weakRefsAlive={instanceWeakRef.IsAlive || typeWeakRef.IsAlive} resident={residentAssemblies} gcAttempts={gcAttempts} leak={cycleReport["leakDetected"]}");
             }
 
             phase["cycles"] = perCycle;
@@ -291,7 +275,7 @@ namespace RuntimePluggableClassFactory.Benchmarks
                 ["managedMemoryDeltaFirstToLastCycleBytes"] = lastMemory - firstMemory,
                 ["verdict"] = leakedCycles.Length == 0
                     ? "no leak indicators: every cycle's plugin instances, types and assemblies were collected after unload"
-                    : $"leak indicators in all {leakedCycles.Length} cycles - plugin assemblies remain resident in the DEFAULT (non-collectible) AssemblyLoadContext; see architecturalFinding"
+                    : $"leak indicators in {leakedCycles.Length} cycles - see cycles for which leak indicator fired and the involved AssemblyLoadContexts"
             };
 
             return phase;
@@ -305,23 +289,5 @@ namespace RuntimePluggableClassFactory.Benchmarks
                             a.Location.StartsWith(pluginFolder, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Measurement-only stub: performs NO security checks. Exists so the
-        /// collectible-path phase can measure the PluginLoadContext machinery
-        /// without DefaultPluginSecurityValidator's Assembly.LoadFrom pinning
-        /// plugin assemblies into the default ALC. NOT a security
-        /// configuration - do not use outside this harness.
-        /// </summary>
-        private sealed class NonLoadingSecurityValidator : IPluginSecurityValidator
-        {
-            public Task<PluginSecurityValidationResult> ValidateAssemblyAsync(string? assemblyPath)
-                => Task.FromResult(PluginSecurityValidationResult.CreateValid());
-
-            public PluginSecurityValidationResult ValidateLoadedAssembly(Assembly? assembly)
-                => PluginSecurityValidationResult.CreateValid();
-
-            public PluginSecurityValidationResult ValidatePluginTypes(IEnumerable<Type>? pluginTypes)
-                => PluginSecurityValidationResult.CreateValid();
-        }
     }
 }

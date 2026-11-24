@@ -1,0 +1,374 @@
+{
+  "measurement": "m3-migration-study",
+  "description": "Promote SpecificClassImpl v1.2.1 (Test module) from in-process to containerized(host) execution in a running hybrid system; measure step effort, contract parity, and rollback.",
+  "scopeWarning": "Containerized target = local plugin host process (see m2-container-leg scope). No K8s/Docker orchestration in this environment; registry push/pull, scheduling and image build add on top in a real promotion and are explicitly NOT claimed here.",
+  "promotedPlugin": "Test.SpecificClassImpl v1.2.1 (same assembly on both paths)",
+  "contractCaseLatencyInProcess": {
+    "unit": "ms",
+    "n": 60,
+    "min": 0.0001,
+    "mean": 0.00015666666666666666,
+    "median": 0.0001,
+    "p90": 0.0002,
+    "p95": 0.0002,
+    "p99": 0.0025,
+    "max": 0.0025,
+    "stdev": 0.00031373456700063067,
+    "raw": [
+      0.0025,
+      0.0005,
+      0.0003,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0002,
+      0.0001,
+      0.0002,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0002,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0002,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001,
+      0.0001
+    ]
+  },
+  "contractCaseLatencyContainerized": {
+    "unit": "ms",
+    "n": 60,
+    "min": 0.1045,
+    "mean": 0.11866833333333333,
+    "median": 0.1127,
+    "p90": 0.1305,
+    "p95": 0.1526,
+    "p99": 0.2677,
+    "max": 0.2677,
+    "stdev": 0.023095391657627484,
+    "raw": [
+      0.2677,
+      0.1555,
+      0.1305,
+      0.1585,
+      0.1241,
+      0.1127,
+      0.1101,
+      0.1246,
+      0.1284,
+      0.1158,
+      0.1085,
+      0.1331,
+      0.1142,
+      0.1126,
+      0.111,
+      0.1132,
+      0.1112,
+      0.1483,
+      0.1057,
+      0.1089,
+      0.1288,
+      0.1088,
+      0.1146,
+      0.1082,
+      0.1135,
+      0.1084,
+      0.1097,
+      0.1063,
+      0.1131,
+      0.1183,
+      0.1128,
+      0.1061,
+      0.1126,
+      0.1091,
+      0.1123,
+      0.1046,
+      0.1105,
+      0.121,
+      0.1249,
+      0.1132,
+      0.1063,
+      0.1097,
+      0.1091,
+      0.1141,
+      0.1049,
+      0.1138,
+      0.1209,
+      0.113,
+      0.1133,
+      0.1159,
+      0.1122,
+      0.1049,
+      0.1526,
+      0.123,
+      0.105,
+      0.1224,
+      0.1117,
+      0.1045,
+      0.1067,
+      0.1047
+    ]
+  },
+  "migrationSteps": [
+    {
+      "step": "0-baseline-auto-resolution",
+      "ms": 5.3589,
+      "note": "First Auto lookup (v1.2.1) with an empty orchestrator: registry miss \u002B traditional fallback (resolved traditional)."
+    },
+    {
+      "step": "1-deploy-containerized-plugin",
+      "ms": 101.0823,
+      "note": "DeployPluginAsync: package staging (4.6 ms) \u002B host spawn-to-ready (94.8 ms). The v1.2.1 plugin assembly stream is the deployment payload (stands in for the signed plugin package; signature verification not exercised)."
+    },
+    {
+      "step": "2-health-check",
+      "ms": 0.8071,
+      "note": "GetPluginHealthAsync: Healthy, ping round trip 0.292 ms."
+    },
+    {
+      "step": "3-switchover-auto-lookup",
+      "ms": 0.3311,
+      "note": "Next GetPluginAsync(Auto) resolved containerized proxy. No call-site change: same method, same signature; only the resolution target changed."
+    },
+    {
+      "step": "4-rollback-undeploy",
+      "ms": 52.78,
+      "note": "UndeployPluginAsync: host teardown (52.4 ms)."
+    },
+    {
+      "step": "5-rollback-auto-lookup",
+      "ms": 0.0197,
+      "note": "Auto lookup after undeploy resolved traditional (fallback restored). The running HybridPluginFactory instance itself was never restarted."
+    }
+  ],
+  "contractParity": [
+    {
+      "case": "Monster",
+      "expected": "true",
+      "after": "baseline",
+      "result": "true",
+      "matchesExpected": true
+    },
+    {
+      "case": "monster",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monste",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monster ",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "M\u00F6\u00F1ster",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "payload-10240B(\u0027x\u0027)",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "payload-102400B(\u0027x\u0027)",
+      "expected": "false",
+      "after": "baseline",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monster",
+      "expected": "true",
+      "after": "promoted",
+      "result": "true",
+      "matchesExpected": true
+    },
+    {
+      "case": "monster",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monste",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monster ",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "M\u00F6\u00F1ster",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "payload-10240B(\u0027x\u0027)",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "payload-102400B(\u0027x\u0027)",
+      "expected": "false",
+      "after": "promoted",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monster",
+      "expected": "true",
+      "after": "rolled-back",
+      "result": "true",
+      "matchesExpected": true
+    },
+    {
+      "case": "monster",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monste",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "Monster ",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "M\u00F6\u00F1ster",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "payload-10240B(\u0027x\u0027)",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    },
+    {
+      "case": "payload-102400B(\u0027x\u0027)",
+      "expected": "false",
+      "after": "rolled-back",
+      "result": "false",
+      "matchesExpected": true
+    }
+  ],
+  "paritySummary": {
+    "contractCaseCount": 8,
+    "baselineParityPass": true,
+    "promotedParityPass": true,
+    "rolledBackParityPass": true,
+    "behaviorPreserved": true,
+    "normalizationNote": "The containerized path returns JSON-decoded output; the in-process path returns the CLR bool. Outcomes are normalized to true/false before comparison and recorded raw as well, so a third party can audit the comparison."
+  },
+  "effortSummary": {
+    "callSiteLinesChanged": 0,
+    "callSiteNote": "Both paths are consumed through HybridPluginFactory.GetPluginAsync with the same signature; the consumer code that resolves the plugin did not change for the promotion.",
+    "configDelta": "HybridPluginFactoryOptions.PreferContainerized = true (1 property), already set before promotion",
+    "promotionCodePath": "HybridPluginFactory.DeployContainerizedPluginAsync (shipped API), 1 call",
+    "containerHostBinaryLoc": 114,
+    "rollbackCodePath": "UndeployPluginAsync (shipped orchestrator API), 1 call, no restart",
+    "stepsMeasured": 6,
+    "totalStepWallMs": 160.37910000000002
+  }
+}

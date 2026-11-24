@@ -26,8 +26,9 @@ Committed runs:
 
 - `data/20261116_sandbox/` — first tranche (M1, M2 seam, M4, M5)
 - `data/20261123_sandbox/` — second tranche (M2 container leg, M3) plus a fresh M1/M2/M4/M5 run
+- `data/20261124_sandbox/` — post-#51-fix full run (all six modules), primarily the M5 fix-verification run
 
-Both on a sandbox vCPU environment — see each run's `summary.md` for the honest
+All on a sandbox vCPU environment — see each run's `summary.md` for the honest
 environment note.
 
 ## Measurements
@@ -39,7 +40,7 @@ environment note.
 | `M2ContainerLeg` | 2 — mode comparison (container leg) | The out-of-process half: the same plugin shipped to a REAL separate plugin host process (`RuntimePluggableClassFactory.PluginHost`, the binary a plugin container image would run as ENTRYPOINT) dispatched over the shipped CRPCF proxy path with per-call JSON-over-pipe IPC; cold start (package staging + spawn-to-ready) over N deploy/undeploy cycles, the IPC protocol floor, payload sweep against a same-run in-process baseline, sequential + concurrent throughput, and auto-resolution over a live/deployment-aware orchestrator. |
 | `M3MigrationStudy` | 3 — migration study | Live promotion of `Test.SpecificClassImpl` v1.2.1 from in-process to containerized(host) execution inside one long-running `HybridPluginFactory`: per-step wall-clock effort (deploy, health, switchover, rollback), zero-code call-site preservation (same `GetPluginAsync` signature), 8-case contract-test parity across baseline/promoted/rolled-back phases, and the rollback path (undeploy + auto fallback, factory never restarted). |
 | `M4SecurityEscapeRate` | 4 — security validator escape rate | An 8-item adversarial plugin corpus (committed C# source in `M4SecurityEscapeRate.cs`, compiled at run time with Roslyn) validated against Default/Strict/Permissive policies; per-level escape rates with issue codes, plus payload verification proving escaped items have the real capability. |
-| `M5UnloadVerification` | 5 — unload verification under sustained hybrid operation | Repeated load/execute/unload cycles with traditional and containerized-seam execution running concurrently; per-cycle leak detection via WeakReference survival, resident plugin assemblies with their AssemblyLoadContext, managed memory and GC collection counts. |
+| `M5UnloadVerification` | 5 — unload verification under sustained hybrid operation | Repeated load/execute/unload cycles with traditional and containerized-seam execution running concurrently, in the shipped loader wiring (real `DefaultPluginSecurityValidator`, metadata-only since the #51 fix); per-cycle leak detection via WeakReference survival, resident plugin assemblies with their AssemblyLoadContext, managed memory and GC collection counts. |
 
 ## Scope and honest limitations
 
@@ -72,15 +73,19 @@ environment note.
   environment, not dedicated hardware; `environment.json` and each run's
   `summary.md` record this. Relative comparisons and structural findings
   transfer; absolute latencies may not.
-- **M5 architectural finding** (shipped configuration): `FilePluginLoader` always attaches a
-  `DefaultPluginSecurityValidator` (constructor fallback), whose path-based
-  `ValidateAssemblyAsync` calls `Assembly.LoadFrom(path)`. This pins every validated plugin
-  assembly in the DEFAULT, non-collectible AssemblyLoadContext, and the loader then reuses that
-  pinned copy instead of its collectible `PluginLoadContext` copy. `UnloadAllPlugins` is
-  consequently a no-op for the assemblies actually in use. M5 measures this honestly in the
-  `shippedConfiguration` phase (leak indicators in every cycle) and separately verifies the
-  collectible machinery itself is leak-free in the `collectiblePath` phase (non-loading stub
-  validator; measurement-only, performs no security checks).
+- **M5 unload finding — fixed by the #51 remediation, verified by the
+  `data/20261124_sandbox/` run**: through the 2026-11-23 run,
+  `DefaultPluginSecurityValidator.ValidateAssemblyAsync` called
+  `Assembly.LoadFrom(path)`, pinning every validated plugin assembly in the
+  DEFAULT, non-collectible AssemblyLoadContext; `FilePluginLoader` then reused
+  that pinned copy instead of its collectible `PluginLoadContext` copy, making
+  `UnloadAllPlugins` a no-op for the assemblies actually in use (leak
+  indicators in every shipped-configuration cycle of the 2026-11-16 and
+  2026-11-23 runs). Since #51 the path-based validation is metadata-only
+  (`PEReader` + `MetadataReader`; no ALC load), the measurement-only
+  non-loading stub validator was removed, and the shipped configuration
+  itself exercises the collectible path: 30/30 leak-free cycles, weak
+  references dying after one GC, 0 resident plugin assemblies.
 
 ## Reproducibility
 
