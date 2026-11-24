@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shipped-surface note at the top of CRPCF_IMPLEMENTATION_GUIDE.md pointing readers to the authoritative consumer contract
 
 ### Changed
+- **#51 follow-up defensive cleanups (no remaining ALC-pinning sites in the shipped library)**:
+  - `AssemblyMetadataCache.CreateMetadata` is now metadata-only (`AssemblyName.GetAssemblyName` + `PEReader`/`MetadataReader` type-name enumeration) instead of `Assembly.LoadFrom` — the opt-in cached-factory path no longer pins inspected assemblies in the DEFAULT, non-collectible AssemblyLoadContext either. Nested types are now reported by their own name without the `Outer+Inner` qualification (metadata-only enumeration; the cache entry is an informational name list, not a reflection surface).
+  - `FilePluginLoader` no longer swaps its collectible `PluginLoadContext` copy for an `AssemblyLoadContext.Default` copy when one exists (the "prefer Default-ALC" branch) — the swap silently defeated unload and could re-introduce the pinning problem the #51 validator fix removed. The collectible copy is always used; the second-stage `ValidateLoadedAssembly` on the loaded assembly is unchanged.
 - **SBoB enforcement is opt-in (default `Off`)** — decision DevelApp-ai/DevelApp-Repo-Global#39, accepted: SBoB profiles are optional for consumers of the public nuget.org packages, which never ship one, so `SBoBEnforcingOrchestratorOptions.Mode` now defaults to `Off` (previously `Enforce`); verification only runs when a consumer explicitly opts in (DevelApp-internal orchestrators opt in and still roll out per package Monitor → Audit → Enforce). Default-options test added; Containerized suite now 95/95
 
 ### Fixed

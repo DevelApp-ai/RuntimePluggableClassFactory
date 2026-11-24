@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
 using System.Threading.Tasks;
 
 namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
@@ -125,7 +124,9 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
 
                         Assembly assembly = pluginLoadContext.LoadFromAssemblyPath(fileName);
 
-                        // Additional security validation on loaded assembly
+                        // Additional security validation on the loaded (collectible)
+                        // assembly - inspects the in-memory assembly without pinning
+                        // anything in the Default ALC
                         var loadedSecurityResult = _securityValidator.ValidateLoadedAssembly(assembly);
                         if (!loadedSecurityResult.IsValid)
                         {
@@ -133,12 +134,15 @@ namespace DevelApp.RuntimePluggableClassFactory.FilePlugin
                             continue; // Skip this assembly
                         }
 
-                        //Get assembly from already loaded Default AssemblyLoadContext if possible so isolation is not needed and to avoid
-                        Assembly? defaultAssembly = AssemblyLoadContext.Default.Assemblies.FirstOrDefault(x => x.FullName == assembly.FullName);
-                        if (defaultAssembly != null)
-                        {
-                            assembly = defaultAssembly;
-                        }
+                        // The collectible copy is ALWAYS used (#51 follow-up): the
+                        // loader previously swapped the collectible copy for an
+                        // AssemblyLoadContext.Default copy whenever one existed,
+                        // which silently defeated unload and re-introduced the
+                        // pinning problem the #51 validator fix removed. With
+                        // metadata-only path validation nothing pins the plugin
+                        // file into the Default ALC anymore; keeping the
+                        // collectible copy guarantees UnloadAllPlugins/UnloadPlugin
+                        // actually release plugin assemblies.
 
                         foreach (Type identifiedType in LoadFromAssembly(assembly))
                         {
